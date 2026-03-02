@@ -1,0 +1,17 @@
+{
+    "godotTools.editorPath.godot4": "bin\\Godot_v4.6.1-stable_mono_win64_console.exe",
+    "VSCodeCounter.include": [
+        "src/**"
+    ],
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.cs": "${capture}.enum.gd-notused"
+    },
+    "files.exclude": {
+        "**/*.gd.uid": true,
+        "**/*.cs.uid": true,
+        "**/*.csv.import": true,
+        "**/*.translation": true,
+    },
+    "chat.agent.maxRequests": 90,
+}

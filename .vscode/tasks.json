@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Godot: 主动触发资源刷新",
+            "type": "shell",
+            "command": ".\\bin\\Godot_v4.6.1-stable_mono_win64.exe",
+            "args": [
+                "--editor",
+                "--headless",
+                "--quit"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

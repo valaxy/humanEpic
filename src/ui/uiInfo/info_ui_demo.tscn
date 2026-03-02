@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://src/ui/ui_info/info_ui.tscn" id="1_info_ui"]
-[ext_resource type="Script" path="res://src/ui/ui_info/InfoUIDemo.cs" id="2_script"]
+[ext_resource type="PackedScene" path="res://src/ui/uiInfo/info_ui.tscn" id="1_info_ui"]
+[ext_resource type="Script" path="res://src/ui/uiInfo/InfoUIDemo.cs" id="2_script"]
 
 [node name="InfoUIDemo" type="Control"]
 layout_mode = 3

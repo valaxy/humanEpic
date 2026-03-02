@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://b8xt3p2v1w2y2"]
+
+[ext_resource type="Script" path="res://src/ui/timeDisplay/TimeDisplayUI.cs" id="1_script"]
+
+
+[node name="TimeDisplayUI" type="PanelContainer"]
+offset_right = 160.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="TimeLabel" type="Label" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "第 1 天 00 时"
+horizontal_alignment = 1
+vertical_alignment = 1

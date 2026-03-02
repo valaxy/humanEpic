@@ -2,6 +2,7 @@ using Godot;
 
 /// <summary>
 /// 全局事件中转站，用于解耦各个系统之间的信号传递。
+/// TODO，没改完
 /// </summary>
 [GlobalClass]
 public partial class EventHub : RefCounted

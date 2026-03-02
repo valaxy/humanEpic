@@ -21,19 +21,25 @@ public partial class Main : Node3D
 	
 	// 视图层顶层入口。
 	private GameView view = new GameView();
+	// 领域层顶层入口。
+	private GameWorld world = null!;
+	// 主 UI 管理器。
+	private MainUI mainUi = null!;
 
 	public override void _Ready()
 	{
 		camera = GetNode<GameCamera>("Camera3D");
+		world = new GameWorld();
 
 		addCoreNodes();
 		setupView();
+		setupUi();
 		initializeGridVisuals();
+	}
 
-		// TODO: 后续逐步接回领域层与 UI 主流程。
-		// GameWorld world = new GameWorld();
-		// NaturalDisasterManager naturalDisasterManager = new NaturalDisasterManager();
-		// MainUI mainUi = new MainUI();
+	public override void _Process(double delta)
+	{
+		world.TimeSystem.Update(delta);
 	}
 
 	// 添加主流程核心节点。
@@ -46,6 +52,15 @@ public partial class Main : Node3D
 	private void setupView()
 	{
 		view.Setup(camera);
+	}
+
+	// 初始化并挂载主 UI。
+	private void setupUi()
+	{
+		PackedScene mainUiScene = GD.Load<PackedScene>("res://src/ui/main_ui.tscn");
+		mainUi = mainUiScene.Instantiate<MainUI>();
+		AddChild(mainUi);
+		mainUi.Setup(world, camera, view.LayerManager);
 	}
 
 	// 根据默认地图尺寸初始化网格渲染。

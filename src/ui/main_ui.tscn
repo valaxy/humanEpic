@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/MainUI.cs" id="1_main_ui_script"]
+[ext_resource type="PackedScene" path="res://src/ui/zoomUI/zoom_ui.tscn" id="2_zoom_ui_scene"]
+[ext_resource type="PackedScene" path="res://src/ui/timeDisplay/time_display_ui.tscn" id="3_time_display_scene"]
+
+[node name="MainUI" type="Node"]
+script = ExtResource("1_main_ui_script")
+
+[node name="ZoomUI" parent="." instance=ExtResource("2_zoom_ui_scene")]
+
+[node name="TimeDisplayUI" parent="." instance=ExtResource("3_time_display_scene")]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 180.0
+offset_bottom = 60.0

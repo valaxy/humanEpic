@@ -1,3 +1,14 @@
 [gd_scene format=3 uid="uid://hoq6vni8rmi0"]
 
-[node name="Node3D" type="Node3D" unique_id=76627867]
+[ext_resource type="PackedScene" path="res://src/chart/chart_demo_entry.tscn" id="1_demo"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChartDemoEntry" parent="." instance=ExtResource("1_demo")]
+layout_mode = 1

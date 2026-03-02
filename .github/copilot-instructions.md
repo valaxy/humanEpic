@@ -23,8 +23,6 @@
 - 包括游戏世界对象的交互、控制的逻辑，继承自`Godot.Node`，并通过组合其他对象实现控制过程
 
 
-
-
 # 核心限制
 - 禁止使用`namespace`定义命名空间，所有代码直接定义在全局作用域
 - 禁止使用`var`，必须显式声明所有变量类型
@@ -34,7 +32,8 @@
   - 若使用`GetNode`获取节点，默认其必定存在，禁止编写`if (node != null)`
 
 # 代码风格
-所有代码都用C#实现，禁止使用GDScript代码
+- 总是使用godot4.X最新版本API和语法
+- 所有代码都用C#实现，禁止使用GDScript代码
 - 总是使用C#最新版本的语法特性
 - 尽量使用C#标准API实现，而不是使用Godot API实现
 - 枚举类型定义在单独的文件`<EnumName>.enum.cs`中，不需要`[GlobalClass]`修饰
@@ -56,4 +55,4 @@
 - 使用中文回复
 - 不要用bash或cmd执行命令，用pwsh执行命令
 - 若新增了`.cs`文件，先运行Task刷新godot资源
-- 若改动了`.cs`文件，最后运行`dotnet build .\bigworld.sln`来确保代码编译通过
+- 若改动了`.cs`文件，最后运行`dotnet build .\humanepic.sln`来确保代码编译通过

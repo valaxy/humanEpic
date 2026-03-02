@@ -6,19 +6,29 @@ using Godot;
 [GlobalClass]
 public partial class ReusableDataTableNode : VBoxContainer
 {
-    private Label _titleLabel = null!;
-    private GridContainer _dataGrid = null!;
+    // 表格标题标签。
+    private Label titleLabel = null!;
 
+    // 数据网格容器。
+    private GridContainer dataGrid = null!;
+
+    /// <summary>
+    /// 初始化节点引用。
+    /// </summary>
     public override void _Ready()
     {
-        _titleLabel = GetNode<Label>("%TitleLabel");
-        _dataGrid = GetNode<GridContainer>("%DataGrid");
+        titleLabel = GetNode<Label>("%TitleLabel");
+        dataGrid = GetNode<GridContainer>("%DataGrid");
     }
 
+    /// <summary>
+    /// 使用数据源渲染表格。
+    /// </summary>
+    /// <param name="dataSource">表格数据源。</param>
     public void Render(DataSource dataSource)
     {
-        _titleLabel.Text = dataSource.Title;
-        _dataGrid.Columns = dataSource.Headers.Count;
+        titleLabel.Text = dataSource.Title;
+        dataGrid.Columns = dataSource.Headers.Count;
         ClearGrid();
 
         for (var columnIndex = 0; columnIndex < dataSource.Headers.Count; columnIndex++)
@@ -29,7 +39,7 @@ public partial class ReusableDataTableNode : VBoxContainer
                 headerAlignment = (HorizontalAlignment)dataSource.HeaderAlignments[columnIndex];
             }
 
-            _dataGrid.AddChild(CreateCell(dataSource.Headers[columnIndex], headerAlignment));
+            dataGrid.AddChild(CreateCell(dataSource.Headers[columnIndex], headerAlignment));
         }
 
         foreach (var row in dataSource.Rows)
@@ -48,19 +58,21 @@ public partial class ReusableDataTableNode : VBoxContainer
                     cellAlignment = (HorizontalAlignment)dataSource.CellAlignments[columnIndex];
                 }
 
-                _dataGrid.AddChild(CreateCell(cellValue, cellAlignment));
+                dataGrid.AddChild(CreateCell(cellValue, cellAlignment));
             }
         }
     }
 
+    // 清空当前网格中的所有单元格。
     private void ClearGrid()
     {
-        foreach (var child in _dataGrid.GetChildren())
+        foreach (var child in dataGrid.GetChildren())
         {
             child.QueueFree();
         }
     }
 
+    // 创建单元格标签。
     private static Label CreateCell(string text, HorizontalAlignment alignment)
     {
         return new Label

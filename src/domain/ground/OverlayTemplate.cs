@@ -64,7 +64,11 @@ public class OverlayTemplate : ITemplate<OverlayType.Enums, OverlayTemplate>
 				CsvColumnDefinition.String("name"),
 				CsvColumnDefinition.Color("color"),
 				CsvColumnDefinition.Float("max_amount", 0.0f),
-				CsvColumnDefinition.String("valid_ground")
+				CsvColumnDefinition.EnumList<SurfaceType.Enums>(
+					"valid_ground",
+					';',
+					false,
+					Enum.GetValues<SurfaceType.Enums>())
 			]);
 
 		return CsvReader
@@ -77,29 +81,10 @@ public class OverlayTemplate : ITemplate<OverlayType.Enums, OverlayTemplate>
 					row.Get<string>("name"),
 					row.Get<Color>("color"),
 					row.Get<float>("max_amount"),
-					parseValidGround(row.Get<string>("valid_ground"), type, row.LineNumber));
+					row.Get<List<SurfaceType.Enums>>("valid_ground"));
 				return (type, template);
 			})
 			.ToDictionary(item => item.type, item => item.template);
-	}
-
-	// 解析可放置地表类型列表。
-	private static List<SurfaceType.Enums> parseValidGround(string text, OverlayType.Enums type, int lineNumber)
-	{
-		return text
-			.Split(';', StringSplitOptions.RemoveEmptyEntries)
-			.Select(value => value.Trim())
-			.Select(value =>
-			{
-				if (Enum.TryParse(value, true, out SurfaceType.Enums surfaceType))
-				{
-					return surfaceType;
-				}
-
-				throw new InvalidOperationException($"CSV format error in {CsvPath} line {lineNumber}, overlay '{type}': invalid ground type '{value}'.");
-			})
-			.Distinct()
-			.ToList();
 	}
 
 	/// <summary>

@@ -26,13 +26,6 @@ public partial class Ground : IPersistence<Ground>
         { OverlayType.Enums.WILD_CHESTNUT, "C" }
     };
 
-    private static readonly Dictionary<TerrainHeight.Enums, string> HMap = new()
-    {
-        { TerrainHeight.Enums.PLAIN, "P" },
-        { TerrainHeight.Enums.HILL, "H" },
-        { TerrainHeight.Enums.MOUNTAIN, "M" }
-    };
-
     private static readonly Dictionary<char, SurfaceType.Enums> GInv = new()
     {
         { 'G', SurfaceType.Enums.GRASSLAND },
@@ -53,14 +46,6 @@ public partial class Ground : IPersistence<Ground>
         { 'T', OverlayType.Enums.WILD_WHEAT },
         { 'C', OverlayType.Enums.WILD_CHESTNUT }
     };
-
-    private static readonly Dictionary<char, TerrainHeight.Enums> HInv = new()
-    {
-        { 'P', TerrainHeight.Enums.PLAIN },
-        { 'H', TerrainHeight.Enums.HILL },
-        { 'M', TerrainHeight.Enums.MOUNTAIN }
-    };
-
 
 
     private void loadData(Dictionary<string, object> data)
@@ -87,7 +72,8 @@ public partial class Ground : IPersistence<Ground>
                 {
                     object cellJson = rowJson[x];
 
-                    // 字符串格式 "G.P" 或 "G.P:100.0" (带资源量)
+                    // 序列化格式：<surface><overlay>[:<amount>]，例如 "G."、"GF:100.0"
+                    // 兼容旧格式：<surface><overlay><height>[:<amount>]，例如 "G.P"、"GFP:100.0"
                     if (cellJson is string s)
                     {
                         string[] parts = s.Split(':');
@@ -95,7 +81,6 @@ public partial class Ground : IPersistence<Ground>
 
                         char gChar = baseData.Length > 0 ? baseData[0] : 'G';
                         char oChar = baseData.Length > 1 ? baseData[1] : '.';
-                        char hChar = baseData.Length > 2 ? baseData[2] : 'P';
 
                         SurfaceType.Enums g = GInv.TryGetValue(gChar, out SurfaceType.Enums gv) ? gv : SurfaceType.Enums.GRASSLAND;
                         OverlayType.Enums o = OInv.TryGetValue(oChar, out OverlayType.Enums ov) ? ov : OverlayType.Enums.NONE;
@@ -137,7 +122,7 @@ public partial class Ground : IPersistence<Ground>
     /// <summary>
     /// 获取可持久化的数据字典
     /// </summary>
-    /// <returns>包含地格数据的字典</returns>
+    /// <returns>包含地格数据的字典。map 单元格式为 &lt;surface&gt;&lt;overlay&gt;[:&lt;amount&gt;]</returns>
     public Dictionary<string, object> GetSaveData()
     {
         int h = Height;
@@ -149,9 +134,8 @@ public partial class Ground : IPersistence<Ground>
             for (int x = 0; x < w; x++)
             {
                 Grid cell = mapData[y, x];
-                string cellStr = GetVal(GMap, cell.Surface, "G") +
-                                 GetVal(OMap, cell.CurrentOverlayType, ".") +
-                                 GetVal(HMap, cell.Height, "P");
+                string cellStr = GetVal(GMap, cell.SurfaceType, "G") +
+                                 GetVal(OMap, cell.OverlayType, ".");
 
                 // 保存覆盖物的当前资源量
                 if (cell.OverlayType != OverlayType.Enums.NONE)

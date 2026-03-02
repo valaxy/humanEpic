@@ -1,5 +1,5 @@
-type,name,color
+type     ,name,color
 GRASSLAND,草地,Green
-DESERT,沙漠,YellowGreen
-RIVER,河流,Blue
-SNOW,雪地,White
+DESERT   ,沙漠,YellowGreen
+RIVER    ,河流,Blue
+SNOW     ,雪地,White

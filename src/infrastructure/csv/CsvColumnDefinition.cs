@@ -78,6 +78,14 @@ public abstract class CsvColumnDefinition
 	}
 
 	/// <summary>
+	/// 定义枚举列表列，格式 item;item;item。
+	/// </summary>
+	public static CsvColumnDefinition EnumList<TEnum>(string header, char separator = ';', bool allowEmpty = false, IEnumerable<TEnum>? allowedValues = null) where TEnum : struct, Enum
+	{
+		return new CsvEnumListColumnDefinition<TEnum>(header, separator, allowEmpty, allowedValues);
+	}
+
+	/// <summary>
 	/// 定义颜色列（支持 Html 色值与命名色）
 	/// </summary>
 	public static CsvColumnDefinition Color(string header)

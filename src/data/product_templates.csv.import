@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://d24q7181dlppp"
+
+[deps]
+
+files=["res://src/data/product_templates. name  .translation", "res://src/data/product_templates. is.translation", "res://src/data/product_templates. volume.translation"]
+
+source_file="res://src/data/product_templates.csv"
+dest_files=["res://src/data/product_templates. name  .translation", "res://src/data/product_templates. is.translation", "res://src/data/product_templates. volume.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

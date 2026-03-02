@@ -1,0 +1,9 @@
+product_type_id, name  , is_consumer_good, volume
+WATER          , 水    , true            , 1
+FOOD           , 食物  , true            , 1
+FURNITURE      , 家具  , true            , 1
+TOOLS          , 工具  , true            , 1
+WOOD           , 木材  , false           , 1
+ORE            , 矿石  , false           , 1
+STONE          , 石头  , false           , 1
+CURRENCY       , 货币  , false           , 1

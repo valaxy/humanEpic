@@ -5,24 +5,6 @@
   - 优先使用`*.tscn`文件定义静态结构，避免在代码中动态创建节点
 - 高内聚低耦合：将内聚性高的文件放到同一个目录下
 
-
-
-# 文件规范
-## Node类
-- 类名命名为`XXXNode`，例如：`BuildingNode`
-- 包括游戏世界对象的渲染逻辑，继承自`Godot.Node3D`，并通过组合其他对象实现渲染过程
-- 可选：如有必要，新增一个对应的`XXX.tscn`文件定义节点结构，避免在代码中动态创建
-
-## Mesh类
-- 类名命名为`XXXMesh`，例如：`BuildingMesh`
-- 负责定义网格结构、材质等渲染细节，继承自`Godot.MeshInstance3D`或`Godot.MultiMeshInstance3D`
-- 可选：如有必要，新增一个对应的`XXX.tscn`文件定义节点结构，避免在代码中动态创建
-
-## Controller类
-- 类名命名为`XXXNode`，例如：`ControllerNode`
-- 包括游戏世界对象的交互、控制的逻辑，继承自`Godot.Node`，并通过组合其他对象实现控制过程
-
-
 # 核心限制
 - 禁止使用`namespace`定义命名空间，所有代码直接定义在全局作用域
 - 禁止使用`var`，必须显式声明所有变量类型
@@ -50,6 +32,23 @@
 - 初始化过程：
   - 若类成员在自定义的初始化过程中被赋值，那么这个成员可以参考`MeshInstance3D meshInstance = null!`这样定义，以防止编译器告警
   - 若类成员在构造函数中被赋值，那么这个成员不需要`= null!`这种方式，编译器不会告警
+
+
+# 文件规范
+## Node类
+- 类名命名为`XXXNode`，例如：`BuildingNode`
+- 包括游戏世界对象的渲染逻辑，继承自`Godot.Node3D`，并通过组合其他对象实现渲染过程
+- 可选：如有必要，新增一个对应的`XXX.tscn`文件定义节点结构，避免在代码中动态创建
+
+## Mesh类
+- 类名命名为`XXXMesh`，例如：`BuildingMesh`
+- 负责定义网格结构、材质等渲染细节，继承自`Godot.MeshInstance3D`或`Godot.MultiMeshInstance3D`
+- 可选：如有必要，新增一个对应的`XXX.tscn`文件定义节点结构，避免在代码中动态创建
+
+## Controller类
+- 类名命名为`XXXNode`，例如：`ControllerNode`
+- 包括游戏世界对象的交互、控制的逻辑，继承自`Godot.Node`，并通过组合其他对象实现控制过程
+
 
 # AI助手规范
 - 使用中文回复

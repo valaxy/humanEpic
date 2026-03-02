@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/bubbleMessage/BubbleMessageDemo.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/bubbleMessage/bubble_message_container_ui.tscn" id="2_container"]
+
+[node name="BubbleMessageDemo" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="BubbleMessageContainerUI" parent="." instance=ExtResource("2_container")]
+
+[node name="MessageTimer" type="Timer" parent="."]
+wait_time = 0.7
+autostart = true

@@ -1,26 +1,28 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using Godot;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 
 public static class JsonUtility
 {
     // 从默认存档路径加载原生 C# 字典数据。
     public static Dictionary<string, object> LoadDataFromJsonFile(string savePath)
     {
-        // 转换 Godot res:// 路径为绝对路径
-        string absolutePath = ProjectSettings.GlobalizePath(savePath);
-
-        if (!File.Exists(absolutePath))
+        if (!FileAccess.FileExists(savePath))
         {
-            throw new FileNotFoundException($"Save file not found at {absolutePath}");
+            throw new InvalidOperationException($"Save file not found at {savePath}");
         }
 
-        // 报错直接就失败
-        string jsonText = File.ReadAllText(absolutePath);
+        using FileAccess file = FileAccess.Open(savePath, FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            throw new InvalidOperationException($"Failed to open save file at {savePath}: {FileAccess.GetOpenError()}");
+        }
+
+        string jsonText = file.GetAsText();
         using JsonDocument doc = JsonDocument.Parse(jsonText);
         return (Dictionary<string, object>)toNativeCsharp(doc.RootElement)!;
-
     }
 
 
@@ -30,19 +32,14 @@ public static class JsonUtility
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                Dictionary<string, object> dict = new();
-                foreach (JsonProperty prop in element.EnumerateObject())
-                {
-                    dict[prop.Name] = toNativeCsharp(prop.Value)!;
-                }
-                return dict;
+                return element
+                    .EnumerateObject()
+                    .ToDictionary(prop => prop.Name, prop => toNativeCsharp(prop.Value)!);
             case JsonValueKind.Array:
-                List<object> list = new();
-                foreach (JsonElement item in element.EnumerateArray())
-                {
-                    list.Add(toNativeCsharp(item)!);
-                }
-                return list;
+                return element
+                    .EnumerateArray()
+                    .Select(item => toNativeCsharp(item)!)
+                    .ToList();
             case JsonValueKind.String:
                 return element.GetString();
             case JsonValueKind.Number:

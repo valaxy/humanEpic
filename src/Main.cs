@@ -18,7 +18,7 @@ public partial class Main : Node3D
 
 	// 主摄像机节点。
 	private GameCamera camera = null!;
-	
+
 	// 视图层顶层入口。
 	private GameView view = new GameView();
 	// 领域层顶层入口。
@@ -29,12 +29,11 @@ public partial class Main : Node3D
 	public override void _Ready()
 	{
 		camera = GetNode<GameCamera>("Camera3D");
-		world = new GameWorld();
+		world = GameWorldInitializer.Load();
 
 		addCoreNodes();
 		setupView();
 		setupUi();
-		initializeGridVisuals();
 	}
 
 	public override void _Process(double delta)
@@ -51,7 +50,7 @@ public partial class Main : Node3D
 	// 初始化视图层。
 	private void setupView()
 	{
-		view.Setup(camera);
+		view.Setup(camera, world, DefaultMapWidth, DefaultMapHeight);
 	}
 
 	// 初始化并挂载主 UI。
@@ -63,9 +62,11 @@ public partial class Main : Node3D
 		mainUi.Setup(world, camera, view.LayerManager);
 	}
 
-	// 根据默认地图尺寸初始化网格渲染。
-	private void initializeGridVisuals()
-	{
-		view.UpdateGridVisuals(DefaultMapWidth, DefaultMapHeight);
-	}
 }
+
+
+// // 根据默认地图尺寸初始化网格渲染。
+// private void initializeGridVisuals()
+// {
+// 	view.UpdateGridVisuals(DefaultMapWidth, DefaultMapHeight);
+// }

@@ -3,8 +3,7 @@ using Godot;
 /// <summary>
 /// 文本型信息条目。
 /// </summary>
-[GlobalClass]
-public partial class InfoTextEntryData : InfoEntryData
+public class InfoTextEntryData : InfoEntryData
 {
     /// <summary>
     /// 文本值。

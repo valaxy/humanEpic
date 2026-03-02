@@ -2,9 +2,9 @@
 
 [ext_resource type="PackedScene" path="res://src/chart/reusable_data_table.tscn" id="1_table"]
 [ext_resource type="PackedScene" path="res://src/chart/line_chart.tscn" id="2_line"]
-[ext_resource type="Script" path="res://src/chart/ChartDemoEntryNode.cs" id="3_script"]
+[ext_resource type="Script" path="res://src/chart/ChartDemo.cs" id="3_script"]
 
-[node name="ChartDemoEntry" type="Control"]
+[node name="ChartDemo" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

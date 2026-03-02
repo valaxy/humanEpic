@@ -1,10 +1,8 @@
-using Godot;
 
 /// <summary>
 /// 数值型信息条目。
 /// </summary>
-[GlobalClass]
-public partial class InfoNumberEntryData : InfoEntryData
+public class InfoNumberEntryData : InfoEntryData
 {
 	/// <summary>
 	/// 数值。
@@ -20,8 +18,8 @@ public partial class InfoNumberEntryData : InfoEntryData
 		Value = value;
 	}
 
-    public override string ToText()
-    {
-        return Value.ToString("0.##");
-    }
+	public override string ToText()
+	{
+		return Value.ToString("0.##");
+	}
 }

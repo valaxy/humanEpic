@@ -4,7 +4,7 @@ using Godot;
 /// 折线图组件，使用 DataSource 中的序列数据进行绘制。
 /// </summary>
 [GlobalClass]
-public partial class LineChartNode : Control
+public partial class LineChart : Control
 {
     // 图表区域内边距。
     private const float ChartPadding = 24f;

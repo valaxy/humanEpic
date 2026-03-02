@@ -6,21 +6,21 @@ using Godot.Collections;
 /// Chart 组件测试入口，集中展示常用图表组件。
 /// </summary>
 [GlobalClass]
-public partial class ChartDemoEntryNode : Control
+public partial class ChartDemo : Control
 {
     // 表格演示组件。
-    private ReusableDataTableNode tableDemo = null!;
+    private ReusableDataTable tableDemo = null!;
 
     // 折线图演示组件。
-    private LineChartNode lineChartDemo = null!;
+    private LineChart lineChartDemo = null!;
 
     /// <summary>
     /// 初始化并渲染所有 Demo 数据。
     /// </summary>
     public override void _Ready()
     {
-        tableDemo = GetNode<ReusableDataTableNode>("%TableDemo");
-        lineChartDemo = GetNode<LineChartNode>("%LineChartDemo");
+        tableDemo = GetNode<ReusableDataTable>("%TableDemo");
+        lineChartDemo = GetNode<LineChart>("%LineChartDemo");
         renderDemos();
     }
 

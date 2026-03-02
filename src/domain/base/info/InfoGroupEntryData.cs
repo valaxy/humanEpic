@@ -1,11 +1,10 @@
 using System;
-using Godot;
+
 
 /// <summary>
 /// 分组型信息条目。
 /// </summary>
-[GlobalClass]
-public partial class InfoGroupEntryData : InfoEntryData
+public class InfoGroupEntryData : InfoEntryData
 {
     /// <summary>
     /// 分组数据。

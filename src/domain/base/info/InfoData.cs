@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using Godot;
+
 
 /// <summary>
 /// 用于视觉层渲染的信息承载类，支持文本、进度和分组
 /// </summary>
-[GlobalClass]
-public partial class InfoData : RefCounted
+public class InfoData
 {
 	private List<(string key, InfoEntryData value)> entries { get; } = new();
 

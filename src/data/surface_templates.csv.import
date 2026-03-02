@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://lk7yvmntuaow"
+
+[deps]
+
+files=["res://src/data/surface_templates.name.translation", "res://src/data/surface_templates.color.translation"]
+
+source_file="res://src/data/surface_templates.csv"
+dest_files=["res://src/data/surface_templates.name.translation", "res://src/data/surface_templates.color.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

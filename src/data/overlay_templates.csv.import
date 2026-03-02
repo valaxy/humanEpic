@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bi57tsr6ybegt"
+
+[deps]
+
+files=["res://src/data/overlay_templates.name.translation", "res://src/data/overlay_templates.color.translation", "res://src/data/overlay_templates.max.translation", "res://src/data/overlay_templates.valid.translation"]
+
+source_file="res://src/data/overlay_templates.csv"
+dest_files=["res://src/data/overlay_templates.name.translation", "res://src/data/overlay_templates.color.translation", "res://src/data/overlay_templates.max.translation", "res://src/data/overlay_templates.valid.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

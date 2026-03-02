@@ -1,12 +1,10 @@
 using System;
 using System.Diagnostics;
-using Godot;
 
 /// <summary>
 /// 进度型信息条目。
 /// </summary>
-[GlobalClass]
-public partial class InfoProgressEntryData : InfoEntryData
+public class InfoProgressEntryData : InfoEntryData
 {
     /// <summary>
     /// 进度值，范围通常在 0 到 1 之间。

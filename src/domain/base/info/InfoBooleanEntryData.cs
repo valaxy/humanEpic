@@ -1,10 +1,8 @@
-using Godot;
 
 /// <summary>
 /// 布尔型信息条目。
 /// </summary>
-[GlobalClass]
-public partial class InfoBooleanEntryData : InfoEntryData
+public class InfoBooleanEntryData : InfoEntryData
 {
     /// <summary>
     /// 布尔值。

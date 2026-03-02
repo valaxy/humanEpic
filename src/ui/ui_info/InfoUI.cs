@@ -198,20 +198,6 @@ public partial class InfoUI : CanvasLayer
 	{
 		closeButton.CustomMinimumSize = new Vector2(36.0f, 36.0f);
 		closeButton.AddThemeFontSizeOverride("font_size", 22);
-		closeButton.MouseEntered += onCloseButtonMouseEntered;
-		closeButton.MouseExited += onCloseButtonMouseExited;
-	}
-
-	// 关闭按钮悬停时放大。
-	private void onCloseButtonMouseEntered()
-	{
-		closeButton.Scale = new Vector2(1.12f, 1.12f);
-	}
-
-	// 关闭按钮离开悬停时恢复大小。
-	private void onCloseButtonMouseExited()
-	{
-		closeButton.Scale = Vector2.One;
 	}
 
 	// 创建一个视觉进度条。

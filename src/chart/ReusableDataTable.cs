@@ -4,7 +4,7 @@ using Godot;
 /// 可复用数据表格组件，负责将 DataSource 渲染为二维表格。
 /// </summary>
 [GlobalClass]
-public partial class ReusableDataTableNode : VBoxContainer
+public partial class ReusableDataTable : VBoxContainer
 {
     // 表格标题标签。
     private Label titleLabel = null!;

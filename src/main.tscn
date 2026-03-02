@@ -1,9 +1,16 @@
 [gd_scene format=3 uid="uid://hoq6vni8rmi0"]
 
-[node name="Main" type="Control"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[ext_resource type="Script" path="res://src/Main.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/view/camera/GameCamera.cs" id="2_camera_script"]
+
+[node name="Main" type="Node3D" unique_id=1978187632]
+script = ExtResource("1_script")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1026684416]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 80, 80)
+far = 500.0
+script = ExtResource("2_camera_script")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2026774878]
+transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 5, 0)
+shadow_enabled = true

@@ -6,10 +6,10 @@ uid="uid://cvlalm8ylsbiv"
 
 [deps]
 
-files=["res://src/data/demand_templates.name.translation", "res://src/data/demand_templates.default.translation", "res://src/data/demand_templates.utility.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.max.translation"]
+files=["res://src/data/demand_templates.name.translation", "res://src/data/demand_templates.utility.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.max.translation"]
 
 source_file="res://src/data/demand_templates.csv"
-dest_files=["res://src/data/demand_templates.name.translation", "res://src/data/demand_templates.default.translation", "res://src/data/demand_templates.utility.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.max.translation"]
+dest_files=["res://src/data/demand_templates.name.translation", "res://src/data/demand_templates.utility.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.target.translation", "res://src/data/demand_templates.max.translation"]
 
 [params]
 

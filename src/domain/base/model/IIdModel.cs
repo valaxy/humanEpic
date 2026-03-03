@@ -1,9 +1,5 @@
-
-
-
-
 /// <summary>
-/// 所有实体类的接口
+/// Id作为唯一标识符的实体类的接口
 /// </summary>
 public interface IIdModel
 {

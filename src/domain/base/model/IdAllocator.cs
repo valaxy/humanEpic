@@ -12,16 +12,17 @@ public class IdAllocator
     /// <summary>
     /// 分配一个新的唯一ID
     /// </summary>
-    public int AllocateId()
+    public int AllocateId(int? id)
     {
-        return nextId++;
-    }
-
-    /// <summary>
-    /// 避免分配已经存在的ID，确保下一个分配的ID不小于指定ID
-    /// </summary>
-    public void AvoidShow(int id)
-    {
-        nextId = Math.Max(nextId, id + 1);
+        if (id.HasValue)
+        {
+            int retId = id.Value;
+            nextId = Math.Max(nextId, retId + 1);
+            return retId;
+        }
+        else
+        {
+            return nextId++;
+        }
     }
 }

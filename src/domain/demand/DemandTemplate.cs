@@ -48,8 +48,7 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 			[
 				CsvColumnDefinition.Enum<DemandType.Enums>("type"),
 				CsvColumnDefinition.String("name"),
-				CsvColumnDefinition.Float("default_per_capita_max_amount", 0.0f),
-				CsvColumnDefinition.Enum<DemandUtilityType.Enums>("utility_type"),
+				CsvColumnDefinition.String("utility_type"),
 				CsvColumnDefinition.Float("target_degree", 0.001f),
 				CsvColumnDefinition.Float("target_utility_ratio", 0.001f, 0.999f),
 				CsvColumnDefinition.Float("max_utility", 0.0f)
@@ -72,10 +71,10 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 	// 创建需求效用函数实例。
 	private static IDemandUtility createDemandUtility(CsvRow row)
 	{
-		DemandUtilityType.Enums utilityType = row.Get<DemandUtilityType.Enums>("utility_type");
+		string utilityType = CsvValueUtility.NormalizeKey(row.Get<string>("utility_type"));
 		return utilityType switch
 		{
-			DemandUtilityType.Enums.SATURATION_SURVIVAL =>
+			"SATURATION_SURVIVAL" =>
 				new SaturationSurvivalUtilityFunction(
 					row.Get<float>("target_degree"),
 					row.Get<float>("target_utility_ratio"),

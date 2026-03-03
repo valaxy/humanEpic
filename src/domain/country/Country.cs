@@ -6,7 +6,7 @@ using Godot;
 /// </summary>
 public class Country : IIdModel
 {
-	private static readonly IdAllocator a = new();
+	private static readonly IdAllocator idAllocator = new();
 
 	/// <summary>
 	/// 国家唯一标识
@@ -33,14 +33,6 @@ public class Country : IIdModel
 	{
 		Name = name;
 		Color = color;
-		if (id.HasValue)
-		{
-			Id = id.Value;
-			a.AvoidShow(Id);
-		}
-		else
-		{
-			Id = a.AllocateId();
-		}
+		Id = idAllocator.AllocateId(id);
 	}
 }

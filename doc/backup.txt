@@ -1,0 +1,17 @@
+- 文件独立原则：每个文件代表不同的关注点，避免文件职责混乱
+- XXXNode: emit signal, get/set funciton
+- XXXInteraction: process logic
+- XXXController: handle input, update state
+
+
+## Interaction类
+- 类名命名为`XXXInteraction`，例如：`PlayerInteraction`
+- 只包含与游戏世界交互相关的处理函数，例如：简单的鼠标点击处理、复杂的地图操作处理等
+- 纯逻辑，不继承Godot对象，不被其他模块依赖，信号到处理函数的路由在`Controller`注册
+
+# Controller类
+- 类名命名为`XXXController`，例如：`GameController`
+- 将Node抛出的信号路由到Interaction的处理函数
+
+https://www.youtube.com/watch?v=pG9SoTF1mCI&t=2385s
+

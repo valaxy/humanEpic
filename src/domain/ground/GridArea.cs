@@ -4,6 +4,7 @@ using GCol = Godot.Collections;
 
 /// <summary>
 /// 地格区域逻辑，负责管理和搜索连通的地格区域
+/// 代码没有REVIEWD过的 TODO
 /// </summary>
 [GlobalClass]
 public partial class GridArea : RefCounted

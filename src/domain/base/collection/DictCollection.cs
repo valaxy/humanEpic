@@ -7,7 +7,6 @@ using System.Linq;
 /// 基于字典的通用领域模型集合基类
 /// 提供基于 Key 的高效查找，同时满足 ICollection 接口
 /// </summary>
-/// 
 public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
     where TKey : notnull
 {
@@ -76,7 +75,7 @@ public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
     {
         TKey key = GetKey(item);
         Debug.Assert(items.ContainsKey(key), "对象不存在于集合中");
-        
+
         items.Remove(key);
         Removed?.Invoke(item);
     }

@@ -1,10 +1,17 @@
 using System.Collections.Generic;
+using System;
+using System.Linq;
 
 /// <summary>
 /// 领域层统一模拟入口，管理并更新所有的世界逻辑（IWorldLogic）
 /// </summary>
 public class Simulation
 {
+	/// <summary>
+	/// 当任意世界逻辑触发时发出。
+	/// </summary>
+	public event Action<IWorldLogic>? LogicTriggered;
+
 	// 当前已注册的世界逻辑集合。
 	private readonly List<IWorldLogic> logics = new();
 
@@ -19,6 +26,7 @@ public class Simulation
 	public Simulation()
 	{
 		logics.Add(helloWorldLogic);
+		logics.ForEach(logic => logic.Triggered += onLogicTriggered);
 	}
 
 	/// <summary>
@@ -27,10 +35,7 @@ public class Simulation
 	/// <param name="delta">时间增量（秒）</param>
 	public void Update(double delta)
 	{
-		foreach (IWorldLogic logic in logics)
-		{
-			logic.UpdateDelta((float)delta);
-		}
+		logics.ForEach(logic => logic.UpdateDelta((float)delta));
 	}
 
 	/// <summary>
@@ -39,5 +44,11 @@ public class Simulation
 	public IReadOnlyList<IWorldLogic> GetWorldLogics()
 	{
 		return logics;
+	}
+
+	// 转发逻辑触发事件。
+	private void onLogicTriggered(IWorldLogic logic)
+	{
+		LogicTriggered?.Invoke(logic);
 	}
 }

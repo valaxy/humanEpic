@@ -31,6 +31,9 @@ public partial class WorldLogicStatusUI : PanelContainer
 	// 世界模拟引用。
 	private Simulation? simulation;
 
+	// 气泡消息容器。
+	private BubbleMessageContainerUI bubbleMessageContainer = null!;
+
 	// 行缓存列表。
 	private readonly List<LogicRow> logicRows = new List<LogicRow>();
 
@@ -47,7 +50,14 @@ public partial class WorldLogicStatusUI : PanelContainer
 	/// </summary>
 	public void Setup(Simulation simulationRef)
 	{
+		if (simulation != null)
+		{
+			simulation.LogicTriggered -= onLogicTriggered;
+		}
+
 		simulation = simulationRef;
+		bubbleMessageContainer = (BubbleMessageContainerUI)GetTree().GetFirstNodeInGroup("bubble_message_container");
+		simulation.LogicTriggered += onLogicTriggered;
 		rebuildRows();
 	}
 
@@ -122,5 +132,11 @@ public partial class WorldLogicStatusUI : PanelContainer
 		float progressValue = row.Logic.GetProgressRatio();
 		row.ProgressBar.Value = progressValue;
 		row.PercentLabel.Text = $"{(int)(progressValue * 100.0f)}%";
+	}
+
+	// 响应世界逻辑触发并展示气泡信息。
+	private void onLogicTriggered(IWorldLogic logic)
+	{
+		bubbleMessageContainer.AddMessage(logic.Name);
 	}
 }

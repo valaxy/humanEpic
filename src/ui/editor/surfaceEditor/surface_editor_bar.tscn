@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://bea1j36b7lw20"]
+
+[ext_resource type="PackedScene" uid="uid://b6p5v2k8j3m4n" path="res://src/ui/editor/base/editor_window.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://vwmtc18u880x" path="res://src/ui/editor/surfaceEditor/surface_editor_bar.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/surfaceEditor/map_resize_ui.tscn" id="3_scene"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/brushForm/brush_form.tscn" id="4_brush"]
+
+[node name="TerrainEditorBar" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+
+[node name="ContentContainer" parent="PanelContainer/MarginContainer" index="0"]
+
+[node name="MainHBox" type="HBoxContainer" parent="PanelContainer/MarginContainer/ContentContainer" index="1"]
+layout_mode = 2
+
+[node name="MapResizeUI" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox" instance=ExtResource("3_scene")]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VSeparator" type="VSeparator" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox" index="1"]
+layout_mode = 2
+
+[node name="RightVBox" type="VBoxContainer" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox" index="2"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="TerrainRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox/RightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="HeightRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox/RightVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="BrushForm" parent="PanelContainer/MarginContainer/ContentContainer/MainHBox/RightVBox" instance=ExtResource("4_brush")]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1

@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://c67f8f6n5m6t7"]
+
+[ext_resource type="Script" path="res://src/ui/editor/brushForm/BrushForm.cs" id="1_script"]
+
+[node name="BrushForm" type="HBoxContainer"]
+alignment = 1
+script = ExtResource("1_script")
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "笔刷大小: "
+mouse_filter = 1
+
+[node name="BrushSizeSpinBox" type="SpinBox" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+value = 1.0
+mouse_filter = 1

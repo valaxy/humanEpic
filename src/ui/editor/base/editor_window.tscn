@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b6p5v2k8j3m4n"]
 
-[ext_resource type="Script" path="res://src/ui/base/EditorWindow.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/ui/editor/base/EditorWindow.cs" id="1_script"]
 
 [node name="EditorWindow" type="CanvasLayer"]
 script = ExtResource("1_script")

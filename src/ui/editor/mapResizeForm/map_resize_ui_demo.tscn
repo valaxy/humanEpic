@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/editor/surfaceEditor/MapResizeUIDemo.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/surfaceEditor/map_resize_ui.tscn" id="2_map_resize"]
+
+[node name="MapResizeUIDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -80.0
+offset_right = 220.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="MapResizeUI" parent="VBox" instance=ExtResource("2_map_resize")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SetPresetButton" type="Button" parent="VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "设为 128 x 96"
+
+[node name="ReadButton" type="Button" parent="VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "读取当前值"
+
+[node name="StatusLabel" type="Label" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "等待操作..."

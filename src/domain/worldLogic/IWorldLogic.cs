@@ -1,10 +1,15 @@
-
+using System;
 
 /// <summary>
 /// 世界逻辑接口，定义世界级别的持续性逻辑处理
 /// </summary>
 public interface IWorldLogic
 {
+    /// <summary>
+    /// 当该逻辑完成一次触发时发出。
+    /// </summary>
+    event Action<IWorldLogic> Triggered;
+
     /// <summary>
     /// 世界逻辑名称（短文本）
     /// </summary>

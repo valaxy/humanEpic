@@ -5,6 +5,11 @@ using System;
 /// </summary>
 public abstract class WorldLogic : IWorldLogic
 {
+    /// <summary>
+    /// 当该逻辑完成一次触发时发出。
+    /// </summary>
+    public event Action<IWorldLogic>? Triggered;
+
     // 已累计的天数。
     private float elapsedDays;
 
@@ -49,6 +54,7 @@ public abstract class WorldLogic : IWorldLogic
         if (intervalDays <= 0.0f)
         {
             ProcessLogic();
+            Triggered?.Invoke(this);
             return;
         }
 
@@ -57,6 +63,7 @@ public abstract class WorldLogic : IWorldLogic
         {
             elapsedDays -= intervalDays;
             ProcessLogic();
+            Triggered?.Invoke(this);
         }
     }
 

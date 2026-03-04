@@ -2,7 +2,8 @@
 
 [ext_resource type="Script" path="res://src/ui/gameEditor/GameEditorButtons.cs" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="2_button"]
-[ext_resource type="PackedScene" path="res://src/ui/gameEditor/game_editor_top_right_tools.tscn" id="3_top_right_tools"]
+[ext_resource type="PackedScene" path="res://src/ui/entryButtons/entry_buttons.tscn" id="3_top_right_tools"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/overlayEditor/overlay_editor.tscn" id="4_overlay_editor"]
 
 [node name="GameEditorButtons" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -50,3 +51,7 @@ text = "覆盖物"
 unique_name_in_owner = true
 layout_mode = 2
 text = "建造"
+
+[node name="OverlayEditor" parent="Control" instance=ExtResource("4_overlay_editor")]
+layout_mode = 1
+visible = false

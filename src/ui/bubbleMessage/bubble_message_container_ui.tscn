@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/ui/bubbleMessage/BubbleMessageContainerUI.cs" id="1_script"]
 
 [node name="BubbleMessageContainerUI" type="CanvasLayer"]
+groups = ["bubble_message_container"]
 script = ExtResource("1_script")
 
 [node name="Control" type="Control" parent="."]

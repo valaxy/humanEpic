@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/entryButtons/GridHelperButton.cs" id="1_script"]
+
+[node name="GridButton" type="Button"]
+custom_minimum_size = Vector2(80, 40)
+offset_right = 80.0
+offset_bottom = 40.0
+text = "网格"
+script = ExtResource("1_script")

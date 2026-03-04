@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dp6b7q3l6j8q1"]
+
+[ext_resource type="Script" path="res://src/ui/entryButtons/SaveButtonUI.cs" id="1_v4m2k"]
+
+
+[node name="SaveButtonUI" type="Button"]
+custom_minimum_size = Vector2(80, 40)
+offset_right = 80.0
+offset_bottom = 40.0
+text = "保存地图"
+script = ExtResource("1_v4m2k")

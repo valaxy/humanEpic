@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/gameEditor/GameEditorTopRightTools.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/entryButtons/grid_helper_button.tscn" id="2_grid_button"]
+[ext_resource type="PackedScene" path="res://src/ui/entryButtons/save_button_ui.tscn" id="3_save_button"]
+[ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="4_editor_button"]
+[ext_resource type="PackedScene" path="res://src/ui/worldLogicUI/world_logic_status_ui.tscn" id="5_world_logic_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/encyclopedia/encyclopedia_panel_ui.tscn" id="6_encyclopedia_ui"]
+
+[node name="TopRightTools" type="VBoxContainer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 380.0
+grow_horizontal = 0
+theme_override_constants/separation = 10
+script = ExtResource("1_script")
+
+[node name="RightTopContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="GridButton" parent="RightTopContainer" instance=ExtResource("2_grid_button")]
+layout_mode = 2
+
+[node name="SaveButton" parent="RightTopContainer" instance=ExtResource("3_save_button")]
+layout_mode = 2
+
+[node name="WorldLogicButton" parent="RightTopContainer" instance=ExtResource("4_editor_button")]
+layout_mode = 2
+text = "世界逻辑"
+
+[node name="EncyclopediaButton" parent="RightTopContainer" instance=ExtResource("4_editor_button")]
+layout_mode = 2
+text = "百科全书"
+
+[node name="WorldLogicStatusUI" parent="." instance=ExtResource("5_world_logic_ui")]
+layout_mode = 2
+visible = false
+
+[node name="EncyclopediaPanelUI" parent="." instance=ExtResource("6_encyclopedia_ui")]
+layout_mode = 2
+visible = false

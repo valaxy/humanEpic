@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://ci8w7v2u8k4b8"]
+
+[ext_resource type="Script" path="res://src/ui/gameEditor/GameEditorButtons.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="2_button"]
+[ext_resource type="PackedScene" path="res://src/ui/gameEditor/game_editor_top_right_tools.tscn" id="3_top_right_tools"]
+
+[node name="GameEditorButtons" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopRightTools" parent="Control" instance=ExtResource("3_top_right_tools")]
+layout_mode = 1
+
+[node name="RightBottomContainer" type="HBoxContainer" parent="Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -60.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="TerrainButton" parent="Control/RightBottomContainer" instance=ExtResource("2_button")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "地表"
+
+[node name="ToggleButton" parent="Control/RightBottomContainer" instance=ExtResource("2_button")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "覆盖物"
+
+[node name="BuildButton" parent="Control/RightBottomContainer" instance=ExtResource("2_button")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "建造"

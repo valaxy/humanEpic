@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+
+/// <summary>
+/// 领域层统一模拟入口，管理并更新所有的世界逻辑（IWorldLogic）
+/// </summary>
+public class Simulation
+{
+	// 当前已注册的世界逻辑集合。
+	private readonly List<IWorldLogic> logics = new();
+
+	/// <summary>
+	/// 示例逻辑：不执行任何业务，仅用于连通性验证。
+	/// </summary>
+	private HelloWorldLogic helloWorldLogic { get; } = new HelloWorldLogic();
+
+	/// <summary>
+	/// 构造函数，初始化并注册可用世界逻辑。
+	/// </summary>
+	public Simulation()
+	{
+		logics.Add(helloWorldLogic);
+	}
+
+	/// <summary>
+	/// 每帧更新所有已注册的逻辑
+	/// </summary>
+	/// <param name="delta">时间增量（秒）</param>
+	public void Update(double delta)
+	{
+		foreach (IWorldLogic logic in logics)
+		{
+			logic.UpdateDelta((float)delta);
+		}
+	}
+
+	/// <summary>
+	/// 获取所有世界逻辑（供 UI 展示名称和进度）
+	/// </summary>
+	public IReadOnlyList<IWorldLogic> GetWorldLogics()
+	{
+		return logics;
+	}
+}

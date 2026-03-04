@@ -52,10 +52,7 @@
 # 	add_child(building_editor_bar)
 # 	building_editor_bar.visible = false
 
-# 	product_ui = product_ui_scene.instantiate()
-# 	add_child(product_ui)
-# 	product_ui.setup()
-# 	product_ui.visible = false
+
 # 	selection_node.MarketBuildingSelected.connect(func(building: MarketBuilding):
 # 		product_ui.bind_market(building.ProductMarket, building.LabourMarket)
 # 		product_ui.visible = true
@@ -82,22 +79,6 @@
 # 	add_child(info_ui_right)
 # 	info_ui_right.set_position_offset(310) # 300 width + 10 gap
 	
-# 	# 初始化具体的信息 UI 控制器，共享 info_ui 实例
-# 	grid_info_ui = GridInfoUI.new()
-# 	add_child(grid_info_ui)
-# 	grid_info_ui.setup(ground_node, selection_node, info_ui_left, info_ui_right)
-
-# 	building_info_ui = BuildingInfoUI.new()
-# 	add_child(building_info_ui)
-# 	building_info_ui.setup(ground_node, selection_node, world, info_ui_left)
-
-# 	unit_info_ui = UnitInfoUI.new()
-# 	add_child(unit_info_ui)
-# 	unit_info_ui.setup(selection_node, info_ui_left)
-
-# 	grid_area_ui = GridAreaUI.new()
-# 	add_child(grid_area_ui)
-# 	grid_area_ui.setup(ground_node, grid_area_node, selection_node)
 
 # 	bubble_container = bubble_container_scene.instantiate()
 # 	add_child(bubble_container)

@@ -23,6 +23,8 @@ public partial class Main : Node3D
 	private GameView view = new GameView();
 	// 领域层顶层入口。
 	private GameWorld world = null!;
+	// 世界逻辑模拟入口。
+	private Simulation simulation = null!;
 	// 主 UI 管理器。
 	private MainUI mainUi = null!;
 
@@ -30,6 +32,7 @@ public partial class Main : Node3D
 	{
 		camera = GetNode<GameCamera>("Camera3D");
 		world = GameWorldInitializer.Load();
+		simulation = new Simulation();
 
 		addCoreNodes();
 		setupView();
@@ -39,6 +42,7 @@ public partial class Main : Node3D
 	public override void _Process(double delta)
 	{
 		world.TimeSystem.Update(delta);
+		simulation.Update(delta);
 	}
 
 	// 添加主流程核心节点。
@@ -59,7 +63,7 @@ public partial class Main : Node3D
 		PackedScene mainUiScene = GD.Load<PackedScene>("res://src/ui/main_ui.tscn");
 		mainUi = mainUiScene.Instantiate<MainUI>();
 		AddChild(mainUi);
-		mainUi.Setup(world, camera, view.LayerManager, view.Selection);
+		mainUi.Setup(world, view, simulation, camera, view.LayerManager, view.Selection);
 	}
 
 }

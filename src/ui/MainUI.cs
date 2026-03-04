@@ -16,6 +16,8 @@ public partial class MainUI : Node
 	private InfoUI infoUiRight = null!;
 	// 地格信息控制器。
 	private GridInfoUI gridInfoUi = null!;
+	// 游戏编辑器按钮区域。
+	private GameEditorButtons gameEditorButtons = null!;
 
 	public override void _Ready()
 	{
@@ -24,15 +26,17 @@ public partial class MainUI : Node
 		infoUiLeft = GetNode<InfoUI>("InfoUILeft");
 		infoUiRight = GetNode<InfoUI>("InfoUIRight");
 		gridInfoUi = GetNode<GridInfoUI>("GridInfoUI");
+		gameEditorButtons = GetNode<GameEditorButtons>("GameEditorButtons");
 	}
 
 	/// <summary>
 	/// 初始化主 UI。
 	/// </summary>
-	public void Setup(GameWorld world, GameCamera camera, LayerManagerNode layerManager, GroundSelection selection)
+	public void Setup(GameWorld world, GameView view, Simulation simulation, GameCamera camera, LayerManagerNode layerManager, GroundSelection selection)
 	{
 		zoomUi.Setup(camera, layerManager);
 		timeDisplayUi.Setup(world.TimeSystem);
+		gameEditorButtons.Setup(world, view, simulation);
 
 		infoUiLeft.SetPositionOffset(0.0f);
 		infoUiRight.SetPositionOffset(310.0f);

@@ -1,11 +1,11 @@
 using Godot;
 
 /// <summary>
-/// 笔刷参数表单。
+/// 笔刷参数控制器。
 /// 提供笔刷大小编辑与事件分发能力。
 /// </summary>
 [GlobalClass]
-public partial class BrushForm : HBoxContainer
+public partial class BrushController : HBoxContainer
 {
 	// 笔刷大小输入框。
 	private SpinBox brushSizeSpinBox = null!;

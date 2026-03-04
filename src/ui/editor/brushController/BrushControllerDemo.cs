@@ -1,13 +1,13 @@
 using Godot;
 
 /// <summary>
-/// BrushForm API 演示入口。
+/// BrushController API 演示入口。
 /// </summary>
 [GlobalClass]
-public partial class BrushFormDemo : Control
+public partial class BrushControllerDemo : Control
 {
-	// 笔刷表单组件。
-	private BrushForm brushForm = null!;
+	// 笔刷控制器组件。
+	private BrushController brushController = null!;
 	// 编辑器状态对象。
 	private GroundEditor groundEditor = null!;
 	// 状态显示文本。
@@ -19,14 +19,14 @@ public partial class BrushFormDemo : Control
 
 	public override void _Ready()
 	{
-		brushForm = GetNode<BrushForm>("%BrushForm");
+		brushController = GetNode<BrushController>("%BrushController");
 		statusLabel = GetNode<Label>("%StatusLabel");
 		setByEditorButton = GetNode<Button>("%SetByEditorButton");
 		readCurrentButton = GetNode<Button>("%ReadCurrentButton");
 
 		groundEditor = new GroundEditor();
 		AddChild(groundEditor);
-		brushForm.Setup(groundEditor);
+		brushController.Setup(groundEditor);
 
 		groundEditor.BrushSizeChanged += onGroundEditorChanged;
 		setByEditorButton.Pressed += onSetByEditorPressed;
@@ -41,7 +41,7 @@ public partial class BrushFormDemo : Control
 		statusLabel.Text = $"状态变更 -> GroundEditor:{size}";
 	}
 
-	// 通过 GroundEditor 修改笔刷大小，验证反向同步到 BrushForm。
+	// 通过 GroundEditor 修改笔刷大小，验证反向同步到 BrushController。
 	private void onSetByEditorPressed()
 	{
 		groundEditor.SetBrushSize(7);

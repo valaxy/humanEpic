@@ -1,9 +1,9 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/editor/brushForm/BrushFormDemo.cs" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/editor/brushForm/brush_form.tscn" id="2_brush_form"]
+[ext_resource type="Script" path="res://src/ui/editor/brushController/BrushControllerDemo.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/brushController/brush_controller.tscn" id="2_brush_controller"]
 
-[node name="BrushFormDemo" type="Control"]
+[node name="BrushControllerDemo" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,7 +27,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="BrushForm" parent="VBox" instance=ExtResource("2_brush_form")]
+[node name="BrushController" parent="VBox" instance=ExtResource("2_brush_controller")]
 unique_name_in_owner = true
 layout_mode = 2
 

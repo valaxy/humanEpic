@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://c67f8f6n5m6t7"]
 
-[ext_resource type="Script" path="res://src/ui/editor/brushForm/BrushForm.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/ui/editor/brushController/BrushController.cs" id="1_script"]
 
-[node name="BrushForm" type="HBoxContainer"]
+[node name="BrushController" type="HBoxContainer"]
 alignment = 1
 script = ExtResource("1_script")
 mouse_filter = 0

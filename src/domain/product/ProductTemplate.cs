@@ -83,20 +83,14 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 	/// 获取全部模板映射
 	/// </summary>
 	/// <returns>键为产品类型的模板字典</returns>
-	public static Dictionary<ProductType.Enums, ProductTemplate> GetTemplates()
-	{
-		return templates;
-	}
+	public static Dictionary<ProductType.Enums, ProductTemplate> GetTemplates() => templates;
 
 	/// <summary>
 	/// 根据产品类型获取模板
 	/// </summary>
 	/// <param name="type">产品类型</param>
 	/// <returns>对应的产品模板</returns>
-	public static ProductTemplate GetTemplate(ProductType.Enums type)
-	{
-		return templates[type];
-	}
+	public static ProductTemplate GetTemplate(ProductType.Enums type) => templates[type];
 
 
 

@@ -59,16 +59,10 @@ public abstract class BuildingTemplate : ITemplate<string, BuildingTemplate>
 	/// <summary>
 	/// 获取模板实例
 	/// </summary>
-	public static BuildingTemplate GetTemplate(string name)
-	{
-		return templates[name];
-	}
+	public static BuildingTemplate GetTemplate(string name) => templates[name];
 
 	/// <summary>
 	/// 获取所有模板实例
 	/// </summary>
-	public static Dictionary<string, BuildingTemplate> GetTemplates()
-	{
-		return templates;
-	}
+	public static Dictionary<string, BuildingTemplate> GetTemplates() => templates;
 }

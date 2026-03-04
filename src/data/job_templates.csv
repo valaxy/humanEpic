@@ -1,0 +1,8 @@
+type          ,name
+LUMBERJACK    ,伐木工
+MINER         ,矿工
+MILITIA       ,民兵
+MARKET_WORKER ,市场工
+FACTORY_WORKER,工厂工人
+MANAGER       ,管理者
+RESIDENT      ,居民

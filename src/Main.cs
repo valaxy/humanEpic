@@ -59,7 +59,7 @@ public partial class Main : Node3D
 		PackedScene mainUiScene = GD.Load<PackedScene>("res://src/ui/main_ui.tscn");
 		mainUi = mainUiScene.Instantiate<MainUI>();
 		AddChild(mainUi);
-		mainUi.Setup(world, camera, view.LayerManager);
+		mainUi.Setup(world, camera, view.LayerManager, view.Selection);
 	}
 
 }

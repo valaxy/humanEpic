@@ -86,16 +86,10 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 	/// <summary>
 	/// 获取所有需求模板
 	/// </summary>
-	public static Dictionary<DemandType.Enums, DemandTemplate> GetTemplates()
-	{
-		return templates;
-	}
+	public static Dictionary<DemandType.Enums, DemandTemplate> GetTemplates() => templates;
 
 	/// <summary>
 	/// 获取指定需求模板
 	/// </summary>
-	public static DemandTemplate GetTemplate(DemandType.Enums type)
-	{
-		return templates[type];
-	}
+	public static DemandTemplate GetTemplate(DemandType.Enums type) => templates[type];
 }

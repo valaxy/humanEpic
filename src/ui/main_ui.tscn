@@ -1,10 +1,11 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/MainUI.cs" id="1_main_ui_script"]
+[ext_resource type="Script" path="res://src/ui/infoUI/grid/GridInfoUI.cs" id="5_grid_info_script"]
+
 [ext_resource type="PackedScene" path="res://src/ui/zoomUI/zoom_ui.tscn" id="2_zoom_ui_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/timeDisplay/time_display_ui.tscn" id="3_time_display_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/infoUI/info_ui.tscn" id="4_info_ui_scene"]
-[ext_resource type="Script" path="res://src/ui/infoUI/GridInfoUI.cs" id="5_grid_info_script"]
 [ext_resource type="PackedScene" path="res://src/ui/gameEditor/game_editor_buttons.tscn" id="6_game_editor_buttons_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/bubbleMessage/bubble_message_container_ui.tscn" id="7_bubble_container_scene"]
 

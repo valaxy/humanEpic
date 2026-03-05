@@ -65,11 +65,11 @@ public partial class InfoUIDemo : Control
 
 		InfoData workerGroup = new InfoData();
 		workerGroup.AddText("负责人", "林涛");
-		workerGroup.AddProgress("出勤率", 0.92f, "92%") ;
+		workerGroup.AddProgress("出勤率", 0.92f, "92%");
 
 		InfoData logisticsGroup = new InfoData();
-		logisticsGroup.AddProgress("装载率", 0.68f, "68%") ;
-		logisticsGroup.AddProgress("拥堵指数", 0.12f, "112%") ;
+		logisticsGroup.AddProgress("装载率", 0.68f, "68%");
+		logisticsGroup.AddProgress("拥堵指数", 0.12f, "112%");
 
 		infoData.AddGroup("人员", workerGroup);
 		infoData.AddGroup("物流", logisticsGroup);

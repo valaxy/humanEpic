@@ -8,10 +8,7 @@ using Godot;
 /// </summary>
 public class CountryCollection : DictCollection<int, Country>, ICollectionPersistence
 {
-	protected override int GetKey(Country item)
-	{
-		return item.Id;
-	}
+	protected override int GetKey(Country item) => item.Id;
 
 	public List<Dictionary<string, object>> GetSaveData()
 	{

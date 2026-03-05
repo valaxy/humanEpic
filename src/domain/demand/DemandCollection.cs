@@ -7,10 +7,7 @@ using System.Linq;
 /// </summary>
 public class DemandCollection : DictCollection<DemandType.Enums, Demand>, ICollectionPersistence, IInfo
 {
-	protected override DemandType.Enums GetKey(Demand item)
-	{
-		return item.Type;
-	}
+	protected override DemandType.Enums GetKey(Demand item) => item.Type;
 
 	/// <summary>
 	/// 构造函数，初始化所有已知需求类型，满足度默认为 0

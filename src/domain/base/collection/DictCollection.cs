@@ -59,7 +59,7 @@ public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
     /// <summary>
     /// 添加对象到集合
     /// </summary>
-    public void Add(TValue item)
+    public virtual void Add(TValue item)
     {
         TKey key = GetKey(item);
         Debug.Assert(!items.ContainsKey(key), "对象已存在于集合中");
@@ -71,7 +71,7 @@ public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
     /// <summary>
     /// 从集合中移除对象
     /// </summary>
-    public void Remove(TValue item)
+    public virtual void Remove(TValue item)
     {
         TKey key = GetKey(item);
         Debug.Assert(items.ContainsKey(key), "对象不存在于集合中");
@@ -83,7 +83,7 @@ public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
     /// <summary>
     /// 清空集合
     /// </summary>
-    public void Clear()
+    public virtual void Clear()
     {
         items.Clear();
     }

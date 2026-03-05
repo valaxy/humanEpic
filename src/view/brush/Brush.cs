@@ -61,7 +61,6 @@ public partial class Brush : MeshInstance3D
 
 		Size = clampedValue;
 		updateVisualSize();
-		EmitSignal(SignalName.SizeChanged, Size);
 	}
 
 
@@ -80,5 +79,6 @@ public partial class Brush : MeshInstance3D
 	{
 		BoxMesh boxMesh = (Mesh as BoxMesh)!;
 		boxMesh.Size = new Vector3(Size + 0.1f, 0.2f, Size + 0.1f);
+		EmitSignal(SignalName.SizeChanged, Size);
 	}
 }

@@ -41,7 +41,7 @@ public abstract class ListCollection<T> : ICollection<T>
 	/// <summary>
 	/// 添加对象到集合
 	/// </summary>
-	public void Add(T item)
+	public virtual void Add(T item)
 	{
 		Debug.Assert(!items.Contains(item), "对象已存在于集合中");
 		items.Add(item);
@@ -51,7 +51,7 @@ public abstract class ListCollection<T> : ICollection<T>
 	/// <summary>
 	/// 从集合中移除对象
 	/// </summary>
-	public void Remove(T item)
+	public virtual void Remove(T item)
 	{
 		Debug.Assert(items.Contains(item), "对象已存在于集合中");
 		items.Remove(item);
@@ -62,7 +62,7 @@ public abstract class ListCollection<T> : ICollection<T>
 	/// <summary>
 	/// 清空集合
 	/// </summary>
-	public void Clear()
+	public virtual void Clear()
 	{
 		items.Clear();
 	}

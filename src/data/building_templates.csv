@@ -1,0 +1,4 @@
+type       ,name    ,color   ,construction_cost
+Residential,民宅    ,CD853F  ,WOOD:60;STONE:20
+Harvest    ,采集点  ,556B2F  ,WOOD:40;STONE:10
+Market     ,市场    ,B22222  ,WOOD:80;STONE:40;TOOLS:10

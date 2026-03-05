@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://chovn1upn055w"
+
+[deps]
+
+files=["res://src/data/building_templates.name    .translation", "res://src/data/building_templates.color   .translation", "res://src/data/building_templates.construction.translation"]
+
+source_file="res://src/data/building_templates.csv"
+dest_files=["res://src/data/building_templates.name    .translation", "res://src/data/building_templates.color   .translation", "res://src/data/building_templates.construction.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

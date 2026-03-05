@@ -12,6 +12,8 @@ public partial class GroundSelection : Node
     private GameWorld world = null!;
     // 地面交互入口引用。
     private GroundView groundView = null!;
+    // 建筑渲染集合入口。
+    private BuildingCollectionNode buildingCollectionNode = null!;
     // 地面选中光标。
     private GroundCursor groundCursor = null!;
 
@@ -40,12 +42,25 @@ public partial class GroundSelection : Node
     public delegate void SelectionClearedEventHandler();
 
     /// <summary>
+    /// 当建筑被选中时发出。
+    /// </summary>
+    [Signal]
+    public delegate void BuildingSelectedEventHandler(Vector2I cellPos);
+
+    /// <summary>
+    /// 当建筑选中被清理时发出。
+    /// </summary>
+    [Signal]
+    public delegate void BuildingSelectionClearedEventHandler();
+
+    /// <summary>
     /// 初始化选中管理器并绑定地面交互信号。
     /// </summary>
-    public void Setup(GameWorld world, GroundView groundView)
+    public void Setup(GameWorld world, GroundView groundView, BuildingCollectionNode buildingCollectionNode)
     {
         this.world = world;
         this.groundView = groundView;
+        this.buildingCollectionNode = buildingCollectionNode;
 
         groundCursor = GroundCursorScene.Instantiate<GroundCursor>();
         AddChild(groundCursor);
@@ -53,10 +68,17 @@ public partial class GroundSelection : Node
         groundView.CellClicked += onGroundCellClicked;
         groundView.CellHovered += onGroundCellHovered;
         groundView.CellHoverCleared += onGroundCellHoverCleared;
+        buildingCollectionNode.BuildingClicked += onBuildingClicked;
     }
 
     // 处理地格点击行为。
     private void onGroundCellClicked(Vector2I cellPos)
+    {
+        ProcessSelection(cellPos);
+    }
+
+    // 处理建筑几何体点击行为。
+    private void onBuildingClicked(Vector2I cellPos)
     {
         ProcessSelection(cellPos);
     }
@@ -82,6 +104,17 @@ public partial class GroundSelection : Node
         {
             ShowCellSelection(cellPos);
             EmitSignal(SignalName.CellSelected, cellPos);
+
+            if (world.Buildings.HasKey(cellPos))
+            {
+                Building building = world.Buildings.Get(cellPos);
+                buildingCollectionNode.ShowBuildingVirtual(building);
+                EmitSignal(SignalName.BuildingSelected, cellPos);
+                return;
+            }
+
+            buildingCollectionNode.HideBuildingInfo();
+            EmitSignal(SignalName.BuildingSelectionCleared);
             return;
         }
 
@@ -102,7 +135,9 @@ public partial class GroundSelection : Node
     public void ClearSelection()
     {
         groundCursor.Clear();
+        buildingCollectionNode.HideBuildingInfo();
         EmitSignal(SignalName.SelectionCleared);
+        EmitSignal(SignalName.BuildingSelectionCleared);
     }
 }
 

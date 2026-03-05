@@ -46,7 +46,7 @@ public partial class GameView : Node3D
 		};
 
 		GroundView.Setup(world.Ground, world.Buildings, LayerManager, GridRender, camera);
-		Selection.Setup(world, GroundView);
+		Selection.Setup(world, GroundView, BuildingCollection);
 		BuildingCollection.Setup(world);
 
 		// 1. 初始化基础显示组件

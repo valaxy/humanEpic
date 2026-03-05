@@ -1,25 +1,28 @@
 using Godot;
 
 /// <summary>
-/// 单个建筑的 3D 表现节点，负责非批量渲染的部分（如标签、进度条）
+/// 单个建筑的 3D 表现节点
 /// </summary>
 [GlobalClass]
-public partial class BuildingNode : Node3D
+public partial class BuildingView : Node3D
 {
 	private Sprite3D storageBarSprite = null!;
 	private BuildingMesh meshRender = null!;
+	private StaticBody3D pickBody = null!;
+	private Building currentBuilding = null!;
 
 	private static readonly PackedScene meshScene = GD.Load<PackedScene>("res://src/view/building/BuildingMesh.tscn");
 
+	/// <summary>
+	/// 当建筑几何体被点击时发出。
+	/// </summary>
+	[Signal]
+	public delegate void BuildingClickedEventHandler(Vector2I cellPos);
+
 	public override void _Ready()
 	{
-		ensureInitialized();
-	}
-
-	private void ensureInitialized()
-	{
-		if (meshRender != null) return;
 		setupMesh();
+		setupPickBody();
 		setupStorageBar();
 	}
 
@@ -27,6 +30,23 @@ public partial class BuildingNode : Node3D
 	{
 		meshRender = meshScene.Instantiate<BuildingMesh>();
 		AddChild(meshRender);
+	}
+
+	private void setupPickBody()
+	{
+		// 处理与鼠标碰撞的问题
+		pickBody = new StaticBody3D();
+		pickBody.InputRayPickable = true;
+		pickBody.InputEvent += onPickBodyInputEvent;
+
+		CollisionShape3D collisionShape = new CollisionShape3D();
+		BoxShape3D boxShape = new BoxShape3D();
+		boxShape.Size = new Vector3(0.9f, 0.8f, 0.9f);
+		collisionShape.Shape = boxShape;
+		collisionShape.Position = new Vector3(0.0f, 0.4f, 0.0f);
+
+		pickBody.AddChild(collisionShape);
+		AddChild(pickBody);
 	}
 
 	private void setupStorageBar()
@@ -56,9 +76,22 @@ public partial class BuildingNode : Node3D
 	/// <param name="isSelected">是否被选中</param>
 	public void Update(Building building, bool isSelected = false)
 	{
-		ensureInitialized();
+		// TODO 考虑重命名为Setup？
+		currentBuilding = building;
 		meshRender.UpdateText(building.Name);
 		meshRender.UpdateHighlight(isSelected, false, building.Color);
 		storageBarSprite.Visible = false;
+	}
+
+	// 响应建筑几何体点击并向上抛出业务对象。
+	private void onPickBodyInputEvent(Node camera, InputEvent inputEvent, Vector3 eventPosition, Vector3 normal, long shapeIdx)
+	{
+		if (inputEvent is not InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+		{
+			return;
+		}
+
+		EmitSignal(SignalName.BuildingClicked, currentBuilding.Collision.Center);
+		GetViewport().SetInputAsHandled();
 	}
 }

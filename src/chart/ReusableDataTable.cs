@@ -1,4 +1,6 @@
 using Godot;
+using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 可复用数据表格组件，负责将 DataSource 渲染为二维表格。
@@ -31,45 +33,43 @@ public partial class ReusableDataTable : VBoxContainer
         dataGrid.Columns = dataSource.Headers.Count;
         ClearGrid();
 
-        for (var columnIndex = 0; columnIndex < dataSource.Headers.Count; columnIndex++)
-        {
-            var headerAlignment = HorizontalAlignment.Left;
-            if (columnIndex < dataSource.HeaderAlignments.Count)
+        Enumerable.Range(0, dataSource.Headers.Count)
+            .ToList()
+            .ForEach(columnIndex =>
             {
-                headerAlignment = (HorizontalAlignment)dataSource.HeaderAlignments[columnIndex];
-            }
+                HorizontalAlignment headerAlignment = columnIndex < dataSource.HeaderAlignments.Count
+                    ? mapAlignment(dataSource.HeaderAlignments[columnIndex])
+                    : HorizontalAlignment.Left;
 
-            dataGrid.AddChild(CreateCell(dataSource.Headers[columnIndex], headerAlignment));
-        }
+                dataGrid.AddChild(CreateCell(dataSource.Headers[columnIndex], headerAlignment));
+            });
 
-        foreach (var row in dataSource.Rows)
-        {
-            for (var columnIndex = 0; columnIndex < dataSource.Headers.Count; columnIndex++)
+        dataSource.Rows
+            .ToList()
+            .ForEach(row =>
             {
-                var cellValue = string.Empty;
-                if (columnIndex < row.Count)
-                {
-                    cellValue = row[columnIndex].ToString();
-                }
+                Enumerable.Range(0, dataSource.Headers.Count)
+                    .ToList()
+                    .ForEach(columnIndex =>
+                    {
+                        string cellValue = columnIndex < row.Count
+                            ? row[columnIndex]
+                            : string.Empty;
 
-                var cellAlignment = HorizontalAlignment.Right;
-                if (columnIndex < dataSource.CellAlignments.Count)
-                {
-                    cellAlignment = (HorizontalAlignment)dataSource.CellAlignments[columnIndex];
-                }
+                        HorizontalAlignment cellAlignment = columnIndex < dataSource.CellAlignments.Count
+                            ? mapAlignment(dataSource.CellAlignments[columnIndex])
+                            : HorizontalAlignment.Right;
 
-                dataGrid.AddChild(CreateCell(cellValue, cellAlignment));
-            }
-        }
+                        dataGrid.AddChild(CreateCell(cellValue, cellAlignment));
+                    });
+            });
     }
 
     // 清空当前网格中的所有单元格。
     private void ClearGrid()
     {
-        foreach (var child in dataGrid.GetChildren())
-        {
-            child.QueueFree();
-        }
+        List<Node> children = dataGrid.GetChildren().Cast<Node>().ToList();
+        children.ForEach(child => child.QueueFree());
     }
 
     // 创建单元格标签。
@@ -79,6 +79,18 @@ public partial class ReusableDataTable : VBoxContainer
         {
             Text = text,
             HorizontalAlignment = alignment
+        };
+    }
+
+    // 将通用对齐值映射为 Godot 对齐枚举。
+    private static HorizontalAlignment mapAlignment(DataTextAlignment alignment)
+    {
+        return alignment switch
+        {
+            DataTextAlignment.Left => HorizontalAlignment.Left,
+            DataTextAlignment.Center => HorizontalAlignment.Center,
+            DataTextAlignment.Right => HorizontalAlignment.Right,
+            _ => HorizontalAlignment.Left
         };
     }
 }

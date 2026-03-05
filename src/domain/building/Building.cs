@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 地图上建筑物，具有建造消耗和建造状态
 /// </summary>
-public class Building : IIdModel, IInfo, IPeristenceRead
+public class Building : IIdModel, IInfo
 {
 	private static IdAllocator idAllocator = new IdAllocator();
 
@@ -54,6 +54,11 @@ public class Building : IIdModel, IInfo, IPeristenceRead
 	/// </summary>
 	public Residential? Residential { get; private set; }
 
+	/// <summary>
+	/// 市场建筑的市场功能组件，可以没有
+	/// </summary>
+	public Market? Market { get; private set; }
+
 
 
 
@@ -74,6 +79,9 @@ public class Building : IIdModel, IInfo, IPeristenceRead
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
 			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
+		Market = template.TypeId == BuildingType.Enums.Market
+			? new global::Market()
+			: null;
 	}
 
 
@@ -90,6 +98,16 @@ public class Building : IIdModel, IInfo, IPeristenceRead
 
 		InfoData data = new();
 		data.AddGroup("基本信息", basicInfoNode);
+
+		if (Residential != null)
+		{
+			data.AddGroup("居住信息", Residential.GetInfoData());
+		}
+
+		if (Market != null)
+		{
+			data.AddGroup("市场信息", Market.GetInfoData());
+		}
 
 		return data;
 	}
@@ -114,6 +132,11 @@ public class Building : IIdModel, IInfo, IPeristenceRead
 			saveData["residential"] = Residential.GetSaveData();
 		}
 
+		if (Market != null)
+		{
+			saveData["market"] = Market.GetSaveData();
+		}
+
 		return saveData;
 	}
 
@@ -135,6 +158,12 @@ public class Building : IIdModel, IInfo, IPeristenceRead
 		{
 			Dictionary<string, object> residentialData = (Dictionary<string, object>)data["residential"];
 			building.Residential = Residential.LoadSaveData(residentialData, populationCollection);
+		}
+
+		if (data.ContainsKey("market"))
+		{
+			Dictionary<string, object> marketData = (Dictionary<string, object>)data["market"];
+			building.Market = global::Market.LoadSaveData(marketData);
 		}
 
 		return building;

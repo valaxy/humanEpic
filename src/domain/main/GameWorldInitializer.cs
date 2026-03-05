@@ -56,36 +56,50 @@ public class GameWorldInitializer
         // 2. 加载核心数据
         Dictionary<string, object> data = JsonUtility.LoadDataFromJsonFile(savePath);
         GameWorld world = GameWorld.LoadSaveData(data);
-
+        ensureColdStart(world);
 
         hasLoadedFromDisk = true;
         GD.Print($"[Perf] GameWorldInitializer Load took {Time.GetTicksMsec() - start} ms");
         return world;
     }
+
+
+    /// <summary>
+    /// 冷启动兜底：补充一些可运行的基础数据，调试用
+    /// </summary>
+    private static void ensureColdStart(GameWorld gameWorld)
+    {
+        CountryCollection countries = gameWorld.Countries;
+
+        if (countries.Size > 0)
+        {
+            return;
+        }
+
+        // 国家数据
+        countries.Add(new Country("红色国家", Colors.Red));
+        countries.Add(new Country("蓝色国家", Colors.DodgerBlue));
+
+        // 单位数据
+        // // 新增一组单位
+        // Vector2I centerPos = new Vector2I(gameWorld.Ground.Width / 2 + 50, gameWorld.Ground.Height / 2 + 50);
+        // Population population = new Population(100);
+        // Country firstCountry = gameWorld.CountryCollection.GetAll()[0];
+        // Unit unit = new Unit(centerPos, firstCountry, population);
+        // unit.Holds.MaxCapacity = 100;
+        // gameWorld.UnitCollection.AddUnit(unit);
+        // GD.Print("324234");
+
+        // // 新增另一组单位
+        // Vector2I topLeftPos = new Vector2I(0, 0);
+        // Population topLeftPopulation = new Population(100);
+        // Country secondCountry = gameWorld.CountryCollection.GetAll().Count > 1
+        // 	? gameWorld.CountryCollection.GetAll()[1]
+        // 	: firstCountry;
+        // Unit topLeftUnit = new Unit(topLeftPos, secondCountry, topLeftPopulation);
+        // topLeftUnit.Holds.MaxCapacity = 100;
+        // gameWorld.UnitCollection.AddUnit(topLeftUnit);
+
+        GD.Print("冷启动：已生成基础数据");
+    }
 }
-
-
-
-
-// CountryCollection = CountryCollection.Instance;
-// GameWorldDataInitializer.InitializeCountryCollection(CountryCollection);
-
-// PopulationCollection = new PopulationCollection();
-// UnitCollection = new UnitCollection(Ground, PopulationCollection, CountryCollection);
-
-// WildlifeCollection = new WildlifeCollection();
-// Buildings = new BuildingCollection(Ground, PopulationCollection, CountryCollection);
-// NaturalDisasters = new NaturalDisasterCollection();
-
-// Simulation = new Simulation(
-// 	this,
-// 	Ground,
-// 	Buildings,
-// 	WildlifeCollection,
-// 	UnitCollection,
-// 	NaturalDisasters,
-// 	TimeSystem
-// );
-
-// bindBuildingTerritoryRefreshEvents();
-// refreshBuildingTerritoryColors();

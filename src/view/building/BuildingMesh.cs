@@ -6,25 +6,23 @@ using Godot;
 [GlobalClass]
 public partial class BuildingMesh : MeshInstance3D
 {
+	// 网格实例独占材质。
 	private StandardMaterial3D material = null!;
+	// 建筑顶部标签。
 	private Label3D label = null!;
 
+	/// <summary>
+	/// 初始化网格渲染依赖。
+	/// </summary>
 	public override void _Ready()
 	{
 		// 材质已经在 .tscn 中配置好，作为 SurfaceOverrideMaterial(0)
 		// 确保材质是唯一的，否则所有建筑会呈现同一种颜色
-		Material? original = GetSurfaceOverrideMaterial(0);
-		if (original != null)
-		{
-			material = (StandardMaterial3D)original.Duplicate();
-			SetSurfaceOverrideMaterial(0, material);
-		}
-		
-		Node? labelNode = GetNodeOrNull("Label3D");
-		if (labelNode is Label3D l)
-		{
-			label = l;
-		}
+		StandardMaterial3D original = (StandardMaterial3D)GetSurfaceOverrideMaterial(0);
+		material = (StandardMaterial3D)original.Duplicate();
+		SetSurfaceOverrideMaterial(0, material);
+
+		label = GetNode<Label3D>("Label3D");
 	}
 
 	/// <summary>
@@ -33,10 +31,7 @@ public partial class BuildingMesh : MeshInstance3D
 	/// <param name="text">文字内容</param>
 	public void UpdateText(string text)
 	{
-		if (label != null)
-		{
-			label.Text = text;
-		}
+		label.Text = text;
 	}
 
 	/// <summary>
@@ -44,10 +39,7 @@ public partial class BuildingMesh : MeshInstance3D
 	/// </summary>
 	public void UpdateColor(Color color)
 	{
-		if (material != null)
-		{
-			material.AlbedoColor = color;
-		}
+		material.AlbedoColor = color;
 	}
 
 	/// <summary>
@@ -58,8 +50,6 @@ public partial class BuildingMesh : MeshInstance3D
 	/// <param name="buildingColor">基础颜色</param>
 	public void UpdateHighlight(bool selected, bool isMarketCovered, Color buildingColor)
 	{
-		if (material == null) return;
-
 		Color finalColor = buildingColor;
 		if (selected)
 		{

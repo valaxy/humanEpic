@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://src/ui/infoUI/info_ui.tscn" id="4_info_ui_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/gameEditor/game_editor_buttons.tscn" id="6_game_editor_buttons_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/bubbleMessage/bubble_message_container_ui.tscn" id="7_bubble_container_scene"]
+[ext_resource type="PackedScene" path="res://src/ui/infoUI/building/building_info_panel_ui.tscn" id="8_building_info_panel_scene"]
 
 [node name="MainUI" type="Node"]
 script = ExtResource("1_main_ui_script")
@@ -23,6 +24,8 @@ offset_bottom = 60.0
 [node name="InfoUILeft" parent="." instance=ExtResource("4_info_ui_scene")]
 
 [node name="InfoUIRight" parent="." instance=ExtResource("4_info_ui_scene")]
+
+[node name="BuildingInfoPanelUI" parent="." instance=ExtResource("8_building_info_panel_scene")]
 
 [node name="GridInfoUI" type="Node" parent="."]
 script = ExtResource("5_grid_info_script")

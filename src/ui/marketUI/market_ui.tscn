@@ -1,7 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/marketUI/MarketUI.cs" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/chart/reusable_data_table.tscn" id="2_reusable_table"]
+[ext_resource type="PackedScene" path="res://src/ui/marketUI/components/product_market_table_ui.tscn" id="2_product_table"]
+[ext_resource type="PackedScene" path="res://src/ui/marketUI/components/labour_market_table_ui.tscn" id="3_labour_table"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_black_panel"]
 bg_color = Color(0, 0, 0, 1)
@@ -56,13 +57,13 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="ProductTable" parent="PanelContainer/MarginContainer/VBoxContainer/TableRow" instance=ExtResource("2_reusable_table")]
+[node name="ProductTable" parent="PanelContainer/MarginContainer/VBoxContainer/TableRow" instance=ExtResource("2_product_table")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="JobTable" parent="PanelContainer/MarginContainer/VBoxContainer/TableRow" instance=ExtResource("2_reusable_table")]
+[node name="JobTable" parent="PanelContainer/MarginContainer/VBoxContainer/TableRow" instance=ExtResource("3_labour_table")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

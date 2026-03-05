@@ -1,9 +1,9 @@
-product_type_id, name  , is_consumer_good, volume
-WATER          , 水    , true            , 1
-FOOD           , 食物  , true            , 1
-FURNITURE      , 家具  , true            , 1
-TOOLS          , 工具  , true            , 1
-WOOD           , 木材  , false           , 1
-ORE            , 矿石  , false           , 1
-STONE          , 石头  , false           , 1
-CURRENCY       , 货币  , false           , 1
+product_type_id, is_consumer_good, demand_satisfaction_ratios          , name  , description
+WATER          , true            , FOOD:0.30                           , 水    , 可直接饮用的基础生活资源
+FOOD           , true            , FOOD:1.00;SPIRITUAL:0.10            , 食物  , 维持人口生存并提供少量精神满足
+FURNITURE      , true            , ENTERTAINMENT:0.50;SPIRITUAL:0.20   , 家具  , 提升居住舒适度并增强娱乐体验
+TOOLS          , true            , ENTERTAINMENT:0.20;SPIRITUAL:0.10   , 工具  , 支撑生产与日常活动的基础器具
+WOOD           , false           ,                                     , 木材  , 常见建材与制造原料
+ORE            , false           ,                                     , 矿石  , 用于冶炼与工业加工的矿产资源
+STONE          , false           ,                                     , 石头  , 用于建设与防御工程的基础材料
+CURRENCY       , false           ,                                     , 货币  , 市场交易与价值衡量的通用媒介

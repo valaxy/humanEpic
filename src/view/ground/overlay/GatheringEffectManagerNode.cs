@@ -6,8 +6,11 @@ using System.Collections.Generic;
 /// </summary>
 public partial class GatheringEffectManagerNode : Node3D
 {
+	// 当前正在播放的采集反馈效果。
 	private Dictionary<Vector2I, GatheringEffectNode> activeEffects = new();
-	private Ground? ground;
+
+	// 用于换算地格坐标的地形数据。
+	private Ground ground = null!;
 
 	/// <summary>
 	/// 初始化地理显示数据支持
@@ -23,14 +26,12 @@ public partial class GatheringEffectManagerNode : Node3D
 	/// </summary>
 	private void OnGridGatheringTriggered(Vector2I gridPos)
 	{
-		if (ground == null) return;
-
 		// 如果此地格已经有效果正在执行，直接重置其周期，防止节点重复创建消耗性能
 		if (activeEffects.TryGetValue(gridPos, out GatheringEffectNode? existingEffect))
 		{
 			if (IsInstanceValid(existingEffect))
 			{
-				existingEffect.Reset();
+				existingEffect!.Reset();
 				return;
 			}
 			activeEffects.Remove(gridPos);
@@ -47,7 +48,8 @@ public partial class GatheringEffectManagerNode : Node3D
 		activeEffects[gridPos] = newEffect;
 		
 		// 连接节点移除信号，实时同步字典状态
-		newEffect.TreeExiting += () => {
+		newEffect.TreeExiting += () =>
+		{
 			if (activeEffects.ContainsKey(gridPos) && activeEffects[gridPos] == newEffect)
 			{
 				activeEffects.Remove(gridPos);

@@ -1,24 +1,23 @@
 using Godot;
 
 /// <summary>
-/// BuildingCountrySelector 组件演示入口。
+/// CountrySelector 组件演示入口。
 /// </summary>
 [GlobalClass]
 public partial class BuildingCountrySelectorDemo : Control
 {
 	// 国家选择器组件。
-	private BuildingCountrySelector countrySelector = null!;
+	private CountrySelector countrySelector = null!;
 
 	// 状态文本。
 	private Label statusLabel = null!;
 
 	public override void _Ready()
 	{
-		countrySelector = GetNode<BuildingCountrySelector>("%CountrySelector");
+		countrySelector = GetNode<CountrySelector>("%CountrySelector");
 		statusLabel = GetNode<Label>("%StatusLabel");
 
-		GameWorld world = GameWorldInitializer.Load();
-		countrySelector.Setup(world.Countries);
+		countrySelector.Setup();
 		countrySelector.CountrySelected += onCountrySelected;
 
 		onCountrySelected(countrySelector.SelectedCountryId);

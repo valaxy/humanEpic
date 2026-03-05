@@ -1,4 +1,5 @@
 using Godot;
+using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
@@ -6,7 +7,7 @@ using System.Linq;
 /// 负责渲染国家下拉框并向外发出国家变更事件。
 /// </summary>
 [GlobalClass]
-public partial class BuildingCountrySelector : HBoxContainer
+public partial class CountrySelector : HBoxContainer
 {
 	/// <summary>
 	/// 国家选中变化信号。
@@ -20,6 +21,15 @@ public partial class BuildingCountrySelector : HBoxContainer
 	// 国家下拉框。
 	private OptionButton countryOptionButton = null!;
 
+	// 组件内置国家数据。
+	private readonly List<Country> localCountries =
+	[
+		new Country("晨曦邦", Colors.CornflowerBlue, 1),
+		new Country("赤岩领", Colors.IndianRed, 2),
+		new Country("霜叶国", Colors.SeaGreen, 3),
+		new Country("银湾城", Colors.Goldenrod, 4)
+	];
+
 	public override void _Ready()
 	{
 		countryOptionButton = GetNode<OptionButton>("%CountryOptionButton");
@@ -29,11 +39,11 @@ public partial class BuildingCountrySelector : HBoxContainer
 	/// <summary>
 	/// 初始化国家选择下拉框。
 	/// </summary>
-	public void Setup(CountryCollection countryCollection)
+	public void Setup()
 	{
 		countryOptionButton.Clear();
 
-		countryCollection.GetAll()
+		localCountries
 			.OrderBy(country => country.Id)
 			.ToList()
 			.ForEach(country => countryOptionButton.AddItem(country.Name, country.Id));

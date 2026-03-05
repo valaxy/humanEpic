@@ -27,36 +27,22 @@ public partial class WallRender : OverlayRender
         bool hasV = isWall(x, y - 1, ground) && isWall(x, y + 1, ground);
 
         Basis scaleBasis = Basis.FromScale(new Vector3(scale, scale, scale));
+        Vector3 pipeOffset = new Vector3(0, 0.3f * scale, 0);
 
         if (hasH)
         {
-            res.Add(new InstanceData
-            {
-                ComponentName = "pipe",
-                LocalTransform = new Transform3D(scaleBasis, Vector3.Zero),
-                VisualOffset = new Vector3(0, 0.3f * scale, 0)
-            });
+            res.Add(Instance("pipe", new Transform3D(scaleBasis, Vector3.Zero), pipeOffset));
         }
 
         if (hasV)
         {
             Basis basis = new Basis(Vector3.Up, Mathf.Pi / 2.0f);
-            res.Add(new InstanceData
-            {
-                ComponentName = "pipe",
-                LocalTransform = new Transform3D(basis * scaleBasis, Vector3.Zero),
-                VisualOffset = new Vector3(0, 0.3f * scale, 0)
-            });
+            res.Add(Instance("pipe", new Transform3D(basis * scaleBasis, Vector3.Zero), pipeOffset));
         }
 
         if (!hasH && !hasV)
         {
-            res.Add(new InstanceData
-            {
-                ComponentName = "node",
-                LocalTransform = new Transform3D(scaleBasis, Vector3.Zero),
-                VisualOffset = new Vector3(0, 0.3f * scale, 0)
-            });
+            res.Add(Instance("node", new Transform3D(scaleBasis, Vector3.Zero), pipeOffset));
         }
 
         return res;

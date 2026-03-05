@@ -1,8 +1,0 @@
-product_key, demand_type_id, ratio
-WATER      , FOOD          , 0.30
-FOOD       , FOOD          , 1.00
-FOOD       , SPIRITUAL     , 0.10
-FURNITURE  , ENTERTAINMENT , 0.50
-FURNITURE  , SPIRITUAL     , 0.20
-TOOLS      , ENTERTAINMENT , 0.20
-TOOLS      , SPIRITUAL     , 0.10

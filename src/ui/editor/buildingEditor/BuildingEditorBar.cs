@@ -33,7 +33,7 @@ public partial class BuildingEditorBar : EditorWindow
 	private HBoxContainer buildingRow = null!;
 
 	// 国家选择组件。
-	private BuildingCountrySelector countrySelector = null!;
+	private CountrySelector countrySelector = null!;
 
 	// 笔刷对象。
 	private Brush brush = null!;
@@ -51,7 +51,7 @@ public partial class BuildingEditorBar : EditorWindow
 	{
 		base._Ready();
 		buildingRow = GetNode<HBoxContainer>("%BuildingRow");
-		countrySelector = GetNode<BuildingCountrySelector>("%CountrySelector");
+		countrySelector = GetNode<CountrySelector>("%CountrySelector");
 		GetNode<Label>("%TitleLabel").Text = "建筑建造";
 
 		setupButtons();
@@ -71,7 +71,7 @@ public partial class BuildingEditorBar : EditorWindow
 		view.GroundView.CellClicked -= onGroundCellClicked;
 		view.GroundView.CellClicked += onGroundCellClicked;
 
-		countrySelector.Setup(world.Countries);
+		countrySelector.Setup();
 		selectDefaultBuildingType();
 	}
 

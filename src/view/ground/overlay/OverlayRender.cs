@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 覆盖物渲染抽象基类，定义覆盖物的视觉组件构成及实例化逻辑
@@ -65,4 +66,46 @@ public abstract partial class OverlayRender : GodotObject
     /// 获取指定地格在渲染时需要的实例数据集合
     /// </summary>
     public abstract List<InstanceData> GetCellInstances(int x, int y, Ground ground, float scale);
+
+    /// <summary>
+    /// 创建仅包含一个组件的定义列表。
+    /// </summary>
+    protected static List<ComponentDefinition> SingleComponent(string name, Mesh mesh, Color color)
+    {
+        return [new ComponentDefinition(name, mesh, color)];
+    }
+
+    /// <summary>
+    /// 创建使用统一缩放变换的实例数据。
+    /// </summary>
+    protected static InstanceData ScaledInstance(string componentName, float scale, Vector3 visualOffset)
+    {
+        return new InstanceData
+        {
+            ComponentName = componentName,
+            LocalTransform = new Transform3D(Basis.FromScale(new Vector3(scale, scale, scale)), Vector3.Zero),
+            VisualOffset = visualOffset
+        };
+    }
+
+    /// <summary>
+    /// 创建带自定义变换的实例数据。
+    /// </summary>
+    protected static InstanceData Instance(string componentName, Transform3D localTransform, Vector3 visualOffset)
+    {
+        return new InstanceData
+        {
+            ComponentName = componentName,
+            LocalTransform = localTransform,
+            VisualOffset = visualOffset
+        };
+    }
+
+    /// <summary>
+    /// 生成 0..count-1 的序列，便于以 LINQ 方式构造实例。
+    /// </summary>
+    protected static IEnumerable<int> Indices(int count)
+    {
+        return Enumerable.Range(0, count);
+    }
 }

@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 层级管理器，负责在细节视角和战略视角之间进行逻辑分发和状态同步
@@ -43,13 +44,10 @@ public partial class LayerManagerNode : Node3D
     /// <param name="ground">地形数据模型</param>
     public void UpdateMapData(Ground ground)
     {
-        foreach (LayerNode layer in layers)
-        {
-            if (layer.Visible)
-            {
-                layer.UpdateLayer(ground);
-            }
-        }
+        layers
+            .Where(layer => layer.Visible)
+            .ToList()
+            .ForEach(layer => layer.UpdateLayer(ground));
     }
 
     /// <summary>
@@ -59,13 +57,10 @@ public partial class LayerManagerNode : Node3D
     /// <param name="ground">地形数据模型</param>
     public void UpdateCells(Godot.Collections.Array<Vector2I> cells, Ground ground)
     {
-        foreach (LayerNode layer in layers)
-        {
-            if (layer.Visible)
-            {
-                layer.UpdateCells(cells, ground);
-            }
-        }
+        layers
+            .Where(layer => layer.Visible)
+            .ToList()
+            .ForEach(layer => layer.UpdateCells(cells, ground));
     }
 
     /// <summary>

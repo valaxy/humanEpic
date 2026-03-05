@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/view/ground/gridHelper/GroundGridHelper.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/view/groundGridHelper/GroundGridHelper.cs" id="1_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j3v0k"]
 transparency = 1

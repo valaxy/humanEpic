@@ -1,0 +1,30 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/view/GameView.cs" id="1_game_view_script"]
+[ext_resource type="Script" path="res://src/view/ground/layer/LayerManagerNode.cs" id="2_layer_manager_script"]
+[ext_resource type="Script" path="res://src/view/ground/GroundView.cs" id="3_ground_view_script"]
+[ext_resource type="Script" path="res://src/view/groundEditor/GroundEditor.cs" id="5_ground_editor_script"]
+[ext_resource type="Script" path="res://src/view/selection/GroundSelection.cs" id="6_selection_script"]
+[ext_resource type="PackedScene" path="res://src/view/brush/Brush.tscn" id="4_brush_scene"]
+[ext_resource type="PackedScene" path="res://src/view/groundGridHelper/ground_grid_helper.tscn" id="7_grid_helper_scene"]
+
+[node name="GameView" type="Node3D"]
+script = ExtResource("1_game_view_script")
+
+[node name="LayerManager" type="Node3D" parent="."]
+script = ExtResource("2_layer_manager_script")
+
+[node name="GroundView" type="Node3D" parent="."]
+script = ExtResource("3_ground_view_script")
+
+[node name="Brush" parent="GroundView" instance=ExtResource("4_brush_scene")]
+
+[node name="BrushPreviewRoot" type="Node3D" parent="GroundView"]
+
+[node name="GroundEditor" type="Node" parent="GroundView"]
+script = ExtResource("5_ground_editor_script")
+
+[node name="Selection" type="Node" parent="."]
+script = ExtResource("6_selection_script")
+
+[node name="GroundGridHelper" parent="." instance=ExtResource("7_grid_helper_scene")]

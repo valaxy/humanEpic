@@ -7,6 +7,8 @@ using Godot;
 [GlobalClass]
 public partial class GameCamera : Camera3D
 {
+    private const float RayParallelEpsilon = 0.0001f;
+
     public float MoveSpeed = 80.0f; // 摄像机平移速度
     public float ZoomSpeed = 2.0f; // 摄像机缩放步长 (滚轮)
     public float KeyboardZoomSpeed = 20.0f; // 键盘缩放速度 (每秒)
@@ -45,24 +47,27 @@ public partial class GameCamera : Camera3D
     private void initializeCameraState()
     {
         Viewport viewport = GetViewport();
-        if (viewport != null)
+        if (viewport == null)
         {
-            Vector3? groundPos = ProjectToPlane(viewport.GetVisibleRect().Size / 2.0f);
-            if (groundPos.HasValue && groundPos.Value != Vector3.Zero)
-            {
-                targetFocusPoint = groundPos.Value;
-            }
-            else
-            {
-                targetFocusPoint = new Vector3(GlobalPosition.X, 0, GlobalPosition.Z - 10);
-            }
+            targetFocusPoint = getDefaultFocusPoint();
         }
         else
         {
-            targetFocusPoint = new Vector3(GlobalPosition.X, 0, GlobalPosition.Z - 10);
+            Vector3? groundPos = ProjectToPlane(viewport.GetVisibleRect().Size / 2.0f);
+            targetFocusPoint = groundPos.HasValue && groundPos.Value != Vector3.Zero
+                ? groundPos.Value
+                : getDefaultFocusPoint();
         }
         
         currentFocusPoint = targetFocusPoint;
+    }
+
+    /// <summary>
+    /// 获取默认视点。
+    /// </summary>
+    private Vector3 getDefaultFocusPoint()
+    {
+        return new Vector3(GlobalPosition.X, 0, GlobalPosition.Z - 10);
     }
 
     public override void _Process(double delta)
@@ -188,7 +193,7 @@ public partial class GameCamera : Camera3D
         Vector3 rayOrigin = ProjectRayOrigin(mousePos);
         Vector3 rayDir = ProjectRayNormal(mousePos);
         
-        if (Mathf.Abs(rayDir.Y) < 0.0001f)
+        if (Mathf.Abs(rayDir.Y) < RayParallelEpsilon)
         {
             return null;
         }
@@ -200,6 +205,46 @@ public partial class GameCamera : Camera3D
         }
             
         return rayOrigin + rayDir * t;
+    }
+
+    /// <summary>
+    /// 将屏幕坐标解析为有效地格坐标。
+    /// </summary>
+    /// <param name="screenPos">屏幕坐标。</param>
+    /// <param name="ground">地面模型。</param>
+    /// <param name="cellPos">解析后的地格坐标。</param>
+    /// <param name="planeY">投影平面高度。</param>
+    /// <returns>是否成功解析到地图边界内地格。</returns>
+    public bool TryResolveGroundCell(Vector2 screenPos, Ground ground, out Vector2I cellPos, float planeY = 0.0f)
+    {
+        cellPos = Vector2I.Zero;
+
+        Vector3? worldPoint = ProjectToPlane(screenPos, planeY);
+        if (!worldPoint.HasValue)
+        {
+            return false;
+        }
+
+        Vector2 cellFloat = ground.WorldToGrid(worldPoint.Value);
+        Vector2I resolved = new Vector2I(Mathf.FloorToInt(cellFloat.X), Mathf.FloorToInt(cellFloat.Y));
+        if (!ground.IsInsideGround(resolved))
+        {
+            return false;
+        }
+
+        cellPos = resolved;
+        return true;
+    }
+
+    /// <summary>
+    /// 获取当前鼠标与地面平面的交点。
+    /// </summary>
+    /// <param name="planeY">投影平面高度。</param>
+    /// <returns>交点坐标，若无交点则返回 null。</returns>
+    public Vector3? GetRayIntersection(float planeY = 0.0f)
+    {
+        Vector2 mousePos = GetViewport().GetMousePosition();
+        return ProjectToPlane(mousePos, planeY);
     }
 
     /// <summary>

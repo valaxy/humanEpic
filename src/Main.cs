@@ -8,19 +8,14 @@ using Godot;
 [GlobalClass]
 public partial class Main : Node3D
 {
-	/// <summary>默认地图宽度</summary>
-	[Export]
-	public int DefaultMapWidth { get; set; } = 500;
-
-	/// <summary>默认地图高度</summary>
-	[Export]
-	public int DefaultMapHeight { get; set; } = 500;
+	// 主视图场景。
+	private static readonly PackedScene gameViewScene = GD.Load<PackedScene>("res://src/view/main_view.tscn");
 
 	// 主摄像机节点。
 	private GameCamera camera = null!;
 
 	// 视图层顶层入口。
-	private GameView view = new GameView();
+	private GameView view = null!;
 	// 领域层顶层入口。
 	private GameWorld world = null!;
 	// 世界逻辑模拟入口。
@@ -35,7 +30,7 @@ public partial class Main : Node3D
 		simulation = new Simulation();
 
 		addCoreNodes();
-		setupView();
+		view.Setup(camera, world);
 		setupUi();
 	}
 
@@ -48,14 +43,11 @@ public partial class Main : Node3D
 	// 添加主流程核心节点。
 	private void addCoreNodes()
 	{
+		view = gameViewScene.Instantiate<GameView>();
 		AddChild(view);
 	}
 
-	// 初始化视图层。
-	private void setupView()
-	{
-		view.Setup(camera, world, DefaultMapWidth, DefaultMapHeight);
-	}
+
 
 	// 初始化并挂载主 UI。
 	private void setupUi()
@@ -65,12 +57,4 @@ public partial class Main : Node3D
 		AddChild(mainUi);
 		mainUi.Setup(world, view, simulation, camera, view.LayerManager, view.Selection);
 	}
-
 }
-
-
-// // 根据默认地图尺寸初始化网格渲染。
-// private void initializeGridVisuals()
-// {
-// 	view.UpdateGridVisuals(DefaultMapWidth, DefaultMapHeight);
-// }

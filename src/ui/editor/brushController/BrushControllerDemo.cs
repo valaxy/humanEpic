@@ -8,8 +8,8 @@ public partial class BrushControllerDemo : Control
 {
 	// 笔刷控制器组件。
 	private BrushController brushController = null!;
-	// 编辑器状态对象。
-	private GroundEditor groundEditor = null!;
+	// 笔刷对象。
+	private Brush brush = null!;
 	// 状态显示文本。
 	private Label statusLabel = null!;
 	// 通过 GroundEditor 设值按钮。
@@ -24,33 +24,32 @@ public partial class BrushControllerDemo : Control
 		setByEditorButton = GetNode<Button>("%SetByEditorButton");
 		readCurrentButton = GetNode<Button>("%ReadCurrentButton");
 
-		groundEditor = new GroundEditor();
-		AddChild(groundEditor);
-		brushController.Setup(groundEditor);
+		brush = new Brush();
+		brushController.Setup(brush);
 
-		groundEditor.BrushSizeChanged += onGroundEditorChanged;
+		brush.SizeChanged += onBrushChanged;
 		setByEditorButton.Pressed += onSetByEditorPressed;
 		readCurrentButton.Pressed += refreshStatus;
 
 		refreshStatus();
 	}
 
-	// 响应 GroundEditor 值变化。
-	private void onGroundEditorChanged(int size)
+	// 响应 Brush 值变化。
+	private void onBrushChanged(int size)
 	{
-		statusLabel.Text = $"状态变更 -> GroundEditor:{size}";
+		statusLabel.Text = $"状态变更 -> Brush:{size}";
 	}
 
-	// 通过 GroundEditor 修改笔刷大小，验证反向同步到 BrushController。
+	// 通过 Brush 修改笔刷大小，验证反向同步到 BrushController。
 	private void onSetByEditorPressed()
 	{
-		groundEditor.SetBrushSize(7);
+		brush.SetSize(7);
 		refreshStatus();
 	}
 
 	// 读取并展示当前双向绑定状态。
 	private void refreshStatus()
 	{
-		statusLabel.Text = $"当前值 -> GroundEditor:{groundEditor.BrushSize}";
+		statusLabel.Text = $"当前值 -> Brush:{brush.Size}";
 	}
 }

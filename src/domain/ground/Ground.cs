@@ -121,6 +121,15 @@ public partial class Ground // IMap
 		);
 	}
 
+	/// <summary>
+	/// 将世界坐标转换为地格坐标。
+	/// </summary>
+	public Vector2I WorldToCell(Vector3 worldPos)
+	{
+		Vector2 pos = WorldToGrid(worldPos);
+		return new Vector2I(Mathf.FloorToInt(pos.X), Mathf.FloorToInt(pos.Y));
+	}
+
 	// /// <summary>
 	// /// 设置指定坐标的地格属性
 	// /// </summary>

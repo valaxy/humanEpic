@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="2_button"]
 [ext_resource type="PackedScene" path="res://src/ui/entryButtons/entry_buttons.tscn" id="3_top_right_tools"]
 [ext_resource type="PackedScene" path="res://src/ui/editor/overlayEditor/overlay_editor.tscn" id="4_overlay_editor"]
+[ext_resource type="PackedScene" path="res://src/ui/editor/surfaceEditor/surface_editor_bar.tscn" id="5_surface_editor"]
 
 [node name="GameEditorButtons" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -53,5 +54,9 @@ layout_mode = 2
 text = "建造"
 
 [node name="OverlayEditor" parent="Control" instance=ExtResource("4_overlay_editor")]
+layout_mode = 1
+visible = false
+
+[node name="SurfaceEditor" parent="Control" instance=ExtResource("5_surface_editor")]
 layout_mode = 1
 visible = false

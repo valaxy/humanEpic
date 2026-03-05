@@ -8,13 +8,13 @@ using Godot;
 public partial class GameView : Node3D
 {
 	/// <summary>管理地图显示层级的管理器</summary>
-	public LayerManagerNode LayerManager { get; private set; } = new LayerManagerNode();
+	public LayerManagerNode LayerManager { get; private set; } = null!;
 	/// <summary>地面网格渲染实例</summary>
 	public GroundGridHelper GridRender { get; private set; } = null!;
 	/// <summary>地面视图入口</summary>
-	public GroundView GroundView { get; private set; } = new GroundView();
+	public GroundView GroundView { get; private set; } = null!;
 	/// <summary>地格选中管理器</summary>
-	public GroundSelection Selection { get; private set; } = new GroundSelection();
+	public GroundSelection Selection { get; private set; } = null!;
 	// /// <summary>管理地理数据和网格绘制的管理器</summary>
 	// public GroundNode Ground { get; private set; } = new GroundNode();
 	// /// <summary>管理单位及其业务逻辑/显示的控制器</summary>
@@ -25,27 +25,17 @@ public partial class GameView : Node3D
 	// public BuildingCollectionNode BuildingCollection { get; private set; } = new BuildingCollectionNode();
 	public override void _Ready()
 	{
-		// 按照层级关系添加到节点树
-		AddChild(LayerManager);
-		AddChild(GroundView);
-		AddChild(Selection);
-		// AddChild(Ground);
-		// AddChild(UnitController);
-		// AddChild(SelectionController);
-		// AddChild(BuildingCollection);
-
-
-		// 加载网格渲染场景
-		PackedScene gridRenderScene = GD.Load<PackedScene>("res://src/view/ground/gridHelper/ground_grid_helper.tscn");
-		GridRender = gridRenderScene.Instantiate<GroundGridHelper>();
-		AddChild(GridRender);
+		LayerManager = GetNode<LayerManagerNode>("LayerManager");
+		GroundView = GetNode<GroundView>("GroundView");
+		Selection = GetNode<GroundSelection>("Selection");
+		GridRender = GetNode<GroundGridHelper>("GroundGridHelper");
 	}
 
 	/// <summary>
 	/// 初始化视图层所有组件
 	/// </summary>
 	/// <param name="camera">主摄像机引用</param>
-	public void Setup(GameCamera camera, GameWorld world, int defaultMapWidth, int defaultMapHeight)
+	public void Setup(GameCamera camera, GameWorld world)
 	{
 		camera.ZoomChanged += (float zoomValue, float minZoom, float maxZoom) =>
 		{
@@ -53,7 +43,6 @@ public partial class GameView : Node3D
 		};
 
 		GroundView.Setup(world.Ground, LayerManager, GridRender, camera);
-		GroundView.InitializeMap(defaultMapWidth, defaultMapHeight);
 		Selection.Setup(world, GroundView);
 
 		// 1. 初始化基础显示组件

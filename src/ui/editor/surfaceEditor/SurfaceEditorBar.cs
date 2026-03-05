@@ -3,25 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// 覆盖物编辑器 UI。
-/// 提供覆盖物类型选择与笔刷放置能力。
+/// 地表编辑器 UI。
+/// 提供地表类型选择、地图尺寸修改与笔刷放置能力。
 /// </summary>
 [GlobalClass]
-public partial class OverlayEditor : EditorWindow
+public partial class SurfaceEditorBar : EditorWindow
 {
 	// 类型按钮场景。
 	private static readonly PackedScene TypeButtonScene = GD.Load<PackedScene>("res://src/ui/editor/type_button.tscn");
 
-	// 当前选中的覆盖物类型。
-	private OverlayType.Enums currentOverlayType = OverlayType.Enums.NONE;
+	// 当前选中的地表类型。
+	private SurfaceType.Enums currentSurfaceType = SurfaceType.Enums.GRASSLAND;
 
-	// 覆盖物类型到按钮实例的映射。
-	private readonly Dictionary<OverlayType.Enums, Button> overlayButtons = new();
+	// 地表类型到按钮实例的映射。
+	private readonly Dictionary<SurfaceType.Enums, Button> surfaceButtons = new();
 
-	// 覆盖物按钮行容器。
-	private HBoxContainer overlayRow = null!;
+	// 地表按钮容器。
+	private HBoxContainer terrainRow = null!;
 
-	// 笔刷控制器组件。
+	// 地图尺寸控制器。
+	private MapResizeController mapResizeController = null!;
+
+	// 笔刷控制器。
 	private BrushController brushController = null!;
 
 	// 笔刷对象。
@@ -41,9 +44,10 @@ public partial class OverlayEditor : EditorWindow
 	public override void _Ready()
 	{
 		base._Ready();
-		overlayRow = GetNode<HBoxContainer>("%OverlayRow");
+		terrainRow = GetNode<HBoxContainer>("%TerrainRow");
+		mapResizeController = GetNode<MapResizeController>("%MapResizeController");
 		brushController = GetNode<BrushController>("%BrushController");
-		GetNode<Label>("%TitleLabel").Text = "覆盖物编辑";
+		GetNode<Label>("%TitleLabel").Text = "地表编辑";
 
 		setupButtons();
 	}
@@ -58,13 +62,14 @@ public partial class OverlayEditor : EditorWindow
 		groundView = groundViewRef;
 		groundEditor = groundEditorRef;
 		brush = brushRef;
+
+		mapResizeController.Setup(ground);
 		brushController.Setup(brush);
 
 		groundView.CellClicked -= onGroundCellClicked;
 		groundView.CellClicked += onGroundCellClicked;
 
 		triggerSelection();
-		triggerBrushSize(brush.Size);
 	}
 
 	/// <summary>
@@ -73,72 +78,62 @@ public partial class OverlayEditor : EditorWindow
 	public void SetEditorVisible(bool visible)
 	{
 		Visible = visible;
-		groundEditor.SetOverlayMode(visible, currentOverlayType);
+		groundEditor.SetSurfaceMode(visible, currentSurfaceType);
 	}
 
-	// 动态生成覆盖物类型按钮。
+	// 动态生成地表类型按钮。
 	private void setupButtons()
 	{
-		overlayButtons.Clear();
-		overlayRow.GetChildren().Cast<Node>().ToList().ForEach(child => child.QueueFree());
+		surfaceButtons.Clear();
+		terrainRow.GetChildren().Cast<Node>().ToList().ForEach(child => child.QueueFree());
 
-		Dictionary<OverlayType.Enums, OverlayTemplate> templates = OverlayTemplate.GetTemplates();
+		Dictionary<SurfaceType.Enums, SurfaceTemplate> templates = SurfaceTemplate.GetTemplates();
 		templates.ToList().ForEach(item =>
 		{
 			Button button = createTypeButton(item.Value.Name, item.Value.Color, item.Key);
-			overlayRow.AddChild(button);
-			overlayButtons[item.Key] = button;
+			terrainRow.AddChild(button);
+			surfaceButtons[item.Key] = button;
 		});
 
 		updateSelectionVisuals();
 	}
 
-	// 同步笔刷大小到视图。
-	private void triggerBrushSize(int size)
-	{
-		if (HasNode("../RightBottomContainer"))
-		{
-			Node rightBottomContainer = GetNode("../RightBottomContainer");
-			rightBottomContainer.SetMeta("OverlayBrushSize", size);
-		}
-	}
-
 	// 创建类型按钮。
-	private Button createTypeButton(string text, Color color, OverlayType.Enums overlayType)
+	private Button createTypeButton(string text, Color color, SurfaceType.Enums surfaceType)
 	{
 		Button button = TypeButtonScene.Instantiate<Button>();
 		button.GetNode<Label>("%Label").Text = text;
 		button.GetNode<ColorRect>("%ColorRect").Color = color;
-		button.Pressed += () => onOverlaySelected(overlayType);
+		button.Pressed += () => onSurfaceSelected(surfaceType);
 		return button;
 	}
 
 	// 刷新按钮选中视觉。
 	private void updateSelectionVisuals()
 	{
-		overlayButtons.Keys.ToList().ForEach(type =>
+		surfaceButtons.Keys.ToList().ForEach(type =>
 		{
-			Button button = overlayButtons[type];
-			button.GetNode<ReferenceRect>("%SelectionBorder").Visible = type == currentOverlayType;
+			Button button = surfaceButtons[type];
+			button.GetNode<ReferenceRect>("%SelectionBorder").Visible = type == currentSurfaceType;
 		});
 	}
 
-	// 响应覆盖物类型选择。
-	private void onOverlaySelected(OverlayType.Enums overlayType)
+	// 响应地表类型选择。
+	private void onSurfaceSelected(SurfaceType.Enums surfaceType)
 	{
-		currentOverlayType = overlayType;
+		currentSurfaceType = surfaceType;
 		updateSelectionVisuals();
 		triggerSelection();
-		groundEditor.SetOverlayMode(Visible, currentOverlayType);
+		groundEditor.SetSurfaceMode(Visible, currentSurfaceType);
 	}
 
-	// 同步当前选中的覆盖物类型。
+	// 同步当前选中的地表类型。
 	private void triggerSelection()
 	{
-		SetMeta("SelectedOverlay", (int)currentOverlayType);
+		SetMeta("SelectedSurface", (int)currentSurfaceType);
 	}
 
-	// 响应地图点击并执行覆盖物放置。
+	// 响应地图点击并执行地表放置。
 	private void onGroundCellClicked(Vector2I cellPos)
 	{
 		if (!Visible)
@@ -151,17 +146,13 @@ public partial class OverlayEditor : EditorWindow
 			.Where(ground.IsInsideGround)
 			.ToList();
 
-		List<Vector2I> validCells = cells
-			.Where(pos => OverlayTemplate.IsValid(ground.GetGrid(pos.X, pos.Y).SurfaceType, currentOverlayType))
-			.ToList();
-
-		validCells.ForEach(pos =>
+		cells.ForEach(pos =>
 		{
 			Grid grid = ground.GetGrid(pos.X, pos.Y);
-			grid.UpdateOverlay(currentOverlayType);
+			grid.UpdateSurface(currentSurfaceType);
 		});
 
-		Godot.Collections.Array<Vector2I> changedCells = new Godot.Collections.Array<Vector2I>(validCells.ToArray());
+		Godot.Collections.Array<Vector2I> changedCells = new Godot.Collections.Array<Vector2I>(cells.ToArray());
 		layerManager.UpdateCells(changedCells, ground);
 	}
 }

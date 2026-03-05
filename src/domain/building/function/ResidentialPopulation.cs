@@ -37,4 +37,15 @@ public class ResidentialPopulation
 		PopCount += count;
 		Pop.AddResidential(count);
 	}
+
+	/// <summary>
+	/// 从存档数据恢复关系，不重复写入人口已居住计数。
+	/// </summary>
+	public static ResidentialPopulation LoadSaveData(Population pop, int popCount)
+	{
+		Debug.Assert(popCount >= 0, "恢复人数不能为负数");
+		ResidentialPopulation relation = new ResidentialPopulation(pop, 0);
+		relation.PopCount = popCount;
+		return relation;
+	}
 }

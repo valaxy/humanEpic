@@ -91,13 +91,13 @@ public partial class GroundView : Node3D
 	/// <summary>
 	/// 绑定地面初始化所需依赖。
 	/// </summary>
-	public void Setup(Ground ground, LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera)
+	public void Setup(Ground ground, BuildingCollection buildingCollection, LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera)
 	{
 		this.ground = ground;
 		this.layerManager = layerManager;
 		this.gridRender = gridRender;
 		this.camera = camera;
-		groundEditor.Setup(ground, brush, previewRoot);
+		groundEditor.Setup(ground, buildingCollection, brush, previewRoot);
 		hasHoveredCell = false;
 
 		initializeMap(DefaultMapWidth, DefaultMapHeight);

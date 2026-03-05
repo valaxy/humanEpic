@@ -12,10 +12,14 @@ public partial class GameEditorButtons : CanvasLayer
 	private EditorButton terrainButton = null!;
 	// 覆盖物编辑开关按钮。
 	private EditorButton overlayButton = null!;
+	// 建筑编辑开关按钮。
+	private EditorButton buildButton = null!;
 	// 地表编辑器。
 	private SurfaceEditorBar surfaceEditor = null!;
 	// 覆盖物编辑器。
 	private OverlayEditor overlayEditor = null!;
+	// 建筑编辑器。
+	private BuildingEditorBar buildingEditor = null!;
 	// 右下角按钮组容器。
 	private HBoxContainer rightBottomContainer = null!;
 	// 地图交互入口。
@@ -27,7 +31,8 @@ public partial class GameEditorButtons : CanvasLayer
 	{
 		None,
 		Surface,
-		Overlay
+		Overlay,
+		Building
 	}
 
 	public override void _Ready()
@@ -36,13 +41,17 @@ public partial class GameEditorButtons : CanvasLayer
 		rightBottomContainer = GetNode<HBoxContainer>("Control/RightBottomContainer");
 		terrainButton = GetNode<EditorButton>("Control/RightBottomContainer/TerrainButton");
 		overlayButton = GetNode<EditorButton>("Control/RightBottomContainer/ToggleButton");
+		buildButton = GetNode<EditorButton>("Control/RightBottomContainer/BuildButton");
 		surfaceEditor = GetNode<SurfaceEditorBar>("Control/SurfaceEditor");
 		overlayEditor = GetNode<OverlayEditor>("Control/OverlayEditor");
+		buildingEditor = GetNode<BuildingEditorBar>("Control/BuildingEditor");
 
 		terrainButton.Pressed += onTerrainButtonPressed;
 		overlayButton.Pressed += onOverlayButtonPressed;
+		buildButton.Pressed += onBuildButtonPressed;
 		surfaceEditor.CloseRequested += onSurfaceEditorClosed;
 		overlayEditor.CloseRequested += onOverlayEditorClosed;
+		buildingEditor.CloseRequested += onBuildingEditorClosed;
 	}
 
 	/// <summary>
@@ -56,6 +65,7 @@ public partial class GameEditorButtons : CanvasLayer
 		topRightTools.Setup(world, view.GridRender, simulation);
 		surfaceEditor.Setup(world.Ground, view.LayerManager, view.GroundView, groundEditor, brush);
 		overlayEditor.Setup(world.Ground, view.LayerManager, view.GroundView, groundEditor, brush);
+		buildingEditor.Setup(world, view, groundEditor, brush);
 		switchEditor(ActiveEditorMode.None);
 	}
 
@@ -71,20 +81,29 @@ public partial class GameEditorButtons : CanvasLayer
 		switchEditor(overlayEditor.Visible ? ActiveEditorMode.None : ActiveEditorMode.Overlay);
 	}
 
+	// 切换建筑编辑器显隐。
+	private void onBuildButtonPressed()
+	{
+		switchEditor(buildingEditor.Visible ? ActiveEditorMode.None : ActiveEditorMode.Building);
+	}
+
 	// 统一切换编辑器状态。
 	private void switchEditor(ActiveEditorMode mode)
 	{
 		bool isSurfaceVisible = mode == ActiveEditorMode.Surface;
 		bool isOverlayVisible = mode == ActiveEditorMode.Overlay;
+		bool isBuildingVisible = mode == ActiveEditorMode.Building;
 
 		surfaceEditor.SetEditorVisible(isSurfaceVisible);
 		overlayEditor.SetEditorVisible(isOverlayVisible);
-		rightBottomContainer.Visible = !isSurfaceVisible && !isOverlayVisible;
+		buildingEditor.SetEditorVisible(isBuildingVisible);
+		rightBottomContainer.Visible = !isSurfaceVisible && !isOverlayVisible && !isBuildingVisible;
 
 		terrainButton.IsActive = isSurfaceVisible;
 		overlayButton.IsActive = isOverlayVisible;
+		buildButton.IsActive = isBuildingVisible;
 
-		if (!isSurfaceVisible && !isOverlayVisible)
+		if (!isSurfaceVisible && !isOverlayVisible && !isBuildingVisible)
 		{
 			groundEditor.DisableEditMode();
 		}
@@ -98,6 +117,12 @@ public partial class GameEditorButtons : CanvasLayer
 
 	// 响应编辑器关闭并同步按钮状态。
 	private void onOverlayEditorClosed()
+	{
+		switchEditor(ActiveEditorMode.None);
+	}
+
+	// 响应建筑编辑器关闭并同步按钮状态。
+	private void onBuildingEditorClosed()
 	{
 		switchEditor(ActiveEditorMode.None);
 	}

@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ckw1ytpvmxx1s"]
+
+[ext_resource type="Script" path="res://src/view/building/BuildingMesh.cs" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_building"]
+size = Vector3(0.9, 0.8, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_building"]
+shading_mode = 0
+albedo_color = Color(0, 0, 0.9, 1)
+
+[node name="BuildingMesh" type="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("BoxMesh_building")
+surface_material_override/0 = SubResource("StandardMaterial3D_building")
+script = ExtResource("1_script")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+billboard = 1
+no_depth_test = true
+font_size = 48
+outline_size = 12
+text = "建筑物"

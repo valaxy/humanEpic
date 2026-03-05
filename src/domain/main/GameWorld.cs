@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 领域层顶层入口类，负责所有领域对象的实例化、生命周期管理和依赖注入。
@@ -10,6 +11,9 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 {
 	public Ground Ground { get; private set; } = null!;
 	public TimeSystem TimeSystem { get; private set; } = null!;
+	public CountryCollection Countries { get; private set; } = null!;
+	public PopulationCollection Populations { get; private set; } = null!;
+	public BuildingCollection Buildings { get; private set; } = null!;
 
 	private GameWorld() { }
 
@@ -20,6 +24,9 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	{
 		Dictionary<string, object> saveData = Ground.GetSaveData();
 		saveData["time"] = TimeSystem.TotalSeconds;
+		saveData["countries"] = Countries.GetSaveData();
+		saveData["populations"] = Populations.GetSaveData();
+		saveData["buildings"] = Buildings.GetSaveData();
 		return saveData;
 	}
 
@@ -29,12 +36,64 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	/// </summary>
 	public static GameWorld LoadSaveData(Dictionary<string, object> data)
 	{
+		Ground ground = Ground.LoadSaveData(data);
+		CountryCollection countries = loadCountries(data);
+		PopulationCollection populations = loadPopulations(data);
+		BuildingCollection buildings = new BuildingCollection(ground, countries, populations);
+		loadBuildings(data, buildings);
+
 		GameWorld world = new GameWorld
 		{
-			Ground = Ground.LoadSaveData(data),
+			Ground = ground,
 			TimeSystem = TimeSystem.LoadSaveData(data),
+			Countries = countries,
+			Populations = populations,
+			Buildings = buildings,
 		};
 		return world;
+	}
+
+	private static CountryCollection loadCountries(Dictionary<string, object> data)
+	{
+		CountryCollection countries = new CountryCollection();
+		if (data.ContainsKey("countries"))
+		{
+			List<Dictionary<string, object>> savedCountries = ((List<object>)data["countries"])
+				.Select(item => (Dictionary<string, object>)item)
+				.ToList();
+			countries.LoadSaveData(savedCountries);
+			return countries;
+		}
+
+		countries.Add(new Country("默认国家", Colors.CornflowerBlue));
+		return countries;
+	}
+
+	private static PopulationCollection loadPopulations(Dictionary<string, object> data)
+	{
+		PopulationCollection populations = new PopulationCollection();
+		if (data.ContainsKey("populations"))
+		{
+			List<Dictionary<string, object>> savedPopulations = ((List<object>)data["populations"])
+				.Select(item => (Dictionary<string, object>)item)
+				.ToList();
+			populations.LoadSaveData(savedPopulations);
+		}
+
+		return populations;
+	}
+
+	private static void loadBuildings(Dictionary<string, object> data, BuildingCollection buildings)
+	{
+		if (!data.ContainsKey("buildings"))
+		{
+			return;
+		}
+
+		List<Dictionary<string, object>> savedBuildings = ((List<object>)data["buildings"])
+			.Select(item => (Dictionary<string, object>)item)
+			.ToList();
+		buildings.LoadSaveData(savedBuildings);
 	}
 }
 

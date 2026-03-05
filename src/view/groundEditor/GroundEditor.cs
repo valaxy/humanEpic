@@ -14,6 +14,8 @@ public partial class GroundEditor : Node
 
 	// 地图地面模型引用。
 	private Ground ground = null!;
+	// 建筑集合引用。
+	private BuildingCollection buildingCollection = null!;
 
 	// 预览节点容器。
 	private Node3D previewRoot = null!;
@@ -38,6 +40,11 @@ public partial class GroundEditor : Node
 	public OverlayType.Enums OverlayType { get; private set; } = global::OverlayType.Enums.NONE;
 
 	/// <summary>
+	/// 当前选中的建筑类型。
+	/// </summary>
+	public BuildingType.Enums BuildingType { get; private set; } = global::BuildingType.Enums.Residential;
+
+	/// <summary>
 	/// 当前是否可进行绘制。
 	/// </summary>
 	public bool CanDraw => previewMode != PreviewMode.Default;
@@ -50,9 +57,10 @@ public partial class GroundEditor : Node
 	/// <summary>
 	/// 初始化编辑器依赖。
 	/// </summary>
-	public void Setup(Ground groundRef, Brush brushRef, Node3D previewRootRef)
+	public void Setup(Ground groundRef, BuildingCollection buildingCollectionRef, Brush brushRef, Node3D previewRootRef)
 	{
 		ground = groundRef;
+		buildingCollection = buildingCollectionRef;
 		brush = brushRef;
 		previewRoot = previewRootRef;
 		previewMode = PreviewMode.Default;
@@ -79,6 +87,14 @@ public partial class GroundEditor : Node
 	}
 
 	/// <summary>
+	/// 设置建筑类型。
+	/// </summary>
+	public void SetBuildingType(BuildingType.Enums value)
+	{
+		BuildingType = value;
+	}
+
+	/// <summary>
 	/// 设置覆盖物编辑模式。
 	/// </summary>
 	public void SetOverlayMode(bool enabled, OverlayType.Enums overlayType)
@@ -99,6 +115,20 @@ public partial class GroundEditor : Node
 	{
 		previewMode = enabled ? PreviewMode.EditSurface : PreviewMode.Default;
 		SurfaceType = surfaceType;
+		if (!enabled)
+		{
+			clearPreview();
+			brush.SetForbiddenIcon(false);
+		}
+	}
+
+	/// <summary>
+	/// 设置建筑编辑模式。
+	/// </summary>
+	public void SetBuildingMode(bool enabled, BuildingType.Enums buildingType)
+	{
+		previewMode = enabled ? PreviewMode.EditBuilding : PreviewMode.Default;
+		BuildingType = buildingType;
 		if (!enabled)
 		{
 			clearPreview();
@@ -193,8 +223,9 @@ public partial class GroundEditor : Node
 		List<Vector2I> insideCells = affectedCells.Where(ground.IsInsideGround).ToList();
 		bool hasOutOfBounds = affectedCells.Any(cell => !ground.IsInsideGround(cell));
 		bool hasInvalidOverlay = previewMode == PreviewMode.EditOverlay && insideCells.Any(cell => !OverlayTemplate.IsValid(ground.GetGrid(cell.X, cell.Y).SurfaceType, OverlayType));
+		bool hasInvalidBuilding = previewMode == PreviewMode.EditBuilding && insideCells.Any(buildingCollection.HasKey);
 
-		brush.SetForbiddenIcon(hasOutOfBounds || hasInvalidOverlay);
+		brush.SetForbiddenIcon(hasOutOfBounds || hasInvalidOverlay || hasInvalidBuilding);
 		renderPreviewCells(insideCells, getPreviewColor());
 	}
 
@@ -210,9 +241,13 @@ public partial class GroundEditor : Node
 	// 获取当前模式对应的预览颜色。
 	private Color getPreviewColor()
 	{
-		Color baseColor = previewMode == PreviewMode.EditSurface
-			? SurfaceTemplate.GetTemplate(SurfaceType).Color
-			: OverlayTemplate.GetTemplate(OverlayType).Color;
+		Color baseColor = previewMode switch
+		{
+			PreviewMode.EditSurface => SurfaceTemplate.GetTemplate(SurfaceType).Color,
+			PreviewMode.EditOverlay => OverlayTemplate.GetTemplate(OverlayType).Color,
+			PreviewMode.EditBuilding => BuildingTemplate.GetTemplate(BuildingType).Color,
+			_ => Colors.White,
+		};
 
 		return new Color(baseColor.R, baseColor.G, baseColor.B, 0.45f);
 	}

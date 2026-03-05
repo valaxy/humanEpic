@@ -15,6 +15,8 @@ public partial class GameView : Node3D
 	public GroundView GroundView { get; private set; } = null!;
 	/// <summary>地格选中管理器</summary>
 	public GroundSelection Selection { get; private set; } = null!;
+	/// <summary>建筑集合渲染节点</summary>
+	public BuildingCollectionNode BuildingCollection { get; private set; } = null!;
 	// /// <summary>管理地理数据和网格绘制的管理器</summary>
 	// public GroundNode Ground { get; private set; } = new GroundNode();
 	// /// <summary>管理单位及其业务逻辑/显示的控制器</summary>
@@ -29,6 +31,7 @@ public partial class GameView : Node3D
 		GroundView = GetNode<GroundView>("GroundView");
 		Selection = GetNode<GroundSelection>("Selection");
 		GridRender = GetNode<GroundGridHelper>("GroundGridHelper");
+		BuildingCollection = GetNode<BuildingCollectionNode>("BuildingCollection");
 	}
 
 	/// <summary>
@@ -42,8 +45,9 @@ public partial class GameView : Node3D
 			LayerManager.HandleZoom(zoomValue);
 		};
 
-		GroundView.Setup(world.Ground, LayerManager, GridRender, camera);
+		GroundView.Setup(world.Ground, world.Buildings, LayerManager, GridRender, camera);
 		Selection.Setup(world, GroundView);
+		BuildingCollection.Setup(world);
 
 		// 1. 初始化基础显示组件
 		// Ground.Setup(camera, world, SelectionController, LayerManager);

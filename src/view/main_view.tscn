@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://src/view/ground/GroundView.cs" id="3_ground_view_script"]
 [ext_resource type="Script" path="res://src/view/groundEditor/GroundEditor.cs" id="5_ground_editor_script"]
 [ext_resource type="Script" path="res://src/view/selection/GroundSelection.cs" id="6_selection_script"]
+[ext_resource type="Script" path="res://src/view/building/BuildingCollectionNode.cs" id="8_building_collection_script"]
 [ext_resource type="PackedScene" path="res://src/view/brush/Brush.tscn" id="4_brush_scene"]
 [ext_resource type="PackedScene" path="res://src/view/groundGridHelper/ground_grid_helper.tscn" id="7_grid_helper_scene"]
 
@@ -28,3 +29,6 @@ script = ExtResource("5_ground_editor_script")
 script = ExtResource("6_selection_script")
 
 [node name="GroundGridHelper" parent="." instance=ExtResource("7_grid_helper_scene")]
+
+[node name="BuildingCollection" type="Node3D" parent="."]
+script = ExtResource("8_building_collection_script")

@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/marketUI/components/LabourMarketHistoryChartUI.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/chart/line_chart.tscn" id="2_chart_scene"]
+
+[node name="LabourMarketHistoryChartUI" instance=ExtResource("2_chart_scene")]
+script = ExtResource("1_script")

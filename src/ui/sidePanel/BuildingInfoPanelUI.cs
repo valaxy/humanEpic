@@ -10,9 +10,13 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 {
 	// 产品市场表场景。
 	private static readonly PackedScene productMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/product_market_table_ui.tscn");
+	// 产品市场历史图场景。
+	private static readonly PackedScene productMarketHistoryChartScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/product_market_history_chart_ui.tscn");
 
 	// 劳动力市场表场景。
 	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_table_ui.tscn");
+	// 劳动力市场历史图场景。
+	private static readonly PackedScene labourMarketHistoryChartScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_history_chart_ui.tscn");
 
 	// 标题节点。
 	private Label titleLabel = null!;
@@ -101,9 +105,17 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 			productMarketSlot.AddChild(productTable); // 必须先addChild后Render
 			productTable.RenderMarket(building.Market.ProductMarket);
 
+			ProductMarketHistoryChartUI productHistoryChart = productMarketHistoryChartScene.Instantiate<ProductMarketHistoryChartUI>();
+			productMarketSlot.AddChild(productHistoryChart); // 必须先addChild后Render
+			productHistoryChart.RenderMarket(building.Market.ProductMarket);
+
 			LabourMarketTableUI labourTable = labourMarketTableScene.Instantiate<LabourMarketTableUI>();
 			labourMarketSlot.AddChild(labourTable); // 必须先addChild后Render
 			labourTable.RenderMarket(building.Market.LabourMarket);
+
+			LabourMarketHistoryChartUI labourHistoryChart = labourMarketHistoryChartScene.Instantiate<LabourMarketHistoryChartUI>();
+			labourMarketSlot.AddChild(labourHistoryChart); // 必须先addChild后Render
+			labourHistoryChart.RenderMarket(building.Market.LabourMarket);
 			setMarketModulesVisible(true);
 		}
 		else

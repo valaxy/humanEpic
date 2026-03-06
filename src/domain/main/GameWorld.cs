@@ -62,10 +62,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 				.Select(item => (Dictionary<string, object>)item)
 				.ToList();
 			countries.LoadSaveData(savedCountries);
-			return countries;
 		}
-
-		countries.Add(new Country("默认国家", Colors.CornflowerBlue));
 		return countries;
 	}
 

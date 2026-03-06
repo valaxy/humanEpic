@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,7 +28,12 @@ public class GameWorldInitializer
         ulong start = Time.GetTicksMsec();
 
         // 使用godot File API的原因是 res:// 路径的问题
-        string jsonString = JsonSerializer.Serialize(gameWorld.GetSaveData(), new JsonSerializerOptions { WriteIndented = false });
+        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = false,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        string jsonString = JsonSerializer.Serialize(gameWorld.GetSaveData(), jsonOptions);
         using FileAccess file = FileAccess.Open(savePath, FileAccess.ModeFlags.Write);
         if (file == null)
         {

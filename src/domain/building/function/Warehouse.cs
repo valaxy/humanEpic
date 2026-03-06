@@ -1,6 +1,5 @@
 using Godot;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +9,10 @@ using System.Linq;
 /// </summary>
 public class Warehouse : IInfo, IPersistence<Warehouse>
 {
-	private readonly Dictionary<ProductType.Enums, float> amounts = new();
+	// 按人口维度分桶的产品库存。
+	private readonly Dictionary<int, Dictionary<ProductType.Enums, float>> amounts = new();
+	// 当前仓库已用容量缓存。不用考虑舍入误差
+	private float totalUsedVolume;
 
 	/// <summary>
 	/// 仓库总容量上限。
@@ -20,7 +22,7 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	/// <summary>
 	/// 已使用容量。
 	/// </summary>
-	public float TotalUsedVolume => amounts.Sum(entry => entry.Value);
+	public float TotalUsedVolume => totalUsedVolume;
 
 	/// <summary>
 	/// 剩余可用容量。
@@ -34,42 +36,63 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	{
 		Debug.Assert(totalVolume >= 0.0f, "仓库总容量必须非负");
 		TotalVolume = totalVolume;
+		totalUsedVolume = 0.0f;
 	}
 
 
 	/// <summary>
 	/// 添加产品，必须不能超过总容量限制，否则断言失败
 	/// </summary>
-	public void AddProduct(ProductType.Enums type, float amount)
+	public void AddProduct(ProductType.Enums type, float amount, int populationId)
 	{
 		Debug.Assert(amount >= 0.0f, "添加数量必须非负");
 		Debug.Assert(TotalUsedVolume + amount <= TotalVolume, "仓库容量不足");
 
-		float currentAmount = GetAmount(type);
+		float currentAmount = GetAmount(type, populationId);
 		float targetAmount = currentAmount + amount;
+		Dictionary<ProductType.Enums, float> bucket = getOrCreatePopulationBucket(populationId);
+		bucket[type] = targetAmount;
 
-		amounts[type] = targetAmount;
+		totalUsedVolume += amount;
 	}
 
 	/// <summary>
 	/// 消耗产品，库存必须足够，否则断言失败
 	/// </summary>
-	public void ConsumeProduct(ProductType.Enums type, float amount)
+	public void ConsumeProduct(ProductType.Enums type, float amount, int populationId)
 	{
 		Debug.Assert(amount >= 0.0f, "消耗数量必须非负");
 
-		float currentAmount = GetAmount(type);
+		float currentAmount = GetAmount(type, populationId);
 		Debug.Assert(amount <= currentAmount, "库存不足，无法消耗");
+		Dictionary<ProductType.Enums, float> bucket = getOrCreatePopulationBucket(populationId);
+		float targetAmount = currentAmount - amount;
+		bucket[type] = targetAmount;
 
-		amounts[type] = currentAmount - amount;
+		totalUsedVolume -= amount;
+		Debug.Assert(totalUsedVolume >= 0.0f, "仓库已用容量不能为负");
 	}
 
 	/// <summary>
-	/// 获取某商品当前库存。
+	/// 获取某商品在指定人口维度下的当前库存。
 	/// </summary>
-	public float GetAmount(ProductType.Enums type)
+	public float GetAmount(ProductType.Enums type, int populationId)
 	{
-		return amounts.TryGetValue(type, out float value) ? value : 0.0f;
+		if (!amounts.TryGetValue(populationId, out Dictionary<ProductType.Enums, float>? bucket))
+		{
+			return 0.0f;
+		}
+
+		return bucket.TryGetValue(type, out float value) ? value : 0.0f;
+	}
+
+	/// <summary>
+	/// 获取某商品在全部人口上的总库存。
+	/// </summary>
+	public float GetTotalAmount(ProductType.Enums type)
+	{
+		return amounts.Values
+			.Sum(bucket => bucket.TryGetValue(type, out float value) ? value : 0.0f);
 	}
 
 
@@ -82,13 +105,15 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	{
 		InfoData data = new();
 		amounts
+			.SelectMany(popEntry => popEntry.Value.Select(productEntry => (populationId: popEntry.Key, productEntry.Key, productEntry.Value)))
 			.Where(entry => entry.Value > 0.0f)
 			.ToList()
-			.ForEach(pair =>
+			.ForEach(entry =>
 			{
-				ProductTemplate template = ProductTemplate.GetTemplate(pair.Key);
-				float ratio = TotalVolume > 0.0f ? Mathf.Clamp(pair.Value / TotalVolume, 0.0f, 1.0f) : 0.0f;
-				data.AddProgress(template.Name, ratio, $"{(int)pair.Value}");
+				ProductTemplate template = ProductTemplate.GetTemplate(entry.Key);
+				float ratio = TotalVolume > 0.0f ? Mathf.Clamp(entry.Value / TotalVolume, 0.0f, 1.0f) : 0.0f;
+				string populationName = $"人口#{entry.populationId}";
+				data.AddProgress($"{populationName}/{template.Name}", ratio, $"{(int)entry.Value}");
 			});
 
 		Debug.Assert(TotalVolume >= 0.0f, "仓库总容量必须非负");
@@ -103,8 +128,14 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	public Dictionary<string, object> GetSaveData()
 	{
 		Dictionary<string, object> productAmounts = amounts
-			.Where(pair => pair.Value > 0.0f)
-			.ToDictionary(pair => pair.Key.ToString(), pair => (object)pair.Value);
+			.Where(popEntry => popEntry.Value.Any(productEntry => productEntry.Value > 0.0f))
+			.ToDictionary(
+				popEntry => popEntry.Key.ToString(),
+				popEntry => (object)popEntry.Value
+					.Where(productEntry => productEntry.Value > 0.0f)
+					.ToDictionary(
+						productEntry => ((int)productEntry.Key).ToString(),
+						productEntry => (object)productEntry.Value));
 
 		return new Dictionary<string, object>
 		{
@@ -121,22 +152,37 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 		float totalVolume = Convert.ToSingle(data["total_volume"]);
 		Warehouse warehouse = new Warehouse(totalVolume);
 
-		Dictionary<string, object> amountEntries = (data["amounts"] as Dictionary<string, object>)!;
-		amountEntries
-			.Where(pair => TryParseProductType(pair.Key, out _)) // TODO 不要按照key string来解析？
-			.ToList()
-			.ForEach(pair =>
-			{
-				ProductType.Enums type = Enum.Parse<ProductType.Enums>(pair.Key, true);
-				warehouse.amounts[type] = Convert.ToSingle(pair.Value);
-			});
+		Dictionary<string, object> populationEntries = (data["amounts"] as Dictionary<string, object>)!;
+		populationEntries
+						.ToList()
+						.ForEach(populationEntry =>
+						{
+							int populationId = Convert.ToInt32(populationEntry.Key);
+							Dictionary<string, object> productEntries = (populationEntry.Value as Dictionary<string, object>)!;
+							Dictionary<ProductType.Enums, float> bucket = productEntries
+								.ToDictionary(
+									productEntry => (ProductType.Enums)Convert.ToInt32(productEntry.Key),
+									productEntry => Convert.ToSingle(productEntry.Value));
+							warehouse.amounts[populationId] = bucket;
+						});
+
+		warehouse.totalUsedVolume = warehouse.amounts.Values
+			.SelectMany(bucket => bucket.Values)
+			.Sum();
 
 		return warehouse;
 	}
 
-	// 统一的产品类型解析。
-	private static bool TryParseProductType(string rawType, out ProductType.Enums type)
+	// 获取人口库存桶，不存在时自动创建。
+	private Dictionary<ProductType.Enums, float> getOrCreatePopulationBucket(int populationId)
 	{
-		return Enum.TryParse(rawType, true, out type);
+		if (amounts.TryGetValue(populationId, out Dictionary<ProductType.Enums, float>? bucket))
+		{
+			return bucket;
+		}
+
+		Dictionary<ProductType.Enums, float> created = new Dictionary<ProductType.Enums, float>();
+		amounts[populationId] = created;
+		return created;
 	}
 }

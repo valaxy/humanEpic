@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Text.Json;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 负责游戏世界的初始化、保存和加载逻辑。
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 public class GameWorldInitializer
 {
     private const string savePath = "res://config/map_config.json";
+    private const float initialPopulationCurrencyTotal = 100000.0f;
     private static bool hasLoadedFromDisk;
 
     /// <summary>
@@ -57,6 +59,7 @@ public class GameWorldInitializer
         Dictionary<string, object> data = JsonUtility.LoadDataFromJsonFile(savePath);
         GameWorld world = GameWorld.LoadSaveData(data);
         ensureColdStart(world);
+        applyInitialPopulationCurrency(world);
 
         hasLoadedFromDisk = true;
         GD.Print($"[Perf] GameWorldInitializer Load took {Time.GetTicksMsec() - start} ms");
@@ -79,7 +82,7 @@ public class GameWorldInitializer
         // 国家数据
         countries.Add(new Country("红色国家", Colors.Red));
         countries.Add(new Country("蓝色国家", Colors.DodgerBlue));
-
+    
         // 单位数据
         // // 新增一组单位
         // Vector2I centerPos = new Vector2I(gameWorld.Ground.Width / 2 + 50, gameWorld.Ground.Height / 2 + 50);
@@ -101,5 +104,36 @@ public class GameWorldInitializer
         // gameWorld.UnitCollection.AddUnit(topLeftUnit);
 
         GD.Print("冷启动：已生成基础数据");
+    }
+
+    /// <summary>
+    /// 启动时按人口占比发放总计初始货币。
+    /// </summary>
+    private static void applyInitialPopulationCurrency(GameWorld gameWorld)
+    {
+        List<(Warehouse Warehouse, int PopulationId, int Count)> residentialEntries = gameWorld.Buildings.GetAll()
+            .Where(building => building.Residential != null)
+            .SelectMany(building => building.Residential!.GetPopulationEntries()
+                .Select(entry => (building.Warehouse, PopulationId: entry.Population.Id, entry.Count)))
+            .Where(entry => entry.Count > 0)
+            .ToList();
+
+        int totalResidentialPopulationCount = residentialEntries.Sum(entry => entry.Count);
+        if (totalResidentialPopulationCount <= 0)
+        {
+            return;
+        }
+
+        residentialEntries.ForEach(entry =>
+        {
+            float existedCurrency = entry.Warehouse.GetAmount(ProductType.Enums.CURRENCY, entry.PopulationId);
+            if (existedCurrency > 0.0f)
+            {
+                entry.Warehouse.ConsumeProduct(ProductType.Enums.CURRENCY, existedCurrency, entry.PopulationId);
+            }
+
+            float initialCurrency = initialPopulationCurrencyTotal * entry.Count / totalResidentialPopulationCount;
+            entry.Warehouse.AddProduct(ProductType.Enums.CURRENCY, initialCurrency, entry.PopulationId);
+        });
     }
 }

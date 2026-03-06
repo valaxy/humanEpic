@@ -159,6 +159,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 			{ "type_id", (int)TypeId },
 			{ "type_name", TypeId.ToString() },
 			{ "country_id", Country.Id },
+			{ "warehouse", Warehouse.GetSaveData() }
 		};
 
 		if (Residential != null)
@@ -170,8 +171,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		{
 			saveData["market"] = Market.GetSaveData();
 		}
-
-		saveData["warehouse"] = Warehouse.GetSaveData();
 
 		return saveData;
 	}

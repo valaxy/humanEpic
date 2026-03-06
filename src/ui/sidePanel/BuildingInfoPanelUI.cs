@@ -30,6 +30,8 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 
 	// 关闭按钮。
 	private Button closeButton = null!;
+	// 主面板，用于拦截滚轮输入避免穿透到底层地面。
+	private Control mainPanel = null!;
 
 	// 建筑集合。
 	private BuildingCollection buildingCollection = null!;
@@ -46,9 +48,11 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 		labourMarketModuleCard = GetNode<PanelContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard");
 		labourMarketSlot = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper/LabourMarketSlot");
 		closeButton = GetNode<Button>("MainPanel/CloseButton");
+		mainPanel = GetNode<Control>("MainPanel");
 
 		Visible = false;
 		closeButton.Pressed += hidePanel;
+		mainPanel.GuiInput += onMainPanelGuiInput;
 		setMarketModulesVisible(false);
 	}
 
@@ -217,5 +221,15 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	private void hidePanel()
 	{
 		Visible = false;
+	}
+
+	// 拦截滚轮输入，防止触发地平面与镜头缩放逻辑。
+	private void onMainPanelGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is InputEventMouseButton mouseButton
+			&& (mouseButton.ButtonIndex == MouseButton.WheelUp || mouseButton.ButtonIndex == MouseButton.WheelDown))
+		{
+			GetViewport().SetInputAsHandled();
+		}
 	}
 }

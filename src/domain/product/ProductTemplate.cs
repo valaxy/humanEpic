@@ -23,6 +23,12 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 		});
 
 	private static readonly Dictionary<ProductType.Enums, ProductTemplate> templates = loadTemplatesFromCsv();
+	private static readonly List<ProductType.Enums> consumerGoods = templates
+		.Where(entry => entry.Value.IsConsumerGood)
+		.Select(entry => entry.Key)
+		.ToList();
+	private static readonly Dictionary<ProductType.Enums, ProductTemplate> consumerGoodTemplates = consumerGoods
+		.ToDictionary(productType => productType, GetTemplate);
 
 	/// <summary>
 	/// 产品类型
@@ -82,6 +88,16 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 	/// <param name="type">产品类型</param>
 	/// <returns>对应的产品模板</returns>
 	public static ProductTemplate GetTemplate(ProductType.Enums type) => templates[type];
+
+	/// <summary>
+	/// 获取全部消费品类型。
+	/// </summary>
+	public static IReadOnlyList<ProductType.Enums> GetConsumerGoods() => consumerGoods;
+
+	/// <summary>
+	/// 获取消费品模板映射缓存。
+	/// </summary>
+	public static IReadOnlyDictionary<ProductType.Enums, ProductTemplate> GetConsumerGoodTemplates() => consumerGoodTemplates;
 
 
 

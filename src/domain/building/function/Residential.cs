@@ -23,6 +23,16 @@ public class Residential : IInfo, IPersistence<Residential, PopulationCollection
     public int TotalCount => totalCount;
 
     /// <summary>
+    /// 获取当前建筑内各人口及其居住人数快照。
+    /// </summary>
+    public IReadOnlyList<(Population Population, int Count)> GetPopulationEntries()
+    {
+        return popRelations.Values
+            .Select(relation => (relation.Pop, relation.PopCount))
+            .ToList();
+    }
+
+    /// <summary>
     /// 初始化住房组件。
     /// </summary>
     public Residential(int maxPopulation)

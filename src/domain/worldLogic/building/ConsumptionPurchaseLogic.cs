@@ -13,8 +13,10 @@ public class ConsumptionPurchaseLogic : WorldLogic
     // 价格下限，避免除零与异常放大。
     private const float minPrice = 0.0001f;
 
-    // 可消费商品缓存。
-    private readonly List<ProductType.Enums> consumerGoods;
+    // 可消费商品类型缓存。
+    private readonly IReadOnlyList<ProductType.Enums> consumerGoods;
+    // 可消费商品模板缓存。
+    private readonly IReadOnlyDictionary<ProductType.Enums, ProductTemplate> consumerGoodTemplates;
 
     // 人口集合，用于计算需求边际效用。
     private readonly PopulationCollection populationCollection;
@@ -30,7 +32,8 @@ public class ConsumptionPurchaseLogic : WorldLogic
     {
         this.populationCollection = populationCollection;
         this.buildingCollection = buildingCollection;
-        consumerGoods = collectConsumerGoods();
+        consumerGoods = ProductTemplate.GetConsumerGoods();
+        consumerGoodTemplates = ProductTemplate.GetConsumerGoodTemplates();
     }
 
     /// <summary>
@@ -38,47 +41,37 @@ public class ConsumptionPurchaseLogic : WorldLogic
     /// </summary>
     protected override void ProcessLogic()
     {
-        ProductMarket? market = resolveGlobalMarket();
-        if (market == null)
-        {
-            return;
-        }
-
-        Dictionary<ProductType.Enums, float> totalDemandByProduct = createDemandAccumulator();
-        List<Warehouse> consumerWarehouses = getConsumerWarehouses();
-        if (consumerWarehouses.Count == 0)
-        {
-            publishConsumerDemands(market, totalDemandByProduct);
-            return;
-        }
-
         IReadOnlyList<Population> populations = populationCollection.GetAll();
-        Dictionary<ProductType.Enums, float> valueForMoneyMap = calculateValueForMoney(populations, market);
-        Dictionary<ProductType.Enums, float> buyRatios = calculateSoftmaxRatios(valueForMoneyMap);
+        if (populations.Count == 0)
+        {
+            GD.Print("消费购买逻辑: 当前没有人口，跳过本轮消费购买");
+            return;
+        }
 
-        // 每个消费仓库独立执行“花完预算”的购买流程。
-        consumerWarehouses.ForEach(warehouse => consumeOneWarehouseBudget(warehouse, market, buyRatios, totalDemandByProduct));
+        ProductMarket? productMarket = resolveGlobalMarket();
+        if (productMarket == null)
+        {
+            GD.Print("消费购买逻辑: 未找到全局市场，跳过本轮消费购买");
+            return;
+        }
 
-        logDemandSummary(totalDemandByProduct);
-        publishConsumerDemands(market, totalDemandByProduct);
+
+        // 1. 计算所有商品的性价比
+        Dictionary<ProductType.Enums, float> productValueForMoney = getProductValueForMoney(populations, productMarket);
+
+        // 2. 将性价比映射成购买比例
+        Dictionary<ProductType.Enums, float> productBuyRatios = getBuyRatios(productValueForMoney);
+
+        // 3. 每个消费仓库独立执行“花完预算”的购买流程。
+        List<(Warehouse Warehouse, IReadOnlyList<(Population Population, int Count)> PopulationEntries)> consumerWarehouses = getConsumerWarehouses();
+        Dictionary<ProductType.Enums, float> totalDemandByProduct = consumerGoods.ToDictionary(productType => productType, _ => 0.0f);
+        consumerWarehouses.ForEach(entry => consumeOneWarehouseBudget(entry.Warehouse, entry.PopulationEntries, productMarket, productBuyRatios, totalDemandByProduct));
+
+        // 4. 更新消费者对商品的需求量和价格
+        publichProductPurchase(productMarket, totalDemandByProduct);
     }
 
-    // 收集所有消费品类型。
-    private List<ProductType.Enums> collectConsumerGoods()
-    {
-        return ProductTemplate.GetTemplates()
-            .Where(entry => entry.Value.IsConsumerGood)
-            .Select(entry => entry.Key)
-            .ToList();
-    }
-
-    // 初始化需求累计器。
-    private Dictionary<ProductType.Enums, float> createDemandAccumulator()
-    {
-        return consumerGoods.ToDictionary(productType => productType, _ => 0.0f);
-    }
-
-    // 解析当前全局市场（暂时使用第一个市场建筑）。
+    // 解析当前全局市场（TODO 暂时使用第一个市场建筑）。
     private ProductMarket? resolveGlobalMarket()
     {
         return buildingCollection.GetAll()
@@ -88,61 +81,30 @@ public class ConsumptionPurchaseLogic : WorldLogic
             .FirstOrDefault();
     }
 
-    // 获取所有作为消费主体的仓库（当前使用住宅建筑仓库）。
-    private List<Warehouse> getConsumerWarehouses()
-    {
-        return buildingCollection.GetAll()
-            .Where(building => building.Residential != null)
-            .Select(building => building.Warehouse)
-            .ToList();
-    }
-
     // 计算所有商品的性价比：边际效用 / 价格。
-    private Dictionary<ProductType.Enums, float> calculateValueForMoney(IReadOnlyList<Population> populations, ProductMarket market)
+    private Dictionary<ProductType.Enums, float> getProductValueForMoney(IReadOnlyList<Population> populations, ProductMarket market)
     {
         return consumerGoods.ToDictionary(
             productType => productType,
             productType =>
             {
-                float utility = calculateAverageMarginalUtility(populations, productType);
+                ProductTemplate template = consumerGoodTemplates[productType];
+                float utility = calculateAverageMarginalUtility(populations, template);
                 float price = Mathf.Max(market.Prices.Get(productType), minPrice);
                 return utility / price;
             });
     }
 
-    // 计算一个商品在全体人口上的平均边际效用。
-    private float calculateAverageMarginalUtility(IReadOnlyList<Population> populations, ProductType.Enums productType)
+    // 计算一个商品在全体人口上的平均边际效用（已合并单人口边际效用计算）。
+    private float calculateAverageMarginalUtility(IReadOnlyList<Population> populations, ProductTemplate template)
     {
-        if (populations.Count == 0)
-        {
-            return 1.0f;
-        }
-
         return populations
-            .Select(population => calculateMarginalUtility(population, productType))
+            .Select(population => template.NeedSatisfactionRatios.Sum(ratioEntry => calculateDemandUtilityDelta(population, ratioEntry.Key, ratioEntry.Value)))
             .Average();
     }
 
-    // 计算某人口对某商品的边际效用。
-    private float calculateMarginalUtility(Population population, ProductType.Enums productType)
-    {
-        ProductTemplate template = ProductTemplate.GetTemplate(productType);
-        return template.NeedSatisfactionRatios.Sum(ratioEntry => calculateDemandUtilityDelta(population, ratioEntry.Key, ratioEntry.Value));
-    }
-
-    // 计算单一需求维度上的效用增量。
-    private float calculateDemandUtilityDelta(Population population, DemandType.Enums demandType, float satisfyRatio)
-    {
-        Demand demand = population.Demands.Get(demandType);
-        float oldDegree = Mathf.Clamp(demand.SatisfiedAmount, 0.0f, 1.0f);
-        float newDegree = Mathf.Clamp(oldDegree + satisfyRatio, 0.0f, 1.0f);
-        float oldUtility = demand.CalculateTotalUtility(oldDegree);
-        float newUtility = demand.CalculateTotalUtility(newDegree);
-        return Mathf.Max(0.0f, newUtility - oldUtility);
-    }
-
     // 将性价比映射成 softmax 购买比例。
-    private Dictionary<ProductType.Enums, float> calculateSoftmaxRatios(Dictionary<ProductType.Enums, float> valueForMoneyMap)
+    private Dictionary<ProductType.Enums, float> getBuyRatios(Dictionary<ProductType.Enums, float> valueForMoneyMap)
     {
         if (valueForMoneyMap.Count == 0)
         {
@@ -170,44 +132,72 @@ public class ConsumptionPurchaseLogic : WorldLogic
         return expMap.ToDictionary(entry => entry.Key, entry => entry.Value / expSum);
     }
 
+    // 获取所有作为消费主体的仓库（当前使用住宅建筑仓库）。
+    private List<(Warehouse Warehouse, IReadOnlyList<(Population Population, int Count)> PopulationEntries)> getConsumerWarehouses()
+    {
+        return buildingCollection.GetAll()
+            .Where(building => building.Residential != null)
+            .Select(building => (building.Warehouse, building.Residential!.GetPopulationEntries()))
+            .ToList();
+    }
+
+
+
+
     // 对单个消费仓库执行一次预算消耗与购买。
     private void consumeOneWarehouseBudget(
         Warehouse warehouse,
+        IReadOnlyList<(Population Population, int Count)> populationEntries,
         ProductMarket market,
         Dictionary<ProductType.Enums, float> buyRatios,
         Dictionary<ProductType.Enums, float> totalDemandByProduct)
     {
-        float budget = warehouse.GetAmount(ProductType.Enums.CURRENCY);
-        if (budget <= 0.0f)
+        populationEntries
+            .Where(entry => entry.Count > 0)
+            .ToList()
+            .ForEach(populationEntry =>
         {
-            return;
-        }
+            int populationId = populationEntry.Population.Id;
+            float budget = warehouse.GetAmount(ProductType.Enums.CURRENCY, populationId);
+            if (budget <= 0.0f)
+            {
+                return;
+            }
 
-        buyRatios.ToList().ForEach(ratioEntry =>
-        {
-            ProductType.Enums productType = ratioEntry.Key;
-            float ratio = ratioEntry.Value;
-            float spent = budget * ratio;
-            float price = Mathf.Max(market.Prices.Get(productType), minPrice);
-            float boughtAmount = spent / price;
+            buyRatios.ToList().ForEach(ratioEntry =>
+            {
+                ProductType.Enums productType = ratioEntry.Key;
+                float ratio = ratioEntry.Value;
+                float spent = budget * ratio;
+                float price = Mathf.Max(market.Prices.Get(productType), minPrice);
+                float boughtAmount = spent / price;
 
-            warehouse.AddProduct(productType, boughtAmount);
-            totalDemandByProduct[productType] += boughtAmount;
+                warehouse.AddProduct(productType, boughtAmount, populationId);
+                totalDemandByProduct[productType] += boughtAmount;
+            });
+
+            warehouse.ConsumeProduct(ProductType.Enums.CURRENCY, budget, populationId);
         });
-
-        warehouse.ConsumeProduct(ProductType.Enums.CURRENCY, warehouse.GetAmount(ProductType.Enums.CURRENCY));
     }
 
-    // 将需求回写到市场，供 UI 与后续逻辑读取。
-    private void publishConsumerDemands(ProductMarket market, Dictionary<ProductType.Enums, float> totalDemandByProduct)
+    // 计算单一需求维度上的效用增量。
+    private float calculateDemandUtilityDelta(Population population, DemandType.Enums demandType, float satisfyRatio)
+    {
+        Demand demand = population.Demands.Get(demandType);
+        float oldDegree = Mathf.Clamp(demand.SatisfiedAmount, 0.0f, 1.0f);
+        float newDegree = Mathf.Clamp(oldDegree + satisfyRatio, 0.0f, 1.0f);
+        float oldUtility = demand.CalculateTotalUtility(oldDegree);
+        float newUtility = demand.CalculateTotalUtility(newDegree);
+        return Mathf.Max(0.0f, newUtility - oldUtility);
+    }
+
+
+    // 将消费者的购买量回写到市场，供 UI 与后续逻辑读取。
+    private void publichProductPurchase(ProductMarket market, Dictionary<ProductType.Enums, float> productPurchase)
     {
         market.ConsumerDemands.Reset();
-        totalDemandByProduct.ToList().ForEach(demandEntry => market.ConsumerDemands.Set(demandEntry.Key, demandEntry.Value));
-    }
-
-    // 打印本轮消费需求汇总，便于调试与观察。
-    private void logDemandSummary(Dictionary<ProductType.Enums, float> totalDemandByProduct)
-    {
-        totalDemandByProduct.ToList().ForEach(entry => GD.Print($"消费购买逻辑: 商品 {entry.Key} 总消费需求量: {entry.Value}"));
+        productPurchase.ToList().ForEach(demandEntry => market.ConsumerDemands.Set(demandEntry.Key, demandEntry.Value));
+        productPurchase.ToList().ForEach(entry => GD.Print($"消费购买逻辑: 商品 {entry.Key} 总消费需求量: {entry.Value}"));
+        market.BalancePrice(); // 因为改变了需求量，所以需要重新平衡价格
     }
 }

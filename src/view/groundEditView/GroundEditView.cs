@@ -7,8 +7,11 @@ using System.Linq;
 /// 用于统一管理编辑模式状态、笔刷预览与连绘状态。
 /// </summary>
 [GlobalClass]
-public partial class GroundEditor : Node
+public partial class GroundEditView : Node
 {
+	// 地图交互入口引用。
+	private GroundView groundView = null!;
+
 	// 地图笔刷引用。
 	private Brush brush = null!;
 
@@ -28,6 +31,18 @@ public partial class GroundEditor : Node
 
 	// 最近一次连续绘制经过的地格。
 	private Vector2I lastDrawnCell = new(-1, -1);
+
+	/// <summary>
+	/// 编辑器请求在指定格点执行一次绘制。
+	/// </summary>
+	[Signal]
+	public delegate void EditCellRequestedEventHandler(Vector2I cellPos);
+
+	/// <summary>
+	/// 一次连续绘制完成时发出。
+	/// </summary>
+	[Signal]
+	public delegate void DrawCompletedEventHandler();
 
 	/// <summary>
 	/// 当前选中的地表类型。
@@ -50,48 +65,54 @@ public partial class GroundEditor : Node
 	public bool CanDraw => previewMode != PreviewMode.Default;
 
 	/// <summary>
+	/// 获取笔刷节点。
+	/// </summary>
+	public Brush GetBrush()
+	{
+		return brush;
+	}
+
+	/// <summary>
 	/// 当前是否处于连续绘制中。
 	/// </summary>
 	public bool IsDrawing { get; private set; }
 
 	/// <summary>
-	/// 初始化编辑器依赖。
+	/// 初始化运行期节点引用。
 	/// </summary>
-	public void Setup(Ground groundRef, BuildingCollection buildingCollectionRef, Brush brushRef, Node3D previewRootRef)
+	public override void _Ready()
+	{
+		brush = GetNode<Brush>("../Brush");
+		brush.Visible = false;
+		previewRoot = GetNode<Node3D>("../BrushPreviewRoot");
+	}
+
+	/// <summary>
+	/// 初始化编辑器依赖并绑定地面输入事件。
+	/// </summary>
+	public void Setup(Ground groundRef, BuildingCollection buildingCollectionRef, GroundView groundViewRef)
 	{
 		ground = groundRef;
 		buildingCollection = buildingCollectionRef;
-		brush = brushRef;
-		previewRoot = previewRootRef;
+
+		if (groundView != null)
+		{
+			groundView.EditPointerCellChanged -= onEditPointerCellChanged;
+			groundView.EditPointerCellCleared -= onEditPointerCellCleared;
+			groundView.EditPrimaryPressed -= onEditPrimaryPressed;
+			groundView.EditPrimaryReleased -= onEditPrimaryReleased;
+		}
+
+		groundView = groundViewRef;
+		groundView.EditPointerCellChanged += onEditPointerCellChanged;
+		groundView.EditPointerCellCleared += onEditPointerCellCleared;
+		groundView.EditPrimaryPressed += onEditPrimaryPressed;
+		groundView.EditPrimaryReleased += onEditPrimaryReleased;
+
 		previewMode = PreviewMode.Default;
 		IsDrawing = false;
 		lastDrawnCell = new Vector2I(-1, -1);
 		clearPreview();
-		brush.SetForbiddenIcon(false);
-	}
-
-	/// <summary>
-	/// 设置地表类型。
-	/// </summary>
-	public void SetSurfaceType(SurfaceType.Enums value)
-	{
-		SurfaceType = value;
-	}
-
-	/// <summary>
-	/// 设置覆盖物类型。
-	/// </summary>
-	public void SetOverlayType(OverlayType.Enums value)
-	{
-		OverlayType = value;
-	}
-
-	/// <summary>
-	/// 设置建筑类型。
-	/// </summary>
-	public void SetBuildingType(BuildingType.Enums value)
-	{
-		BuildingType = value;
 	}
 
 	/// <summary>
@@ -104,7 +125,6 @@ public partial class GroundEditor : Node
 		if (!enabled)
 		{
 			clearPreview();
-			brush.SetForbiddenIcon(false);
 		}
 	}
 
@@ -118,7 +138,6 @@ public partial class GroundEditor : Node
 		if (!enabled)
 		{
 			clearPreview();
-			brush.SetForbiddenIcon(false);
 		}
 	}
 
@@ -132,7 +151,6 @@ public partial class GroundEditor : Node
 		if (!enabled)
 		{
 			clearPreview();
-			brush.SetForbiddenIcon(false);
 		}
 	}
 
@@ -142,76 +160,72 @@ public partial class GroundEditor : Node
 	public void DisableEditMode()
 	{
 		previewMode = PreviewMode.Default;
-		IsDrawing = false;
-		lastDrawnCell = new Vector2I(-1, -1);
+		endDrawInternal();
 		brush.Visible = false;
-		brush.SetForbiddenIcon(false);
 		clearPreview();
 	}
 
-	/// <summary>
-	/// 开始一次连续绘制。
-	/// </summary>
-	public void BeginDraw()
+	// 处理地面指针变化。
+	private void onEditPointerCellChanged(Vector2I cellPos)
 	{
-		if (!CanDraw)
+		if (!CanDraw || !ground.IsInsideGround(cellPos))
+		{
+			brush.Visible = false;
+			HidePreviewAndForbidden();
+			return;
+		}
+
+		brush.Visible = true;
+		updateCursorVisual(cellPos);
+		updatePreview(cellPos);
+
+		if (tryConsumeDrawCell(cellPos))
+		{
+			EmitSignal(SignalName.EditCellRequested, cellPos);
+		}
+	}
+
+	// 处理地面指针清理。
+	private void onEditPointerCellCleared()
+	{
+		brush.Visible = false;
+		HidePreviewAndForbidden();
+	}
+
+	// 处理地面主指针按下。
+	private void onEditPrimaryPressed(Vector2I cellPos)
+	{
+		if (!CanDraw || !ground.IsInsideGround(cellPos))
 		{
 			return;
 		}
 
 		IsDrawing = true;
-		lastDrawnCell = new Vector2I(-1, -1);
+		lastDrawnCell = cellPos;
+		EmitSignal(SignalName.EditCellRequested, cellPos);
 	}
 
-	/// <summary>
-	/// 结束一次连续绘制。
-	/// </summary>
-	/// <returns>结束前是否处于绘制中。</returns>
-	public bool EndDraw()
+	// 处理地面主指针抬起。
+	private void onEditPrimaryReleased()
 	{
-		bool wasDrawing = IsDrawing;
-		IsDrawing = false;
-		lastDrawnCell = new Vector2I(-1, -1);
-		return wasDrawing;
-	}
-
-	/// <summary>
-	/// 判断指定格点是否可在当前模式下绘制。
-	/// </summary>
-	public bool IsDrawableCell(Vector2I cellPos)
-	{
-		return CanDraw && ground.IsInsideGround(cellPos);
-	}
-
-	/// <summary>
-	/// 在连绘期间消费一个格点。
-	/// </summary>
-	/// <returns>是否应对该格点触发绘制。</returns>
-	public bool TryConsumeDrawCell(Vector2I cellPos)
-	{
-		if (!IsDrawing || cellPos == lastDrawnCell)
+		if (!endDrawInternal())
 		{
-			return false;
+			return;
 		}
 
-		lastDrawnCell = cellPos;
-		return true;
+		EmitSignal(SignalName.DrawCompleted);
 	}
 
-	/// <summary>
-	/// 更新笔刷光标视觉位置。
-	/// </summary>
-	public void UpdateCursorVisual(Vector2I cellPos)
+	// 更新笔刷光标视觉位置。
+	private void updateCursorVisual(Vector2I cellPos)
 	{
 		Vector3 worldPos = ground.GridToWorld(cellPos, YConfig.CursorY + 0.02f);
 		float visualOffset = brush.Size % 2 == 0 ? 0.5f : 0.0f;
 		brush.GlobalPosition = worldPos + new Vector3(visualOffset, 0, visualOffset);
 	}
 
-	/// <summary>
-	/// 更新刷子覆盖区预览与非法提示。
-	/// </summary>
-	public void UpdatePreview(Vector2I centerCell)
+	// 更新刷子覆盖区预览与非法提示。
+	private void updatePreview(Vector2I centerCell)
 	{
 		if (previewMode == PreviewMode.Default)
 		{
@@ -229,6 +243,27 @@ public partial class GroundEditor : Node
 		renderPreviewCells(insideCells, getPreviewColor());
 	}
 
+	// 在连绘期间消费一个格点。
+	private bool tryConsumeDrawCell(Vector2I cellPos)
+	{
+		if (!IsDrawing || cellPos == lastDrawnCell)
+		{
+			return false;
+		}
+
+		lastDrawnCell = cellPos;
+		return true;
+	}
+
+	// 结束绘制状态并返回结束前状态。
+	private bool endDrawInternal()
+	{
+		bool wasDrawing = IsDrawing;
+		IsDrawing = false;
+		lastDrawnCell = new Vector2I(-1, -1);
+		return wasDrawing;
+	}
+
 	/// <summary>
 	/// 隐藏预览并关闭非法提示图标。
 	/// </summary>
@@ -237,6 +272,10 @@ public partial class GroundEditor : Node
 		clearPreview();
 		brush.SetForbiddenIcon(false);
 	}
+
+
+
+
 
 	// 获取当前模式对应的预览颜色。
 	private Color getPreviewColor()
@@ -311,6 +350,7 @@ public partial class GroundEditor : Node
 	private void clearPreview()
 	{
 		previewCells.ForEach(node => node.Visible = false);
+		brush.SetForbiddenIcon(false);
 	}
 
 }

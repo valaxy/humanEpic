@@ -16,6 +16,8 @@ public partial class MainUI : Node
 	private InfoUI infoUiRight = null!;
 	// 地格信息控制器。
 	private GridInfoUI gridInfoUi = null!;
+	// 建筑信息控制器（左侧信息面板）。
+	private BuildingInfoUI buildingInfoUi = null!;
 	// 建筑信息总面板。
 	private BuildingInfoPanelUI buildingInfoPanelUi = null!;
 	// 游戏编辑器按钮区域。
@@ -28,6 +30,7 @@ public partial class MainUI : Node
 		infoUiLeft = GetNode<InfoUI>("InfoUILeft");
 		infoUiRight = GetNode<InfoUI>("InfoUIRight");
 		gridInfoUi = GetNode<GridInfoUI>("GridInfoUI");
+		buildingInfoUi = GetNode<BuildingInfoUI>("BuildingInfoUI");
 		buildingInfoPanelUi = GetNode<BuildingInfoPanelUI>("BuildingInfoPanelUI");
 		gameEditorButtons = GetNode<GameEditorButtons>("GameEditorButtons");
 	}
@@ -35,7 +38,7 @@ public partial class MainUI : Node
 	/// <summary>
 	/// 初始化主 UI。
 	/// </summary>
-	public void Setup(GameWorld world, GameView view, Simulation simulation, GameCamera camera, LayerManagerNode layerManager, GroundSelection selection)
+	public void Setup(GameWorld world, GameView view, Simulation simulation, GameCamera camera, LayerManagerNode layerManager, GroundView selection)
 	{
 		zoomUi.Setup(camera, layerManager);
 		timeDisplayUi.Setup(world.TimeSystem);
@@ -44,6 +47,8 @@ public partial class MainUI : Node
 		infoUiLeft.SetPositionOffset(0.0f);
 		infoUiRight.SetPositionOffset(310.0f);
 		gridInfoUi.Setup(infoUiLeft, infoUiRight, world.Ground);
+		buildingInfoUi.Setup(world.Buildings, infoUiLeft);
+		buildingInfoUi.BindSelection(selection);
 		buildingInfoPanelUi.Setup(world.Buildings, selection);
 
 		selection.CellHovered += gridInfoUi.OnCellHovered;

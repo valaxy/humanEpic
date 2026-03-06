@@ -27,7 +27,7 @@ public partial class Main : Node3D
 	{
 		camera = GetNode<GameCamera>("Camera3D");
 		world = GameWorldInitializer.Load();
-		simulation = new Simulation();
+		simulation = new Simulation(world);
 
 		addCoreNodes();
 		view.Setup(camera, world);
@@ -55,6 +55,6 @@ public partial class Main : Node3D
 		PackedScene mainUiScene = GD.Load<PackedScene>("res://src/ui/main_ui.tscn");
 		mainUi = mainUiScene.Instantiate<MainUI>();
 		AddChild(mainUi);
-		mainUi.Setup(world, view, simulation, camera, view.LayerManager, view.Selection);
+		mainUi.Setup(world, view, simulation, camera, view.LayerManager, view.GroundView);
 	}
 }

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dbl8crqglg6mf"]
 
-[ext_resource type="Script" path="res://src/view/selection/GroundCursor.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/view/ground/gridCursor/GridCursor.cs" id="1_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 transparency = 1
@@ -13,7 +13,7 @@ emission_energy_multiplier = 0.5
 material = SubResource("StandardMaterial3D_1")
 size = Vector3(1.1, 0.1, 1.1)
 
-[node name="GroundCursorNode" type="MeshInstance3D" unique_id=32488582]
+[node name="GridCursorNode" type="MeshInstance3D" unique_id=32488582]
 unique_name_in_owner = true
 script = ExtResource("1_script")
 mesh = SubResource("BoxMesh_1")

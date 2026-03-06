@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/ui/MainUI.cs" id="1_main_ui_script"]
 [ext_resource type="Script" path="res://src/ui/infoUI/grid/GridInfoUI.cs" id="5_grid_info_script"]
+[ext_resource type="Script" path="res://src/ui/infoUI/building/BuildingInfoUI.cs" id="9_building_info_script"]
 
 [ext_resource type="PackedScene" path="res://src/ui/zoomUI/zoom_ui.tscn" id="2_zoom_ui_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/timeDisplay/time_display_ui.tscn" id="3_time_display_scene"]
@@ -29,6 +30,9 @@ offset_bottom = 60.0
 
 [node name="GridInfoUI" type="Node" parent="."]
 script = ExtResource("5_grid_info_script")
+
+[node name="BuildingInfoUI" type="Node" parent="."]
+script = ExtResource("9_building_info_script")
 
 [node name="GameEditorButtons" parent="." instance=ExtResource("6_game_editor_buttons_scene")]
 

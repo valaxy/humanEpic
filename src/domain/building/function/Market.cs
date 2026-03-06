@@ -52,13 +52,13 @@ public class Market : IInfo, IPersistence<Market>
 	{
 		return new Dictionary<string, object>
 		{
-			{ "product_consumer_demands", serializeBucket(Enum.GetValues<ProductType.Enums>(), ProductMarket.ConsumerDemands.Get) },
-			{ "product_industry_demands", serializeBucket(Enum.GetValues<ProductType.Enums>(), ProductMarket.IndustryDemands.Get) },
-			{ "product_supplies", serializeBucket(Enum.GetValues<ProductType.Enums>(), ProductMarket.Supplies.Get) },
-			{ "product_prices", serializeBucket(Enum.GetValues<ProductType.Enums>(), ProductMarket.Prices.Get) },
-			{ "labour_prices", serializeBucket(Enum.GetValues<JobType.Enums>(), LabourMarket.JobPrices.Get) },
-			{ "labour_supplies", serializeBucket(Enum.GetValues<JobType.Enums>(), LabourMarket.JobSupplies.Get) },
-			{ "labour_demands", serializeBucket(Enum.GetValues<JobType.Enums>(), LabourMarket.JobDemands.Get) }
+			{ "product_consumer_demands", ProductMarket.ConsumerDemands.GetSaveData() },
+			{ "product_industry_demands", ProductMarket.IndustryDemands.GetSaveData() },
+			{ "product_supplies", ProductMarket.Supplies.GetSaveData() },
+			{ "product_prices", ProductMarket.Prices.GetSaveData() },
+			{ "labour_prices", LabourMarket.JobPrices.GetSaveData() },
+			{ "labour_supplies", LabourMarket.JobSupplies.GetSaveData() },
+			{ "labour_demands", LabourMarket.JobDemands.GetSaveData() }
 		};
 	}
 
@@ -69,25 +69,19 @@ public class Market : IInfo, IPersistence<Market>
 	{
 		Market market = new();
 
-		deserializeBucket<ProductType.Enums>(data, "product_consumer_demands", market.ProductMarket.ConsumerDemands.Set);
-		deserializeBucket<ProductType.Enums>(data, "product_industry_demands", market.ProductMarket.IndustryDemands.Set);
-		deserializeBucket<ProductType.Enums>(data, "product_supplies", market.ProductMarket.Supplies.Set);
-		deserializeBucket<ProductType.Enums>(data, "product_prices", market.ProductMarket.Prices.Set);
-		deserializeBucket<JobType.Enums>(data, "labour_prices", market.LabourMarket.JobPrices.Set);
-		deserializeBucket<JobType.Enums>(data, "labour_supplies", market.LabourMarket.JobSupplies.Set);
-		deserializeBucket<JobType.Enums>(data, "labour_demands", market.LabourMarket.JobDemands.Set);
+		applySavedBucket(data, "product_consumer_demands", market.ProductMarket.ConsumerDemands);
+		applySavedBucket(data, "product_industry_demands", market.ProductMarket.IndustryDemands);
+		applySavedBucket(data, "product_supplies", market.ProductMarket.Supplies);
+		applySavedBucket(data, "product_prices", market.ProductMarket.Prices);
+		applySavedBucket(data, "labour_prices", market.LabourMarket.JobPrices);
+		applySavedBucket(data, "labour_supplies", market.LabourMarket.JobSupplies);
+		applySavedBucket(data, "labour_demands", market.LabourMarket.JobDemands);
 
 		return market;
 	}
 
-	// 序列化市场数据桶，键使用枚举名称。
-	private static Dictionary<string, object> serializeBucket<TEnum>(IEnumerable<TEnum> keys, Func<TEnum, float> getValue) where TEnum : struct, Enum
-	{
-		return keys.ToDictionary(key => key.ToString(), key => (object)getValue(key));
-	}
-
-	// 反序列化市场数据桶并回填到目标 setter。
-	private static void deserializeBucket<TEnum>(Dictionary<string, object> data, string fieldName, Action<TEnum, float> setValue) where TEnum : struct, Enum
+	// 将存档字段回填到目标市场数据桶。
+	private static void applySavedBucket<TEnum>(Dictionary<string, object> data, string fieldName, MarketDataBucket<TEnum> target) where TEnum : struct, Enum
 	{
 		if (!data.ContainsKey(fieldName))
 		{
@@ -99,15 +93,7 @@ public class Market : IInfo, IPersistence<Market>
 			return;
 		}
 
-		savedBucket
-			.Where(item => Enum.TryParse(item.Key, true, out TEnum _))
-			.ToList()
-			.ForEach(item =>
-			{
-				Enum.TryParse(item.Key, true, out TEnum key);
-				float value = Convert.ToSingle(item.Value);
-				setValue(key, value);
-			});
+		target.ApplySaveData(savedBucket);
 	}
 
 

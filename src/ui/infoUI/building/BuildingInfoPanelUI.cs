@@ -46,7 +46,7 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	/// <summary>
 	/// 绑定选择系统。
 	/// </summary>
-	public void Setup(BuildingCollection buildingCollection, GroundSelection selection)
+	public void Setup(BuildingCollection buildingCollection, GroundView selection)
 	{
 		this.buildingCollection = buildingCollection;
 		selection.BuildingSelected += onBuildingSelected;

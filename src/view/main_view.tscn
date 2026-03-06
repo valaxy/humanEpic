@@ -1,11 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/view/GameView.cs" id="1_game_view_script"]
 [ext_resource type="Script" path="res://src/view/ground/layer/LayerManagerNode.cs" id="2_layer_manager_script"]
 [ext_resource type="Script" path="res://src/view/ground/GroundView.cs" id="3_ground_view_script"]
-[ext_resource type="Script" path="res://src/view/groundEditor/GroundEditor.cs" id="5_ground_editor_script"]
-[ext_resource type="Script" path="res://src/view/selection/GroundSelection.cs" id="6_selection_script"]
-[ext_resource type="Script" path="res://src/view/building/BuildingCollectionNode.cs" id="8_building_collection_script"]
+[ext_resource type="Script" path="res://src/view/groundEditView/GroundEditView.cs" id="5_ground_editor_script"]
+[ext_resource type="Script" path="res://src/view/building/BuildingCollectionView.cs" id="8_building_collection_script"]
 [ext_resource type="PackedScene" path="res://src/view/brush/Brush.tscn" id="4_brush_scene"]
 [ext_resource type="PackedScene" path="res://src/view/groundGridHelper/ground_grid_helper.tscn" id="7_grid_helper_scene"]
 
@@ -24,9 +23,6 @@ script = ExtResource("3_ground_view_script")
 
 [node name="GroundEditor" type="Node" parent="GroundView"]
 script = ExtResource("5_ground_editor_script")
-
-[node name="Selection" type="Node" parent="."]
-script = ExtResource("6_selection_script")
 
 [node name="GroundGridHelper" parent="." instance=ExtResource("7_grid_helper_scene")]
 

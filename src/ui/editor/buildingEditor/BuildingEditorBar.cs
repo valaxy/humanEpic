@@ -45,7 +45,7 @@ public partial class BuildingEditorBar : EditorWindow
 	private GameView view = null!;
 
 	// 地图编辑器。
-	private GroundEditor groundEditor = null!;
+	private GroundEditView groundEditor = null!;
 
 	public override void _Ready()
 	{
@@ -61,15 +61,15 @@ public partial class BuildingEditorBar : EditorWindow
 	/// <summary>
 	/// 初始化编辑器依赖并绑定地图点击事件。
 	/// </summary>
-	public void Setup(GameWorld worldRef, GameView viewRef, GroundEditor groundEditorRef, Brush brushRef)
+	public void Setup(GameWorld worldRef, GameView viewRef, GroundEditView groundEditorRef, Brush brushRef)
 	{
 		world = worldRef;
 		view = viewRef;
 		groundEditor = groundEditorRef;
 		brush = brushRef;
 
-		view.GroundView.CellClicked -= onGroundCellClicked;
-		view.GroundView.CellClicked += onGroundCellClicked;
+		groundEditor.EditCellRequested -= onGroundCellClicked;
+		groundEditor.EditCellRequested += onGroundCellClicked;
 
 		countrySelector.Setup();
 		selectDefaultBuildingType();
@@ -179,6 +179,6 @@ public partial class BuildingEditorBar : EditorWindow
 		BuildingTemplate template = BuildingTemplate.GetTemplate(currentBuildingType);
 		Building building = new Building(template, cellPos, country);
 		world.Buildings.Add(building);
-		view.BuildingCollection.RefreshVisuals();
+		view.BuildingCollection.UpdateBuildingVisuals();
 	}
 }

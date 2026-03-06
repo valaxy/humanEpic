@@ -22,10 +22,8 @@ public partial class GameEditorButtons : CanvasLayer
 	private BuildingEditorBar buildingEditor = null!;
 	// 右下角按钮组容器。
 	private HBoxContainer rightBottomContainer = null!;
-	// 地图交互入口。
-	private GroundView groundView = null!;
 	// 地图编辑器。
-	private GroundEditor groundEditor = null!;
+	private GroundEditView groundEditor = null!;
 
 	private enum ActiveEditorMode
 	{
@@ -59,12 +57,11 @@ public partial class GameEditorButtons : CanvasLayer
 	/// </summary>
 	public void Setup(GameWorld world, GameView view, Simulation simulation)
 	{
-		groundView = view.GroundView;
-		groundEditor = groundView.GetEditor();
-		Brush brush = groundView.GetBrush();
+		groundEditor = view.GroundEditor;
+		Brush brush = groundEditor.GetBrush();
 		topRightTools.Setup(world, view.GridRender, simulation);
-		surfaceEditor.Setup(world.Ground, view.LayerManager, view.GroundView, groundEditor, brush);
-		overlayEditor.Setup(world.Ground, view.LayerManager, view.GroundView, groundEditor, brush);
+		surfaceEditor.Setup(world.Ground, view.LayerManager, groundEditor, brush);
+		overlayEditor.Setup(world.Ground, view.LayerManager, groundEditor, brush);
 		buildingEditor.Setup(world, view, groundEditor, brush);
 		switchEditor(ActiveEditorMode.None);
 	}

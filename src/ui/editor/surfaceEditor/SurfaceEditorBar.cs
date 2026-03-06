@@ -36,10 +36,8 @@ public partial class SurfaceEditorBar : EditorWindow
 	// 地图层级管理器。
 	private LayerManagerNode layerManager = null!;
 
-	// 地图交互入口。
-	private GroundView groundView = null!;
 	// 地图编辑器。
-	private GroundEditor groundEditor = null!;
+	private GroundEditView groundEditor = null!;
 
 	public override void _Ready()
 	{
@@ -55,19 +53,18 @@ public partial class SurfaceEditorBar : EditorWindow
 	/// <summary>
 	/// 初始化编辑器依赖并绑定地图点击事件。
 	/// </summary>
-	public void Setup(Ground groundRef, LayerManagerNode layerManagerRef, GroundView groundViewRef, GroundEditor groundEditorRef, Brush brushRef)
+	public void Setup(Ground groundRef, LayerManagerNode layerManagerRef, GroundEditView groundEditorRef, Brush brushRef)
 	{
 		ground = groundRef;
 		layerManager = layerManagerRef;
-		groundView = groundViewRef;
 		groundEditor = groundEditorRef;
 		brush = brushRef;
 
 		mapResizeController.Setup(ground);
 		brushController.Setup(brush);
 
-		groundView.CellClicked -= onGroundCellClicked;
-		groundView.CellClicked += onGroundCellClicked;
+		groundEditor.EditCellRequested -= onGroundCellClicked;
+		groundEditor.EditCellRequested += onGroundCellClicked;
 
 		triggerSelection();
 	}

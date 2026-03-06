@@ -1,13 +1,39 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 /// <summary>
 /// 地图上建筑物，具有建造消耗和建造状态
 /// </summary>
-public class Building : IIdModel, IInfo
+public class Building : IIdModel, IInfo, IPersistence<Building, Building.PersistenceContext>
 {
 	private static IdAllocator idAllocator = new IdAllocator();
+
+	/// <summary>
+	/// 建筑反序列化上下文。
+	/// </summary>
+	public readonly struct PersistenceContext
+	{
+		/// <summary>
+		/// 国家集合上下文。
+		/// </summary>
+		public CountryCollection CountryCollection { get; }
+
+		/// <summary>
+		/// 人口集合上下文。
+		/// </summary>
+		public PopulationCollection PopulationCollection { get; }
+
+		/// <summary>
+		/// 构造上下文。
+		/// </summary>
+		public PersistenceContext(CountryCollection countryCollection, PopulationCollection populationCollection)
+		{
+			CountryCollection = countryCollection;
+			PopulationCollection = populationCollection;
+		}
+	}
 
 
 	// 建筑模板，由子类提供。
@@ -59,6 +85,11 @@ public class Building : IIdModel, IInfo
 	/// </summary>
 	public Market? Market { get; private set; }
 
+	/// <summary>
+	/// 建筑仓库（所有建筑固定拥有）。
+	/// </summary>
+	public Warehouse Warehouse { get; private set; }
+
 
 
 
@@ -76,6 +107,7 @@ public class Building : IIdModel, IInfo
 		Id = idAllocator.AllocateId(id);
 		Country = country;
 		Collision = new AtomCollision(pos);
+		Warehouse = new Warehouse(1000.0f);
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
 			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
@@ -109,6 +141,8 @@ public class Building : IIdModel, IInfo
 			data.AddGroup("市场信息", Market.GetInfoData());
 		}
 
+		data.AddGroup("仓库信息", Warehouse.GetInfoData());
+
 		return data;
 	}
 
@@ -137,33 +171,45 @@ public class Building : IIdModel, IInfo
 			saveData["market"] = Market.GetSaveData();
 		}
 
+		saveData["warehouse"] = Warehouse.GetSaveData();
+
 		return saveData;
 	}
 
 	/// <summary>
 	/// 从持久化数据恢复一个基础建筑实例。
 	/// </summary>
-	public static Building LoadSaveData(Dictionary<string, object> data, CountryCollection countryCollection, PopulationCollection populationCollection)
+	public static Building LoadSaveData(Dictionary<string, object> data, PersistenceContext context = default)
 	{
+		Debug.Assert(context.CountryCollection != null, "恢复 Building 需要 CountryCollection 上下文");
+		Debug.Assert(context.PopulationCollection != null, "恢复 Building 需要 PopulationCollection 上下文");
+		PersistenceContext persistenceContext = context;
+
 		int id = Convert.ToInt32(data["id"]);
 		int posX = Convert.ToInt32(data["pos_x"]);
 		int posY = Convert.ToInt32(data["pos_y"]);
 		int countryId = Convert.ToInt32(data["country_id"]);
 
 		BuildingTemplate template = loadTemplate(data);
-		Country country = countryCollection.Get(countryId);
+		Country country = persistenceContext.CountryCollection.Get(countryId);
 		Building building = new Building(template, new Vector2I(posX, posY), country, id);
 
 		if (data.ContainsKey("residential"))
 		{
 			Dictionary<string, object> residentialData = (Dictionary<string, object>)data["residential"];
-			building.Residential = Residential.LoadSaveData(residentialData, populationCollection);
+			building.Residential = Residential.LoadSaveData(residentialData, persistenceContext.PopulationCollection);
 		}
 
 		if (data.ContainsKey("market"))
 		{
 			Dictionary<string, object> marketData = (Dictionary<string, object>)data["market"];
 			building.Market = global::Market.LoadSaveData(marketData);
+		}
+
+		if (data.ContainsKey("warehouse"))
+		{
+			Dictionary<string, object> warehouseData = (Dictionary<string, object>)data["warehouse"];
+			building.Warehouse = Warehouse.LoadSaveData(warehouseData);
 		}
 
 		return building;

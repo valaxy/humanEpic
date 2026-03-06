@@ -16,16 +16,12 @@ public class Simulation
 	private readonly List<IWorldLogic> logics = new();
 
 	/// <summary>
-	/// 示例逻辑：不执行任何业务，仅用于连通性验证。
-	/// </summary>
-	private HelloWorldLogic helloWorldLogic { get; } = new HelloWorldLogic();
-
-	/// <summary>
 	/// 构造函数，初始化并注册可用世界逻辑。
 	/// </summary>
-	public Simulation()
+	public Simulation(GameWorld world)
 	{
-		logics.Add(helloWorldLogic);
+		logics.Add(new HelloWorldLogic());
+		logics.Add(new ConsumptionPurchaseLogic(world.Populations, world.Buildings));
 		logics.ForEach(logic => logic.Triggered += onLogicTriggered);
 	}
 

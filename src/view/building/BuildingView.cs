@@ -51,6 +51,7 @@ public partial class BuildingView : Node3D
 
 	private void setupStorageBar()
 	{
+		// 处理点击碰撞，可能有性能问题，后面记得优化
 		storageBarSprite = new Sprite3D();
 		storageBarSprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
 		storageBarSprite.NoDepthTest = true;

@@ -16,7 +16,7 @@ public class BuildingCollection : DictCollection<Vector2I, Building>, ICollectio
 	private readonly Dictionary<int, Building> idToItem = new();
 
 	// TODO 这是啥玩意啊？感觉不太对，为什么要在这里注册反序列化工厂？应该是每个建筑类自己注册吧？先放这儿，后续再重构。
-	private static readonly Dictionary<BuildingType.Enums, Func<Dictionary<string, object>, CountryCollection, PopulationCollection, Building>> buildingLoaders = new();
+	private static readonly Dictionary<BuildingType.Enums, Func<Dictionary<string, object>, Building.PersistenceContext, Building>> buildingLoaders = new();
 
 	/// <summary>
 	/// 构造函数，注入建筑系统依赖。
@@ -61,7 +61,7 @@ public class BuildingCollection : DictCollection<Vector2I, Building>, ICollectio
 	/// <summary>
 	/// 注册指定建筑类型的反序列化工厂。
 	/// </summary>
-	public static void RegisterLoader(BuildingType.Enums type, Func<Dictionary<string, object>, CountryCollection, PopulationCollection, Building> loader)
+	public static void RegisterLoader(BuildingType.Enums type, Func<Dictionary<string, object>, Building.PersistenceContext, Building> loader)
 	{
 		buildingLoaders[type] = loader;
 	}
@@ -90,12 +90,14 @@ public class BuildingCollection : DictCollection<Vector2I, Building>, ICollectio
 	private Building loadBuilding(Dictionary<string, object> data)
 	{
 		BuildingType.Enums type = parseBuildingType(data);
+		Building.PersistenceContext context = new(countryCollection, populationCollection);
+
 		if (buildingLoaders.ContainsKey(type))
 		{
-			return buildingLoaders[type](data, countryCollection, populationCollection);
+			return buildingLoaders[type](data, context);
 		}
 
-		return Building.LoadSaveData(data, countryCollection, populationCollection);
+		return Building.LoadSaveData(data, context);
 	}
 
 	private static BuildingType.Enums parseBuildingType(Dictionary<string, object> data)

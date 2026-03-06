@@ -6,7 +6,7 @@ using System.Linq;
 /// 通用市场数据桶，提供按类型读取、累加、重置与覆写能力。
 /// </summary>
 /// <typeparam name="TKey">市场类型键（通常为枚举）。</typeparam>
-public class MarketDataBucket<TKey> where TKey : struct, Enum
+public class MarketDataBucket<TKey> : IPersistence<MarketDataBucket<TKey>, IEnumerable<TKey>> where TKey : struct, Enum
 {
 	// 当前数据表。
 	private readonly Dictionary<TKey, float> values;
@@ -49,5 +49,39 @@ public class MarketDataBucket<TKey> where TKey : struct, Enum
 	{
 		List<TKey> keys = values.Keys.ToList();
 		keys.ForEach(key => values[key] = 0.0f);
+	}
+
+	/// <summary>
+	/// 导出当前数据桶。
+	/// </summary>
+	public Dictionary<string, object> GetSaveData()
+	{
+		return values.ToDictionary(item => item.Key.ToString(), item => (object)item.Value);
+	}
+
+	/// <summary>
+	/// 使用存档数据回填当前数据桶。
+	/// </summary>
+	public void ApplySaveData(Dictionary<string, object> data)
+	{
+		data
+			.Where(item => Enum.TryParse(item.Key, true, out TKey _))
+			.ToList()
+			.ForEach(item =>
+			{
+				Enum.TryParse(item.Key, true, out TKey key);
+				values[key] = Convert.ToSingle(item.Value);
+			});
+	}
+
+	/// <summary>
+	/// 从存档恢复一个新的数据桶。
+	/// </summary>
+	public static MarketDataBucket<TKey> LoadSaveData(Dictionary<string, object> data, IEnumerable<TKey>? context = default)
+	{
+		IEnumerable<TKey> keys = context ?? Enum.GetValues<TKey>();
+		MarketDataBucket<TKey> bucket = new(keys, _ => 0.0f);
+		bucket.ApplySaveData(data);
+		return bucket;
 	}
 }

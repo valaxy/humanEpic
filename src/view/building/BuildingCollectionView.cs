@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 /// <summary>
@@ -64,14 +65,14 @@ public partial class BuildingCollectionView : Node3D
 			Vector2I pos = building.Collision.Center;
 			float worldY = YConfig.PlainY;
 			Vector3 worldPos = world.Ground.GridToWorld(pos, worldY);
-			updateBuildingNode(building, pos, worldPos, building == selectedBuilding);
+			updateBuildingView(building, pos, worldPos, building == selectedBuilding);
 		});
 
-		cleanupInvalidNodes(currentPositions);
+		cleanupInvalidViews(currentPositions);
 	}
 
 	// 更新或创建建筑节点。
-	private void updateBuildingNode(Building building, Vector2I pos, Vector3 worldPos, bool isSelected)
+	private void updateBuildingView(Building building, Vector2I pos, Vector3 worldPos, bool isSelected)
 	{
 		if (!buildingNodes.TryGetValue(pos, out BuildingView? node))
 		{
@@ -86,7 +87,8 @@ public partial class BuildingCollectionView : Node3D
 	}
 
 	// 移除已经不在集合中的节点。
-	private void cleanupInvalidNodes(HashSet<Vector2I> currentPositions)
+	// TOOD 为什么要出现要移除的流程来着？
+	private void cleanupInvalidViews(HashSet<Vector2I> currentPositions)
 	{
 		List<Vector2I> positionsToRemove = buildingNodes
 			.Where(pair => !currentPositions.Contains(pair.Key))
@@ -107,5 +109,7 @@ public partial class BuildingCollectionView : Node3D
 		selectedBuilding = building;
 		UpdateBuildingVisuals();
 		EmitSignal(SignalName.BuildingClicked, cellPos);
+
+		Debug.Print($"点击了建筑，位置：{cellPos}");
 	}
 }

@@ -28,7 +28,7 @@ public partial class BuildingInfoUI : Node
 	/// <summary>
 	/// 绑定选中管理器。
 	/// </summary>
-	public void BindSelection(GroundSelection selection)
+	public void BindSelection(GroundView selection)
 	{
 		selection.CellSelected += OnCellSelected;
 		selection.SelectionCleared += OnSelectionCleared;

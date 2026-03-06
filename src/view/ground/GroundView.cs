@@ -6,6 +6,8 @@ using Godot;
 [GlobalClass]
 public partial class GroundView : Node3D
 {
+	private static readonly PackedScene gridCursorScene = GD.Load<PackedScene>("res://src/view/ground/gridCursor/GridCursor.tscn");
+
 	/// <summary>默认地图宽度</summary>
 	[Export]
 	public int DefaultMapWidth { get; set; } = 500;
@@ -22,22 +24,18 @@ public partial class GroundView : Node3D
 	private LayerManagerNode layerManager = null!;
 	// 网格辅助线渲染引用。
 	private GroundGridHelper gridRender = null!;
+	// 世界模型引用。
+	private GameWorld world = null!;
+	// 建筑集合渲染视图。
+	private BuildingCollectionView buildingCollectionView = null!;
+	// 地格选中光标。
+	private GridCursor gridCursor = null!;
 
 	// 最近一次悬浮的格点。
 	private Vector2I lastHoveredCell = Vector2I.Zero;
 
 	// 是否存在有效悬浮格点。
 	private bool hasHoveredCell;
-
-	// 地图笔刷。
-	private Brush brush = null!;
-
-	// 预览容器。
-	private Node3D previewRoot = null!;
-
-	// 地图编辑器。
-	private GroundEditor groundEditor = null!;
-
 
 	/// <summary>
 	/// 鼠标悬浮在有效地格时发出。
@@ -58,47 +56,69 @@ public partial class GroundView : Node3D
 	public delegate void CellClickedEventHandler(Vector2I cellPos);
 
 	/// <summary>
-	/// 一次连续绘制（按下到抬起）完成时发出。
+	/// 地格选中时发出。
 	/// </summary>
 	[Signal]
-	public delegate void DrawCompletedEventHandler();
-
-
-	/// <summary>
-	/// 获取笔刷节点。
-	/// </summary>
-	public Brush GetBrush()
-	{
-		return brush;
-	}
+	public delegate void CellSelectedEventHandler(Vector2I cellPos);
 
 	/// <summary>
-	/// 获取地面编辑器节点。
+	/// 选中状态清理时发出。
 	/// </summary>
-	public GroundEditor GetEditor()
-	{
-		return groundEditor;
-	}
+	[Signal]
+	public delegate void SelectionClearedEventHandler();
 
-	public override void _Ready()
-	{
-		brush = GetNode<Brush>("Brush");
-		brush.Visible = false;
-		previewRoot = GetNode<Node3D>("BrushPreviewRoot");
-		groundEditor = GetNode<GroundEditor>("GroundEditor");
-	}
+	/// <summary>
+	/// 建筑被选中时发出。
+	/// </summary>
+	[Signal]
+	public delegate void BuildingSelectedEventHandler(Vector2I cellPos);
+
+	/// <summary>
+	/// 建筑选中清理时发出。
+	/// </summary>
+	[Signal]
+	public delegate void BuildingSelectionClearedEventHandler();
+
+	/// <summary>
+	/// 主指针命中地格时发出。
+	/// </summary>
+	[Signal]
+	public delegate void EditPointerCellChangedEventHandler(Vector2I cellPos);
+
+	/// <summary>
+	/// 主指针离开地面有效投影时发出。
+	/// </summary>
+	[Signal]
+	public delegate void EditPointerCellClearedEventHandler();
+
+	/// <summary>
+	/// 主指针左键按下且命中地格时发出。
+	/// </summary>
+	[Signal]
+	public delegate void EditPrimaryPressedEventHandler(Vector2I cellPos);
+
+	/// <summary>
+	/// 主指针左键抬起时发出。
+	/// </summary>
+	[Signal]
+	public delegate void EditPrimaryReleasedEventHandler();
 
 	/// <summary>
 	/// 绑定地面初始化所需依赖。
 	/// </summary>
-	public void Setup(Ground ground, BuildingCollection buildingCollection, LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera)
+	public void Setup(GameWorld world, LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera, BuildingCollectionView buildingCollectionView)
 	{
-		this.ground = ground;
+		this.world = world;
+		ground = world.Ground;
 		this.layerManager = layerManager;
 		this.gridRender = gridRender;
 		this.camera = camera;
-		groundEditor.Setup(ground, buildingCollection, brush, previewRoot);
+		this.buildingCollectionView = buildingCollectionView;
 		hasHoveredCell = false;
+
+		gridCursor = gridCursorScene.Instantiate<GridCursor>();
+		AddChild(gridCursor);
+		buildingCollectionView.BuildingClicked += onBuildingClicked;
 
 		initializeMap(DefaultMapWidth, DefaultMapHeight);
 	}
@@ -134,56 +154,51 @@ public partial class GroundView : Node3D
 				if (camera.TryResolveGroundCell(mouseButton.Position, ground, out Vector2I cellPos, YConfig.PlainY))
 				{
 					EmitSignal(SignalName.CellClicked, cellPos);
-					GetViewport().SetInputAsHandled();
-					groundEditor.BeginDraw();
+					processSelection(cellPos);
+					// 注释暂时保留 
+					// GetViewport().SetInputAsHandled();
+					EmitSignal(SignalName.EditPrimaryPressed, cellPos);
 				}
 			}
 			else
 			{
-				if (groundEditor.EndDraw())
-				{
-					EmitSignal(SignalName.DrawCompleted);
-				}
+				EmitSignal(SignalName.EditPrimaryReleased);
 			}
 		}
 	}
 
 	public override void _Process(double delta)
 	{
-		// 更新地面交互状态与笔刷可视。
 		if (GetViewport().GuiGetHoveredControl() != null)
 		{
-			brush.Visible = false;
-			groundEditor.HidePreviewAndForbidden();
+			clearHoverIfNeeded();
+			EmitSignal(SignalName.EditPointerCellCleared);
 			return;
 		}
 
 		Vector3? worldPoint = camera.GetRayIntersection(YConfig.PlainY);
 		if (!worldPoint.HasValue)
 		{
-			brush.Visible = false;
-			groundEditor.HidePreviewAndForbidden();
+			clearHoverIfNeeded();
+			EmitSignal(SignalName.EditPointerCellCleared);
 			return;
 		}
 
 		Vector2I cellPos = ground.WorldToCell(worldPoint.Value);
 		handleMouseHover(GetViewport().GetMousePosition());
+		EmitSignal(SignalName.EditPointerCellChanged, cellPos);
+	}
 
-		if (!groundEditor.IsDrawableCell(cellPos))
+	// 清理悬浮状态并发出清理信号。
+	private void clearHoverIfNeeded()
+	{
+		if (!hasHoveredCell)
 		{
-			brush.Visible = false;
-			groundEditor.HidePreviewAndForbidden();
 			return;
 		}
 
-		brush.Visible = true;
-		groundEditor.UpdateCursorVisual(cellPos);
-		groundEditor.UpdatePreview(cellPos);
-
-		if (groundEditor.TryConsumeDrawCell(cellPos))
-		{
-			EmitSignal(SignalName.CellClicked, cellPos);
-		}
+		hasHoveredCell = false;
+		EmitSignal(SignalName.CellHoverCleared);
 	}
 
 	// 处理鼠标悬浮行为。
@@ -208,5 +223,52 @@ public partial class GroundView : Node3D
 		hasHoveredCell = true;
 		lastHoveredCell = cellPos;
 		EmitSignal(SignalName.CellHovered, cellPos);
+	}
+
+	// 处理建筑点击行为。
+	private void onBuildingClicked(Vector2I cellPos)
+	{
+		processSelection(cellPos);
+	}
+
+	// 处理地格选中状态流转。
+	private void processSelection(Vector2I cellPos)
+	{
+		if (!ground.IsInsideGround(cellPos))
+		{
+			ClearSelection();
+			return;
+		}
+
+		ShowCellSelection(cellPos);
+		EmitSignal(SignalName.CellSelected, cellPos);
+
+		if (world.Buildings.HasKey(cellPos))
+		{
+			EmitSignal(SignalName.BuildingSelected, cellPos);
+			return;
+		}
+
+		buildingCollectionView.Unselect();
+		EmitSignal(SignalName.BuildingSelectionCleared);
+	}
+
+	/// <summary>
+	/// 显示地格选中光标。
+	/// </summary>
+	public void ShowCellSelection(Vector2I cellPos)
+	{
+		gridCursor.ShowCell(cellPos, ground);
+	}
+
+	/// <summary>
+	/// 清理所有选中状态。
+	/// </summary>
+	public void ClearSelection()
+	{
+		gridCursor.Clear();
+		buildingCollectionView.Unselect();
+		EmitSignal(SignalName.SelectionCleared);
+		EmitSignal(SignalName.BuildingSelectionCleared);
 	}
 }

@@ -7,6 +7,8 @@ using System.Linq;
 /// </summary>
 public class ProductMarket
 {
+	private const string initialDt = "INIT";
+
 	/// <summary>
 	/// 市场数据变更事件。
 	/// </summary>
@@ -24,6 +26,9 @@ public class ProductMarket
 	// 每种产品的价格。
 	public MarketDataBucket<ProductType.Enums> Prices { get; }
 
+	// 商品价格历史。
+	public PriceHistory<ProductType.Enums> PriceHistory { get; }
+
 	// 商品价格下限，防止出现除零或极端价格。
 	public const float MinProductPrice = 0.0001f; // TODO 在往上提一层？
 
@@ -35,6 +40,8 @@ public class ProductMarket
 		IndustryDemands = new MarketDataBucket<ProductType.Enums>(productTypes, _ => 0.0f);
 		Supplies = new MarketDataBucket<ProductType.Enums>(productTypes, _ => 0.0f);
 		Prices = new MarketDataBucket<ProductType.Enums>(productTypes, _ => getRandomInitialPrice());
+		PriceHistory = new PriceHistory<ProductType.Enums>();
+		recordPriceSnapshot(initialDt);
 	}
 
 
@@ -48,7 +55,7 @@ public class ProductMarket
 	/// <summary>
 	/// 基于供需关系，动态平衡商品价格
 	/// </summary>
-	public void BalancePrice()
+	public void BalancePrice(string dt)
 	{
 		List<ProductType.Enums> productTypes = ProductTemplate.GetTemplates().Keys.ToList();
 		productTypes.ForEach(productType =>
@@ -73,7 +80,35 @@ public class ProductMarket
 			}
 		});
 
+		recordPriceSnapshot(dt);
+
 		NotifyChanged();
+	}
+
+	/// <summary>
+	/// 重置为单条价格历史记录。
+	/// </summary>
+	public void ResetPriceHistory(string dt)
+	{
+		PriceHistory.ResetWithSingleSnapshot(dt, captureCurrentPrices());
+	}
+
+	/// <summary>
+	/// 从存档恢复价格历史。
+	/// </summary>
+	public void LoadPriceHistory(List<Dictionary<string, object>> historyData)
+	{
+		PriceHistory.LoadSaveData(historyData);
+	}
+
+	private void recordPriceSnapshot(string dt)
+	{
+		PriceHistory.Record(dt, captureCurrentPrices());
+	}
+
+	private Dictionary<ProductType.Enums, float> captureCurrentPrices()
+	{
+		return ProductTemplate.GetTemplates().Keys.ToDictionary(productType => productType, productType => Prices.Get(productType));
 	}
 
 	/// <summary>

@@ -107,7 +107,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		Id = idAllocator.AllocateId(id);
 		Country = country;
 		Collision = new AtomCollision(pos);
-		Warehouse = new Warehouse(1000.0f);
+		Warehouse = new Warehouse(1000000000.0f); // 暂时等同于无限
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
 			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;

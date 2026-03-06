@@ -59,7 +59,7 @@ public class GameWorldInitializer
         Dictionary<string, object> data = JsonUtility.LoadDataFromJsonFile(savePath);
         GameWorld world = GameWorld.LoadSaveData(data);
         ensureColdStart(world);
-        applyInitialPopulationCurrency(world);
+        ApplyInitialPopulationCurrency(world.Buildings);
 
         hasLoadedFromDisk = true;
         GD.Print($"[Perf] GameWorldInitializer Load took {Time.GetTicksMsec() - start} ms");
@@ -73,7 +73,9 @@ public class GameWorldInitializer
     private static void ensureColdStart(GameWorld gameWorld)
     {
         CountryCollection countries = gameWorld.Countries;
+        PopulationCollection populations = gameWorld.Populations;
 
+        // 只通过这一项来判断即可，保持模型数据的一致性
         if (countries.Size > 0)
         {
             return;
@@ -82,7 +84,14 @@ public class GameWorldInitializer
         // 国家数据
         countries.Add(new Country("红色国家", Colors.Red));
         countries.Add(new Country("蓝色国家", Colors.DodgerBlue));
-    
+
+        // 人口数据
+        populations.Add(new Population("青年劳工群体", 120));
+        populations.Add(new Population("家庭居民群体", 180));
+        populations.Add(new Population("技术服务群体", 90));
+
+        GD.Print("冷启动：已生成基础数据");
+
         // 单位数据
         // // 新增一组单位
         // Vector2I centerPos = new Vector2I(gameWorld.Ground.Width / 2 + 50, gameWorld.Ground.Height / 2 + 50);
@@ -102,16 +111,14 @@ public class GameWorldInitializer
         // Unit topLeftUnit = new Unit(topLeftPos, secondCountry, topLeftPopulation);
         // topLeftUnit.Holds.MaxCapacity = 100;
         // gameWorld.UnitCollection.AddUnit(topLeftUnit);
-
-        GD.Print("冷启动：已生成基础数据");
     }
 
     /// <summary>
     /// 启动时按人口占比发放总计初始货币。
     /// </summary>
-    private static void applyInitialPopulationCurrency(GameWorld gameWorld)
+    public static void ApplyInitialPopulationCurrency(BuildingCollection buildings)
     {
-        List<(Warehouse Warehouse, int PopulationId, int Count)> residentialEntries = gameWorld.Buildings.GetAll()
+        List<(Warehouse Warehouse, int PopulationId, int Count)> residentialEntries = buildings.GetAll()
             .Where(building => building.Residential != null)
             .SelectMany(building => building.Residential!.GetPopulationEntries()
                 .Select(entry => (building.Warehouse, PopulationId: entry.Population.Id, entry.Count)))

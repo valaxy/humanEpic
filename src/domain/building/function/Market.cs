@@ -7,6 +7,8 @@ using System.Linq;
 /// </summary>
 public class Market : IInfo, IPersistence<Market>
 {
+	private const string initialDt = "INIT";
+
 	/// <summary>
 	/// 建筑内产品市场实例
 	/// </summary>
@@ -41,6 +43,8 @@ public class Market : IInfo, IPersistence<Market>
 			.Sum();
 		marketInfo.AddText("总需求", totalDemand.ToString("0.00"));
 		marketInfo.AddText("总供给", totalSupply.ToString("0.00"));
+		marketInfo.AddGroup("商品价格历史", buildProductPriceHistoryInfo());
+		marketInfo.AddGroup("劳动力价格历史", buildLabourPriceHistoryInfo());
 
 		return marketInfo;
 	}
@@ -56,9 +60,11 @@ public class Market : IInfo, IPersistence<Market>
 			{ "product_industry_demands", ProductMarket.IndustryDemands.GetSaveData() },
 			{ "product_supplies", ProductMarket.Supplies.GetSaveData() },
 			{ "product_prices", ProductMarket.Prices.GetSaveData() },
+			{ "product_price_history", ProductMarket.PriceHistory.GetSaveData() },
 			{ "labour_prices", LabourMarket.JobPrices.GetSaveData() },
 			{ "labour_supplies", LabourMarket.JobSupplies.GetSaveData() },
-			{ "labour_demands", LabourMarket.JobDemands.GetSaveData() }
+			{ "labour_demands", LabourMarket.JobDemands.GetSaveData() },
+			{ "labour_price_history", LabourMarket.PriceHistory.GetSaveData() }
 		};
 	}
 
@@ -76,6 +82,8 @@ public class Market : IInfo, IPersistence<Market>
 		applySavedBucket(data, "labour_prices", market.LabourMarket.JobPrices);
 		applySavedBucket(data, "labour_supplies", market.LabourMarket.JobSupplies);
 		applySavedBucket(data, "labour_demands", market.LabourMarket.JobDemands);
+		loadHistory(data, "product_price_history", historyData => market.ProductMarket.LoadPriceHistory(historyData), () => market.ProductMarket.ResetPriceHistory(initialDt));
+		loadHistory(data, "labour_price_history", historyData => market.LabourMarket.LoadPriceHistory(historyData), () => market.LabourMarket.ResetPriceHistory(initialDt));
 
 		return market;
 	}
@@ -94,6 +102,77 @@ public class Market : IInfo, IPersistence<Market>
 		}
 
 		target.ApplySaveData(savedBucket);
+	}
+
+	// 构造商品价格历史信息。
+	private InfoData buildProductPriceHistoryInfo()
+	{
+		InfoData historyInfo = new();
+		ProductMarket.PriceHistory.Snapshots
+			.Reverse()
+			.ToList()
+			.ForEach(snapshot =>
+			{
+				InfoData snapshotInfo = new();
+				snapshot.Prices
+					.OrderBy(item => item.Key)
+					.ToList()
+					.ForEach(priceEntry => snapshotInfo.AddText(ProductTemplate.GetTemplate(priceEntry.Key).Name, priceEntry.Value.ToString("0.00")));
+				historyInfo.AddGroup(snapshot.Dt, snapshotInfo);
+			});
+
+		if (historyInfo.IsEmpty)
+		{
+			historyInfo.AddText("状态", "无数据");
+		}
+
+		return historyInfo;
+	}
+
+	// 构造劳动力价格历史信息。
+	private InfoData buildLabourPriceHistoryInfo()
+	{
+		InfoData historyInfo = new();
+		LabourMarket.PriceHistory.Snapshots
+			.Reverse()
+			.ToList()
+			.ForEach(snapshot =>
+			{
+				InfoData snapshotInfo = new();
+				snapshot.Prices
+					.OrderBy(item => item.Key)
+					.ToList()
+					.ForEach(priceEntry => snapshotInfo.AddText(JobTemplate.GetTemplate(priceEntry.Key).Name, priceEntry.Value.ToString("0.00")));
+				historyInfo.AddGroup(snapshot.Dt, snapshotInfo);
+			});
+
+		if (historyInfo.IsEmpty)
+		{
+			historyInfo.AddText("状态", "无数据");
+		}
+
+		return historyInfo;
+	}
+
+	// 统一处理价格历史读取与旧存档兼容兜底。
+	private static void loadHistory(Dictionary<string, object> data, string fieldName, Action<List<Dictionary<string, object>>> onLoaded, Action onMissing)
+	{
+		if (!data.ContainsKey(fieldName))
+		{
+			onMissing();
+			return;
+		}
+
+		if (data[fieldName] is not List<object> rawHistory)
+		{
+			onMissing();
+			return;
+		}
+
+		List<Dictionary<string, object>> historyData = rawHistory
+			.Select(item => (Dictionary<string, object>)item)
+			.ToList();
+		onLoaded(historyData);
 	}
 
 

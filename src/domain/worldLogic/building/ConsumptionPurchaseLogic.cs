@@ -24,14 +24,18 @@ public class ConsumptionPurchaseLogic : WorldLogic
     // 建筑集合，用于解析市场与消费者仓库。
     private readonly BuildingCollection buildingCollection;
 
+    // 时间系统，用于生成价格记录时间戳。
+    private readonly TimeSystem timeSystem;
+
     /// <summary>
     /// 初始化消费购买逻辑。
     /// </summary>
-    public ConsumptionPurchaseLogic(PopulationCollection populationCollection, BuildingCollection buildingCollection)
+    public ConsumptionPurchaseLogic(PopulationCollection populationCollection, BuildingCollection buildingCollection, TimeSystem timeSystem)
         : base("消费购买", "按边际效用与价格的性价比进行 softmax 分配，居民仓库花完全部预算购买消费品。", 1.0f)
     {
         this.populationCollection = populationCollection;
         this.buildingCollection = buildingCollection;
+        this.timeSystem = timeSystem;
         consumerGoods = ProductTemplate.GetConsumerGoods();
         consumerGoodTemplates = ProductTemplate.GetConsumerGoodTemplates();
     }
@@ -69,6 +73,9 @@ public class ConsumptionPurchaseLogic : WorldLogic
 
         // 4. 更新消费者对商品的需求量和价格
         publichProductPurchase(productMarket, totalDemandByProduct);
+
+        // 5. DEBUG使用，将货币恢复
+        GameWorldInitializer.ApplyInitialPopulationCurrency(buildingCollection);
     }
 
     // 解析当前全局市场（TODO 暂时使用第一个市场建筑）。
@@ -198,6 +205,7 @@ public class ConsumptionPurchaseLogic : WorldLogic
         market.ConsumerDemands.Reset();
         productPurchase.ToList().ForEach(demandEntry => market.ConsumerDemands.Set(demandEntry.Key, demandEntry.Value));
         productPurchase.ToList().ForEach(entry => GD.Print($"消费购买逻辑: 商品 {entry.Key} 总消费需求量: {entry.Value}"));
-        market.BalancePrice(); // 因为改变了需求量，所以需要重新平衡价格
+        string dt = $"D{timeSystem.GetDay():D6}H{timeSystem.GetHour():D2}";
+        market.BalancePrice(dt); // 因为改变了需求量，所以需要重新平衡价格
     }
 }

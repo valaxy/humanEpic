@@ -46,7 +46,7 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	public void AddProduct(ProductType.Enums type, float amount, int populationId)
 	{
 		Debug.Assert(amount >= 0.0f, "添加数量必须非负");
-		Debug.Assert(TotalUsedVolume + amount <= TotalVolume, "仓库容量不足");
+		Debug.Assert(TotalUsedVolume + amount <= TotalVolume, $"仓库容量不足: {TotalUsedVolume + amount} > {TotalVolume}");
 
 		float currentAmount = GetAmount(type, populationId);
 		float targetAmount = currentAmount + amount;

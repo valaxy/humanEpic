@@ -16,6 +16,11 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	public int Id { get; }
 
 	/// <summary>
+	/// 人口名称（自然语言描述）
+	/// </summary>
+	public string Name { get; private set; }
+
+	/// <summary>
 	/// 人口人数
 	/// </summary>
 	public int Count { get; private set; }
@@ -53,9 +58,10 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// <summary>
 	/// 初始化人口
 	/// </summary>
-	public Population(int count, int? id = null)
+	public Population(string name, int count, int? id = null)
 	{
 		Id = idAllocator.AllocateId(id);
+		Name = name;
 		Count = count;
 	}
 
@@ -139,6 +145,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	public InfoData GetInfoData()
 	{
 		InfoData basicInfo = new InfoData();
+		basicInfo.AddText("名称", Name);
 		basicInfo.AddNumber("人口总数", Count);
 		basicInfo.AddNumber("已居住", ResidentialCount);
 		basicInfo.AddNumber("未居住", UnassignedResidentialCount);
@@ -166,6 +173,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		return new Dictionary<string, object>
 		{
 			{ "id", Id },
+			{ "name", Name },
 			{ "count", Count },
 			{ "residential_count", ResidentialCount },
 			{ "work_count", WorkCount },
@@ -180,11 +188,14 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	public static Population LoadSaveData(Dictionary<string, object> data)
 	{
 		int id = Convert.ToInt32(data["id"]);
+		string name = data.ContainsKey("name")
+			? data["name"].ToString() ?? $"人口#{id}"
+			: $"人口#{id}";
 		int count = Convert.ToInt32(data["count"]);
 		int residentialCount = Convert.ToInt32(data["residential_count"]);
 		int workCount = Convert.ToInt32(data["work_count"]);
 
-		Population population = new Population(count, id);
+		Population population = new Population(name, count, id);
 		population.AddResidential(residentialCount);
 		population.AddWork(workCount);
 

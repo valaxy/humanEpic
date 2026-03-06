@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -179,6 +180,64 @@ public partial class BuildingEditorBar : EditorWindow
 		BuildingTemplate template = BuildingTemplate.GetTemplate(currentBuildingType);
 		Building building = new Building(template, cellPos, country);
 		world.Buildings.Add(building);
+		assignRandomResidents(building);
 		view.BuildingCollection.UpdateBuildingVisuals();
+	}
+
+	// 新建民宅时，随机让全部人口中的一部分入住。
+	private void assignRandomResidents(Building building)
+	{
+		if (building.Residential == null)
+		{
+			return;
+		}
+
+		int remainingCapacity = building.Residential.MaxPopulation - building.Residential.TotalCount;
+		if (remainingCapacity <= 0)
+		{
+			return;
+		}
+
+		List<Population> candidatePopulations = world.Populations.GetAll()
+			.Where(population => population.UnassignedResidentialCount > 0)
+			.OrderBy(_ => Random.Shared.Next())
+			.ToList();
+		if (candidatePopulations.Count == 0)
+		{
+			return;
+		}
+
+		int guaranteedGroups = Math.Min(remainingCapacity, candidatePopulations.Count);
+		candidatePopulations
+			.Take(guaranteedGroups)
+			.ToList()
+			.ForEach(population =>
+			{
+				building.Residential.EnterPopulation(population, 1);
+				remainingCapacity -= 1;
+			});
+
+		candidatePopulations.ForEach(population =>
+		{
+			if (remainingCapacity <= 0)
+			{
+				return;
+			}
+
+			int maxAssignable = Math.Min(population.UnassignedResidentialCount, remainingCapacity);
+			if (maxAssignable <= 0)
+			{
+				return;
+			}
+
+			int randomAssignCount = Random.Shared.Next(maxAssignable + 1);
+			if (randomAssignCount <= 0)
+			{
+				return;
+			}
+
+			building.Residential.EnterPopulation(population, randomAssignCount);
+			remainingCapacity -= randomAssignCount;
+		});
 	}
 }

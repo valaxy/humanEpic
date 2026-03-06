@@ -1,39 +1,38 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://0l4bp5i4c1hc"]
 
-[ext_resource type="Script" path="res://src/ui/MainUI.cs" id="1_main_ui_script"]
-[ext_resource type="Script" path="res://src/ui/infoUI/grid/GridInfoUI.cs" id="5_grid_info_script"]
-[ext_resource type="Script" path="res://src/ui/infoUI/building/BuildingInfoUI.cs" id="9_building_info_script"]
-
-[ext_resource type="PackedScene" path="res://src/ui/zoomUI/zoom_ui.tscn" id="2_zoom_ui_scene"]
-[ext_resource type="PackedScene" path="res://src/ui/timeDisplay/time_display_ui.tscn" id="3_time_display_scene"]
+[ext_resource type="Script" uid="uid://i042rw33ayqi" path="res://src/ui/MainUI.cs" id="1_main_ui_script"]
+[ext_resource type="PackedScene" uid="uid://cx6y8v2u8k4b7" path="res://src/ui/zoomUI/zoom_ui.tscn" id="2_zoom_ui_scene"]
+[ext_resource type="PackedScene" uid="uid://b8xt3p2v1w2y2" path="res://src/ui/timeDisplay/time_display_ui.tscn" id="3_time_display_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/infoUI/info_ui.tscn" id="4_info_ui_scene"]
-[ext_resource type="PackedScene" path="res://src/ui/gameEditor/game_editor_buttons.tscn" id="6_game_editor_buttons_scene"]
+[ext_resource type="Script" uid="uid://ueide7pybayu" path="res://src/ui/infoUI/grid/GridInfoUI.cs" id="5_grid_info_script"]
+[ext_resource type="PackedScene" uid="uid://ci8w7v2u8k4b8" path="res://src/ui/gameEditor/game_editor_buttons.tscn" id="6_game_editor_buttons_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/bubbleMessage/bubble_message_container_ui.tscn" id="7_bubble_container_scene"]
-[ext_resource type="PackedScene" path="res://src/ui/infoUI/building/building_info_panel_ui.tscn" id="8_building_info_panel_scene"]
+[ext_resource type="PackedScene" path="res://src/ui/sidePanel/building_info_panel_ui.tscn" id="8_building_info_panel_scene"]
+[ext_resource type="Script" uid="uid://cskxy5sni4vjp" path="res://src/ui/infoUI/building/BuildingInfoUI.cs" id="9_building_info_script"]
 
-[node name="MainUI" type="Node"]
+[node name="MainUI" type="Node" unique_id=1960510849]
 script = ExtResource("1_main_ui_script")
 
-[node name="ZoomUI" parent="." instance=ExtResource("2_zoom_ui_scene")]
+[node name="ZoomUI" parent="." unique_id=1879794613 instance=ExtResource("2_zoom_ui_scene")]
 
-[node name="TimeDisplayUI" parent="." instance=ExtResource("3_time_display_scene")]
+[node name="TimeDisplayUI" parent="." unique_id=1700932558 instance=ExtResource("3_time_display_scene")]
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 180.0
 offset_bottom = 60.0
 
-[node name="InfoUILeft" parent="." instance=ExtResource("4_info_ui_scene")]
+[node name="InfoUILeft" parent="." unique_id=1225254484 instance=ExtResource("4_info_ui_scene")]
 
-[node name="InfoUIRight" parent="." instance=ExtResource("4_info_ui_scene")]
+[node name="InfoUIRight" parent="." unique_id=2055486938 instance=ExtResource("4_info_ui_scene")]
 
-[node name="BuildingInfoPanelUI" parent="." instance=ExtResource("8_building_info_panel_scene")]
+[node name="BuildingInfoPanelUI" parent="." unique_id=1877031753 instance=ExtResource("8_building_info_panel_scene")]
 
-[node name="GridInfoUI" type="Node" parent="."]
+[node name="GridInfoUI" type="Node" parent="." unique_id=1397779152]
 script = ExtResource("5_grid_info_script")
 
-[node name="BuildingInfoUI" type="Node" parent="."]
+[node name="BuildingInfoUI" type="Node" parent="." unique_id=1240955522]
 script = ExtResource("9_building_info_script")
 
-[node name="GameEditorButtons" parent="." instance=ExtResource("6_game_editor_buttons_scene")]
+[node name="GameEditorButtons" parent="." unique_id=806009076 instance=ExtResource("6_game_editor_buttons_scene")]
 
-[node name="BubbleMessageContainerUI" parent="." instance=ExtResource("7_bubble_container_scene")]
+[node name="BubbleMessageContainerUI" parent="." unique_id=1009425273 instance=ExtResource("7_bubble_container_scene")]

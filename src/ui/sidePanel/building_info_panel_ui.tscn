@@ -1,0 +1,169 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://bpqpjb78xw1aw" path="res://src/ui/sidePanel/BuildingInfoPanelUI.cs" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_main_panel_bg"]
+bg_color = Color(0.06, 0.07, 0.09, 1)
+
+
+[node name="BuildingInfoPanelUI" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="MainPanel" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 0.03
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 0.0
+offset_right = 560.0
+offset_bottom = 0.0
+grow_vertical = 0
+mouse_filter = 0
+
+[node name="Panel" type="Panel" parent="MainPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_main_panel_bg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+mouse_filter = 0
+
+[node name="TitleLabel" type="Label" parent="MainPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "建筑信息"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="MainPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 0
+
+[node name="ModuleGrid" type="GridContainer" parent="MainPanel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 1
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="InfoModuleCard" type="PanelContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Wrapper" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin/Wrapper"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.603922, 0.803922, 0.196078, 1)
+text = "Info"
+
+[node name="HSeparator" type="HSeparator" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin/Wrapper"]
+layout_mode = 2
+
+[node name="InfoContent" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin/Wrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ProductMarketModuleCard" type="PanelContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Wrapper" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.603922, 0.803922, 0.196078, 1)
+text = "产品市场"
+
+[node name="HSeparator" type="HSeparator" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+
+[node name="ProductMarketSlot" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LabourMarketModuleCard" type="PanelContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Wrapper" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.603922, 0.803922, 0.196078, 1)
+text = "劳动力市场"
+
+[node name="HSeparator" type="HSeparator" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+
+[node name="LabourMarketSlot" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseButton" type="Button" parent="MainPanel"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -25.0
+offset_bottom = 31.0
+grow_horizontal = 0
+text = "×"
+flat = true

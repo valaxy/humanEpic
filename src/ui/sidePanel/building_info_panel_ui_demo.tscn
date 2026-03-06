@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/sidePanel/BuildingInfoPanelUIDemo.cs" id="1_demo_script"]
+[ext_resource type="PackedScene" path="res://src/ui/sidePanel/building_info_panel_ui.tscn" id="2_panel_scene"]
+
+[node name="BuildingInfoPanelUIDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_demo_script")
+
+[node name="BuildingInfoPanelUI" parent="." instance=ExtResource("2_panel_scene")]
+unique_name_in_owner = true
+
+[node name="ToolbarMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_right = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 120.0
+grow_horizontal = 2
+
+[node name="Toolbar" type="HBoxContainer" parent="ToolbarMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ShowResidentialButton" type="Button" parent="ToolbarMargin/Toolbar"]
+layout_mode = 2
+text = "展示民宅建筑"
+
+[node name="ShowMarketButton" type="Button" parent="ToolbarMargin/Toolbar"]
+layout_mode = 2
+text = "展示市场建筑"
+
+[node name="HideButton" type="Button" parent="ToolbarMargin/Toolbar"]
+layout_mode = 2
+text = "隐藏侧边栏"

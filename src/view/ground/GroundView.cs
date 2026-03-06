@@ -8,34 +8,35 @@ public partial class GroundView : Node3D
 {
 	private static readonly PackedScene gridCursorScene = GD.Load<PackedScene>("res://src/view/ground/gridCursor/GridCursor.tscn");
 
-	/// <summary>默认地图宽度</summary>
-	[Export]
-	public int DefaultMapWidth { get; set; } = 500;
+	// 默认地图宽度
+	private readonly int defaultMapWidth = 500;
+	// 默认地图高度
+	private readonly int defaultMapHeight = 500;
 
-	/// <summary>默认地图高度</summary>
-	[Export]
-	public int DefaultMapHeight { get; set; } = 500;
+
+
+	// 建筑物集合
+	private BuildingCollection buildings = null!;
+	// 地形数据模型引用。
+	private Ground ground = null!;
+
+
 
 	// 摄像机引用，用于屏幕坐标投影。
 	private GameCamera camera = null!;
-	// 地形数据模型引用。
-	private Ground ground = null!;
 	// 地图层级渲染管理器引用。
 	private LayerManagerNode layerManager = null!;
 	// 网格辅助线渲染引用。
 	private GroundGridHelper gridRender = null!;
-	// 世界模型引用。
-	private GameWorld world = null!;
 	// 建筑集合渲染视图。
 	private BuildingCollectionView buildingCollectionView = null!;
 	// 地格选中光标。
 	private GridCursor gridCursor = null!;
-
 	// 最近一次悬浮的格点。
 	private Vector2I lastHoveredCell = Vector2I.Zero;
-
 	// 是否存在有效悬浮格点。
 	private bool hasHoveredCell;
+
 
 	/// <summary>
 	/// 鼠标悬浮在有效地格时发出。
@@ -106,10 +107,12 @@ public partial class GroundView : Node3D
 	/// <summary>
 	/// 绑定地面初始化所需依赖。
 	/// </summary>
-	public void Setup(GameWorld world, LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera, BuildingCollectionView buildingCollectionView)
+	public void Setup(BuildingCollection buildings, Ground ground,
+		LayerManagerNode layerManager, GroundGridHelper gridRender, GameCamera camera, BuildingCollectionView buildingCollectionView)
 	{
-		this.world = world;
-		ground = world.Ground;
+		this.buildings = buildings;
+		this.ground = ground;
+
 		this.layerManager = layerManager;
 		this.gridRender = gridRender;
 		this.camera = camera;
@@ -120,7 +123,7 @@ public partial class GroundView : Node3D
 		AddChild(gridCursor);
 		buildingCollectionView.BuildingClicked += onBuildingClicked;
 
-		initializeMap(DefaultMapWidth, DefaultMapHeight);
+		initializeMap(defaultMapWidth, defaultMapHeight);
 	}
 
 	// 初始化地图尺寸并同步初始渲染。
@@ -129,6 +132,18 @@ public partial class GroundView : Node3D
 		ground.Resize(width, height);
 		layerManager.UpdateMapData(ground);
 		gridRender.UpdateGrid(width, height);
+	}
+
+	// 处理建筑节点触发的选中流程。
+	private void onBuildingClicked(Vector2I cellPos)
+	{
+		if (!ground.IsInsideGround(cellPos))
+		{
+			ClearSelection();
+			return;
+		}
+
+		EmitSignal(SignalName.BuildingSelected, cellPos);
 	}
 
 	/// <summary>
@@ -149,21 +164,7 @@ public partial class GroundView : Node3D
 
 		if (inputEvent is InputEventMouseButton { ButtonIndex: MouseButton.Left } mouseButton)
 		{
-			if (mouseButton.Pressed)
-			{
-				if (camera.TryResolveGroundCell(mouseButton.Position, ground, out Vector2I cellPos, YConfig.PlainY))
-				{
-					EmitSignal(SignalName.CellClicked, cellPos);
-					processSelection(cellPos);
-					// 注释暂时保留 
-					// GetViewport().SetInputAsHandled();
-					EmitSignal(SignalName.EditPrimaryPressed, cellPos);
-				}
-			}
-			else
-			{
-				EmitSignal(SignalName.EditPrimaryReleased);
-			}
+			handlePrimaryMouseButton(mouseButton);
 		}
 	}
 
@@ -176,17 +177,35 @@ public partial class GroundView : Node3D
 			return;
 		}
 
-		Vector3? worldPoint = camera.GetRayIntersection(YConfig.PlainY);
-		if (!worldPoint.HasValue)
+		Vector2 mousePos = GetViewport().GetMousePosition();
+		handleMouseHover(mousePos);
+
+		if (!camera.TryResolveGroundCell(mousePos, ground, out Vector2I cellPos, YConfig.PlainY))
 		{
-			clearHoverIfNeeded();
 			EmitSignal(SignalName.EditPointerCellCleared);
 			return;
 		}
 
-		Vector2I cellPos = ground.WorldToCell(worldPoint.Value);
-		handleMouseHover(GetViewport().GetMousePosition());
 		EmitSignal(SignalName.EditPointerCellChanged, cellPos);
+	}
+
+	// 处理主鼠标按键事件。
+	private void handlePrimaryMouseButton(InputEventMouseButton mouseButton)
+	{
+		if (!mouseButton.Pressed)
+		{
+			EmitSignal(SignalName.EditPrimaryReleased);
+			return;
+		}
+
+		if (!camera.TryResolveGroundCell(mouseButton.Position, ground, out Vector2I cellPos, YConfig.PlainY))
+		{
+			return;
+		}
+
+		EmitSignal(SignalName.CellClicked, cellPos);
+		selectGroundCell(cellPos);
+		EmitSignal(SignalName.EditPrimaryPressed, cellPos);
 	}
 
 	// 清理悬浮状态并发出清理信号。
@@ -206,12 +225,7 @@ public partial class GroundView : Node3D
 	{
 		if (!camera.TryResolveGroundCell(screenPos, ground, out Vector2I cellPos, YConfig.PlainY))
 		{
-			if (hasHoveredCell)
-			{
-				hasHoveredCell = false;
-				EmitSignal(SignalName.CellHoverCleared);
-			}
-
+			clearHoverIfNeeded();
 			return;
 		}
 
@@ -225,14 +239,10 @@ public partial class GroundView : Node3D
 		EmitSignal(SignalName.CellHovered, cellPos);
 	}
 
-	// 处理建筑点击行为。
-	private void onBuildingClicked(Vector2I cellPos)
-	{
-		processSelection(cellPos);
-	}
+
 
 	// 处理地格选中状态流转。
-	private void processSelection(Vector2I cellPos)
+	private void selectGroundCell(Vector2I cellPos)
 	{
 		if (!ground.IsInsideGround(cellPos))
 		{
@@ -243,7 +253,7 @@ public partial class GroundView : Node3D
 		ShowCellSelection(cellPos);
 		EmitSignal(SignalName.CellSelected, cellPos);
 
-		if (world.Buildings.HasKey(cellPos))
+		if (buildings.HasKey(cellPos))
 		{
 			EmitSignal(SignalName.BuildingSelected, cellPos);
 			return;
@@ -252,6 +262,8 @@ public partial class GroundView : Node3D
 		buildingCollectionView.Unselect();
 		EmitSignal(SignalName.BuildingSelectionCleared);
 	}
+
+
 
 	/// <summary>
 	/// 显示地格选中光标。

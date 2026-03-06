@@ -8,6 +8,7 @@ using Godot;
 public partial class GameCamera : Camera3D
 {
     private const float RayParallelEpsilon = 0.0001f;
+    private const float FocusShiftScale = 2.0f;
 
     public float MoveSpeed = 80.0f; // 摄像机平移速度
     public float ZoomSpeed = 2.0f; // 摄像机缩放步长 (滚轮)
@@ -37,7 +38,7 @@ public partial class GameCamera : Camera3D
     {
         targetZoom = InitialZoom;
         currentZoom = targetZoom;
-        
+
         initializeCameraState();
     }
 
@@ -46,19 +47,9 @@ public partial class GameCamera : Camera3D
     /// </summary>
     private void initializeCameraState()
     {
-        Viewport viewport = GetViewport();
-        if (viewport == null)
-        {
-            targetFocusPoint = getDefaultFocusPoint();
-        }
-        else
-        {
-            Vector3? groundPos = ProjectToPlane(viewport.GetVisibleRect().Size / 2.0f);
-            targetFocusPoint = groundPos.HasValue && groundPos.Value != Vector3.Zero
-                ? groundPos.Value
-                : getDefaultFocusPoint();
-        }
-        
+        Vector2 center = GetViewport().GetVisibleRect().Size / 2.0f;
+        Vector3? groundPos = ProjectToPlane(center);
+        targetFocusPoint = groundPos ?? getDefaultFocusPoint();
         currentFocusPoint = targetFocusPoint;
     }
 
@@ -82,21 +73,26 @@ public partial class GameCamera : Camera3D
     /// </summary>
     private void handleMovement(float delta)
     {
-        Vector3 inputDir = Vector3.Zero;
-        if (Input.IsKeyPressed(Key.W)) inputDir.Z -= 1;
-        if (Input.IsKeyPressed(Key.S)) inputDir.Z += 1;
-        if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1;
-        if (Input.IsKeyPressed(Key.D)) inputDir.X += 1;
-        
+        Vector3 inputDir = getMoveInputDirection();
         if (inputDir != Vector3.Zero)
         {
-            inputDir = inputDir.Normalized();
             targetFocusPoint += inputDir * MoveSpeed * delta;
         }
-        
+
         // Q 和 E 控制视野高低
         if (Input.IsKeyPressed(Key.Q)) ZoomBy(-KeyboardZoomSpeed * delta);
         if (Input.IsKeyPressed(Key.E)) ZoomBy(KeyboardZoomSpeed * delta);
+    }
+
+    // 读取并归一化键盘移动方向。
+    private static Vector3 getMoveInputDirection()
+    {
+        Vector3 inputDir = Vector3.Zero;
+        if (Input.IsKeyPressed(Key.W)) inputDir.Z -= 1.0f;
+        if (Input.IsKeyPressed(Key.S)) inputDir.Z += 1.0f;
+        if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1.0f;
+        if (Input.IsKeyPressed(Key.D)) inputDir.X += 1.0f;
+        return inputDir == Vector3.Zero ? Vector3.Zero : inputDir.Normalized();
     }
 
     /// <summary>
@@ -105,29 +101,40 @@ public partial class GameCamera : Camera3D
     private void updateCameraTransform(float delta)
     {
         float prevZoom = currentZoom;
+
         // 平滑插值
         currentZoom = Mathf.Lerp(currentZoom, targetZoom, ZoomLerpSpeed * delta);
         currentFocusPoint = currentFocusPoint.Lerp(targetFocusPoint, MoveLerpSpeed * delta);
-        
-        // 计算当前权重 t (0.0 到 1.0)
-        float t = (currentZoom - MinZoom) / (MaxZoom - MinZoom);
-        t = Mathf.Clamp(t, 0.0f, 1.0f);
-        
+
+        float t = getZoomRatio(currentZoom);
+
         // 根据高度计算倾斜角度 (动态角度)
         float angleRad = Mathf.DegToRad(Mathf.Lerp(MinAngleDeg, MaxAngleDeg, t));
-        
+
         // 根据高度和角度计算 Z 轴偏移量
         float zOffset = currentZoom / Mathf.Tan(angleRad);
-        
+
         // 设置摄像机空间位置并注视当前视点
         GlobalPosition = currentFocusPoint + new Vector3(0, currentZoom, zOffset);
         LookAt(currentFocusPoint, Vector3.Up);
-        
+
         // 发送信号更新 UI (仅在高度变动足够大时)
         if (!Mathf.IsEqualApprox(currentZoom, prevZoom))
         {
             EmitSignal(SignalName.ZoomChanged, currentZoom, MinZoom, MaxZoom);
         }
+    }
+
+    // 将当前高度映射为 0-1 缩放区间。
+    private float getZoomRatio(float zoom)
+    {
+        if (Mathf.IsZeroApprox(MaxZoom - MinZoom))
+        {
+            return 0.0f;
+        }
+
+        float rawRatio = (zoom - MinZoom) / (MaxZoom - MinZoom);
+        return Mathf.Clamp(rawRatio, 0.0f, 1.0f);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -152,34 +159,32 @@ public partial class GameCamera : Camera3D
     {
         float prevTargetZoom = targetZoom;
         targetZoom = Mathf.Clamp(targetZoom + amount, MinZoom, MaxZoom);
-        
+
         // 缩放至鼠标指向点逻辑
-        if (!Mathf.IsEqualApprox(prevTargetZoom, targetZoom))
+        if (Mathf.IsEqualApprox(prevTargetZoom, targetZoom))
         {
-            if (mousePos == default)
-            {
-                Viewport viewport = GetViewport();
-                if (viewport != null)
-                {
-                    mousePos = viewport.GetVisibleRect().Size / 2.0f;
-                }
-                else
-                {
-                    return;
-                }
-            }
-            
-            Vector3? groundPos = ProjectToPlane(mousePos);
-            if (groundPos.HasValue)
-            {
-                // 动态调整视点，产生“缩放至目标”的效果
-                float zoomRange = MaxZoom - MinZoom;
-                float shiftFactor = (targetZoom - prevTargetZoom) / zoomRange;
-                
-                // 偏移强度系数
-                targetFocusPoint -= (groundPos.Value - targetFocusPoint) * shiftFactor * 2.0f;
-            }
+            return;
         }
+
+        Vector2 targetScreenPos = mousePos == default
+            ? GetViewport().GetVisibleRect().Size / 2.0f
+            : mousePos;
+
+        Vector3? groundPos = ProjectToPlane(targetScreenPos);
+        if (!groundPos.HasValue)
+        {
+            return;
+        }
+
+        // 动态调整视点，产生“缩放至目标”的效果
+        float zoomRange = MaxZoom - MinZoom;
+        if (Mathf.IsZeroApprox(zoomRange))
+        {
+            return;
+        }
+
+        float shiftFactor = (targetZoom - prevTargetZoom) / zoomRange;
+        targetFocusPoint -= (groundPos.Value - targetFocusPoint) * shiftFactor * FocusShiftScale;
     }
 
     /// <summary>
@@ -243,8 +248,7 @@ public partial class GameCamera : Camera3D
     /// <returns>交点坐标，若无交点则返回 null。</returns>
     public Vector3? GetRayIntersection(float planeY = 0.0f)
     {
-        Vector2 mousePos = GetViewport().GetMousePosition();
-        return ProjectToPlane(mousePos, planeY);
+        return ProjectToPlane(GetViewport().GetMousePosition(), planeY);
     }
 
     /// <summary>
@@ -260,6 +264,6 @@ public partial class GameCamera : Camera3D
     /// </summary>
     public float GetZoomPercentage()
     {
-        return (currentZoom - MinZoom) / (MaxZoom - MinZoom);
+        return getZoomRatio(currentZoom);
     }
 }

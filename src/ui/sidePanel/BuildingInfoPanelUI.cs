@@ -14,14 +14,19 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 劳动力市场表场景。
 	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_table_ui.tscn");
 
-	// 面板主节点。
-	private Control mainPanel = null!;
-
 	// 标题节点。
 	private Label titleLabel = null!;
 
-	// 模块格子容器。
-	private GridContainer moduleGrid = null!;
+	// Info 模块内容容器。
+	private VBoxContainer infoContent = null!;
+	// 产品市场模块卡片。
+	private PanelContainer productMarketModuleCard = null!;
+	// 产品市场模块内容槽位。
+	private VBoxContainer productMarketSlot = null!;
+	// 劳动力市场模块卡片。
+	private PanelContainer labourMarketModuleCard = null!;
+	// 劳动力市场模块内容槽位。
+	private VBoxContainer labourMarketSlot = null!;
 
 	// 关闭按钮。
 	private Button closeButton = null!;
@@ -34,23 +39,35 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	/// </summary>
 	public override void _Ready()
 	{
-		mainPanel = GetNode<Control>("MainPanel");
 		titleLabel = GetNode<Label>("MainPanel/VBoxContainer/TitleLabel");
-		moduleGrid = GetNode<GridContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid");
+		infoContent = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin/Wrapper/InfoContent");
+		productMarketModuleCard = GetNode<PanelContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard");
+		productMarketSlot = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin/Wrapper/ProductMarketSlot");
+		labourMarketModuleCard = GetNode<PanelContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard");
+		labourMarketSlot = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper/LabourMarketSlot");
 		closeButton = GetNode<Button>("MainPanel/CloseButton");
 
 		Visible = false;
 		closeButton.Pressed += hidePanel;
+		setMarketModulesVisible(false);
 	}
 
 	/// <summary>
 	/// 绑定选择系统。
 	/// </summary>
-	public void Setup(BuildingCollection buildingCollection, GroundView selection)
+	public void Setup(BuildingCollection buildingCollection, GroundView groundView)
 	{
 		this.buildingCollection = buildingCollection;
-		selection.BuildingSelected += onBuildingSelected;
-		selection.BuildingSelectionCleared += onBuildingSelectionCleared;
+		groundView.BuildingSelected += onBuildingSelected;
+		groundView.BuildingSelectionCleared += onBuildingSelectionCleared;
+	}
+
+	/// <summary>
+	/// 直接展示指定建筑信息（用于 Demo 或调试）。
+	/// </summary>
+	public void RenderBuilding(Building building)
+	{
+		renderBuildingModules(building);
 	}
 
 	// 响应建筑选中。
@@ -70,63 +87,27 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	private void renderBuildingModules(Building building)
 	{
 		titleLabel.Text = $"建筑信息 - {building.Name}";
-		clearModules();
-		moduleGrid.AddChild(createInfoModuleCard("Info", building.GetInfoData()));
+		clearInfoEntries();
+		appendInfoEntries(infoContent, building.GetInfoData());
+		clearMarketSlots();
 
 		if (building.Market != null)
 		{
 			ProductMarketTableUI productTable = productMarketTableScene.Instantiate<ProductMarketTableUI>();
+			productMarketSlot.AddChild(productTable); // 必须先addChild后Render
 			productTable.RenderMarket(building.Market.ProductMarket);
-			moduleGrid.AddChild(createControlModuleCard("产品市场", productTable));
 
 			LabourMarketTableUI labourTable = labourMarketTableScene.Instantiate<LabourMarketTableUI>();
+			labourMarketSlot.AddChild(labourTable); // 必须先addChild后Render
 			labourTable.RenderMarket(building.Market.LabourMarket);
-			moduleGrid.AddChild(createControlModuleCard("劳动力市场", labourTable));
+			setMarketModulesVisible(true);
+		}
+		else
+		{
+			setMarketModulesVisible(false);
 		}
 
 		Visible = true;
-		updatePanelHeight();
-	}
-
-	// 创建 InfoData 模块卡片。
-	private Control createInfoModuleCard(string title, InfoData data)
-	{
-		VBoxContainer content = new VBoxContainer();
-		content.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		content.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-		appendInfoEntries(content, data);
-		return createControlModuleCard(title, content);
-	}
-
-	// 创建通用控件模块卡片。
-	private Control createControlModuleCard(string title, Control content)
-	{
-		PanelContainer panel = new PanelContainer();
-		panel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		panel.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-
-		MarginContainer margin = new MarginContainer();
-		margin.AddThemeConstantOverride("margin_left", 10);
-		margin.AddThemeConstantOverride("margin_top", 10);
-		margin.AddThemeConstantOverride("margin_right", 10);
-		margin.AddThemeConstantOverride("margin_bottom", 10);
-
-		VBoxContainer wrapper = new VBoxContainer();
-		wrapper.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-		wrapper.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-		wrapper.AddThemeConstantOverride("separation", 8);
-
-		Label moduleTitle = new Label();
-		moduleTitle.Text = title;
-		moduleTitle.AddThemeFontSizeOverride("font_size", 16);
-		moduleTitle.AddThemeColorOverride("font_color", Colors.YellowGreen);
-
-		wrapper.AddChild(moduleTitle);
-		wrapper.AddChild(new HSeparator());
-		wrapper.AddChild(content);
-		margin.AddChild(wrapper);
-		panel.AddChild(margin);
-		return panel;
 	}
 
 	// 将结构化信息追加为 KV 行。
@@ -208,26 +189,33 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 		return row;
 	}
 
-	// 清理已有模块。
-	private void clearModules()
+	// 清理 Info 模块内容。
+	private void clearInfoEntries()
 	{
-		List<Node> children = moduleGrid.GetChildren().Cast<Node>().ToList();
+		List<Node> children = infoContent.GetChildren().Cast<Node>().ToList();
 		children.ForEach(child => child.QueueFree());
+	}
+
+	// 清理市场模块内容。
+	private void clearMarketSlots()
+	{
+		List<Node> productChildren = productMarketSlot.GetChildren().Cast<Node>().ToList();
+		productChildren.ForEach(child => child.QueueFree());
+
+		List<Node> labourChildren = labourMarketSlot.GetChildren().Cast<Node>().ToList();
+		labourChildren.ForEach(child => child.QueueFree());
+	}
+
+	// 控制市场模块显隐。
+	private void setMarketModulesVisible(bool visible)
+	{
+		productMarketModuleCard.Visible = visible;
+		labourMarketModuleCard.Visible = visible;
 	}
 
 	// 隐藏面板。
 	private void hidePanel()
 	{
 		Visible = false;
-	}
-
-	// 动态调整面板高度以适配内容。
-	private async void updatePanelHeight()
-	{
-		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		float baseFixedHeight = 84.0f;
-		float contentHeight = moduleGrid.GetCombinedMinimumSize().Y;
-		float totalTargetHeight = Mathf.Clamp(baseFixedHeight + contentHeight + 30.0f, 240.0f, 760.0f);
-		mainPanel.OffsetTop = mainPanel.OffsetBottom - totalTargetHeight;
 	}
 }

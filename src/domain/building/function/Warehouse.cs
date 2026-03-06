@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -80,12 +81,15 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	public InfoData GetInfoData()
 	{
 		InfoData data = new();
-		foreach (KeyValuePair<ProductType.Enums, float> pair in amounts.Where(entry => entry.Value > 0.0f))
-		{
-			ProductTemplate template = ProductTemplate.GetTemplate(pair.Key);
-			float ratio = TotalVolume > 0.0f ? Mathf.Clamp((pair.Value) / TotalVolume, 0.0f, 1.0f) : 0.0f;
-			data.AddProgress(template.Name, ratio, $"{(int)pair.Value}");
-		}
+		amounts
+			.Where(entry => entry.Value > 0.0f)
+			.ToList()
+			.ForEach(pair =>
+			{
+				ProductTemplate template = ProductTemplate.GetTemplate(pair.Key);
+				float ratio = TotalVolume > 0.0f ? Mathf.Clamp(pair.Value / TotalVolume, 0.0f, 1.0f) : 0.0f;
+				data.AddProgress(template.Name, ratio, $"{(int)pair.Value}");
+			});
 
 		Debug.Assert(TotalVolume >= 0.0f, "仓库总容量必须非负");
 		float usedRatio = TotalVolume > 0.0f ? Mathf.Clamp(TotalUsedVolume / TotalVolume, 0.0f, 1.0f) : 0.0f;
@@ -98,14 +102,9 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 	/// </summary>
 	public Dictionary<string, object> GetSaveData()
 	{
-		Dictionary<string, object> productAmounts = new();
-		foreach (KeyValuePair<ProductType.Enums, float> pair in amounts)
-		{
-			if (pair.Value > 0.0f)
-			{
-				productAmounts[pair.Key.ToString()] = pair.Value;
-			}
-		}
+		Dictionary<string, object> productAmounts = amounts
+			.Where(pair => pair.Value > 0.0f)
+			.ToDictionary(pair => pair.Key.ToString(), pair => (object)pair.Value);
 
 		return new Dictionary<string, object>
 		{
@@ -122,17 +121,22 @@ public class Warehouse : IInfo, IPersistence<Warehouse>
 		float totalVolume = Convert.ToSingle(data["total_volume"]);
 		Warehouse warehouse = new Warehouse(totalVolume);
 
-		if (data.TryGetValue("amounts", out object? amountsObj) && amountsObj is Dictionary<string, object> amountsDict)
-		{
-			foreach (KeyValuePair<string, object> pair in amountsDict)
+		Dictionary<string, object> amountEntries = (data["amounts"] as Dictionary<string, object>)!;
+		amountEntries
+			.Where(pair => TryParseProductType(pair.Key, out _)) // TODO 不要按照key string来解析？
+			.ToList()
+			.ForEach(pair =>
 			{
-				if (Enum.TryParse(pair.Key, out ProductType.Enums type))
-				{
-					warehouse.amounts[type] = Convert.ToSingle(pair.Value);
-				}
-			}
-		}
+				ProductType.Enums type = Enum.Parse<ProductType.Enums>(pair.Key, true);
+				warehouse.amounts[type] = Convert.ToSingle(pair.Value);
+			});
 
 		return warehouse;
+	}
+
+	// 统一的产品类型解析。
+	private static bool TryParseProductType(string rawType, out ProductType.Enums type)
+	{
+		return Enum.TryParse(rawType, true, out type);
 	}
 }

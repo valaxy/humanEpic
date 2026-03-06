@@ -12,7 +12,9 @@ public partial class GridCursor : MeshInstance3D
 	public override void _Ready()
 	{
 		Mesh = (Mesh)Mesh.Duplicate();
-		material = (StandardMaterial3D)GetSurfaceOverrideMaterial(0).Duplicate();
+		Material baseMaterial = Mesh.SurfaceGetMaterial(0);
+		StandardMaterial3D sourceMaterial = baseMaterial as StandardMaterial3D ?? new StandardMaterial3D();
+		material = (StandardMaterial3D)sourceMaterial.Duplicate();
 		SetSurfaceOverrideMaterial(0, material);
 		Visible = false;
 	}

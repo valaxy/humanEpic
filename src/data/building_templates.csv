@@ -1,4 +1,7 @@
-type       ,name    ,color   ,construction_cost
-Residential,民宅    ,CD853F  ,WOOD:60;STONE:20
-Harvest    ,采集点  ,556B2F  ,WOOD:40;STONE:10
-Market     ,市场    ,B22222  ,WOOD:80;STONE:40;TOOLS:10
+type            ,name      ,color   ,construction_cost
+Residential     ,民宅      ,CD853F  ,WOOD:60;STONE:20
+LoggingCamp     ,伐木场    ,556B2F  ,WOOD:40;STONE:10
+Mine            ,矿场      ,708090  ,WOOD:35;STONE:20
+FurnitureFactory,家具工厂  ,CD5C5C  ,WOOD:90;STONE:40;TOOLS:20
+ToolFactory     ,工具工厂  ,4682B4  ,WOOD:85;STONE:45;TOOLS:15
+Market          ,市场      ,B22222  ,WOOD:80;STONE:40;TOOLS:10

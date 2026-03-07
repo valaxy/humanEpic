@@ -5,6 +5,8 @@ using System.Linq;
 
 /// <summary>
 /// 人口类，代表了具有统一特征的一群人
+/// - 人口是一种抽象的存在
+/// - 人口具有三种功能：消费、劳动、投资
 /// </summary>
 public class Population : IIdModel, IInfo, IPersistence<Population>
 {
@@ -35,7 +37,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// <summary>
 	/// 已经工作的人数
 	/// </summary>
-	public int WorkCount { get; private set; } = 0;
+	public int LabourCount { get; private set; } = 0;
 
 	/// <summary>
 	/// 仍未分配居住的人口数量。
@@ -45,7 +47,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// <summary>
 	/// 仍未分配工作的人口数量。
 	/// </summary>
-	public int UnassignedWorkCount => Math.Max(0, Count - WorkCount);
+	public int UnassignedLabourCount => Math.Max(0, Count - LabourCount);
 
 
 	/// <summary>
@@ -87,7 +89,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		// 确保死亡人数不会为负数
 		Count = Count - amount;
 		ResidentialCount = Math.Min(ResidentialCount, Count); // TODO 这里逻辑可能需要调整，先不懂
-		WorkCount = Math.Min(WorkCount, Count); // TODO 这里逻辑可能需要调整，先不懂
+		LabourCount = Math.Min(LabourCount, Count); // TODO 这里逻辑可能需要调整，先不懂
 	}
 
 
@@ -101,6 +103,17 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		Debug.Assert(amount >= 0, "不能为负数");
 		Debug.Assert(ResidentialCount + amount <= Count, "居住分配不能超过人口总数");
 		ResidentialCount += amount;
+	}
+
+
+	/// <summary>
+	/// 分配劳动力人数。
+	/// </summary>
+	public void AddLabour(int amount)
+	{
+		Debug.Assert(amount >= 0, "不能为负数");
+		Debug.Assert(LabourCount + amount <= Count, "劳动力分配不能超过人口总数");
+		LabourCount += amount;
 	}
 
 	/// <summary>
@@ -121,8 +134,8 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	public void AddWork(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(WorkCount + amount <= Count, "就业分配不能超过人口总数");
-		WorkCount += amount;
+		Debug.Assert(LabourCount + amount <= Count, "就业分配不能超过人口总数");
+		LabourCount += amount;
 	}
 
 	/// <summary>
@@ -131,8 +144,8 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	public void RemoveWork(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(WorkCount - amount >= 0, "就业人数不能为负数");
-		WorkCount -= amount;
+		Debug.Assert(LabourCount - amount >= 0, "就业人数不能为负数");
+		LabourCount -= amount;
 	}
 
 
@@ -149,8 +162,8 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		basicInfo.AddNumber("人口总数", Count);
 		basicInfo.AddNumber("已居住", ResidentialCount);
 		basicInfo.AddNumber("未居住", UnassignedResidentialCount);
-		basicInfo.AddNumber("已就业", WorkCount);
-		basicInfo.AddNumber("未就业", UnassignedWorkCount);
+		basicInfo.AddNumber("已就业", LabourCount);
+		basicInfo.AddNumber("未就业", UnassignedLabourCount);
 
 		InfoData data = new InfoData();
 		data.AddGroup("人口概览", basicInfo);
@@ -176,7 +189,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 			{ "name", Name },
 			{ "count", Count },
 			{ "residential_count", ResidentialCount },
-			{ "work_count", WorkCount },
+			{ "work_count", LabourCount },
 			{ "demands", Demands.GetSaveData() },
 		};
 	}

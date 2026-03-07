@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://co2pusqjuec5d"
+
+[deps]
+
+files=["res://src/data/processing_templates.type.translation", "res://src/data/processing_templates.job.translation", "res://src/data/processing_templates.max.translation", "res://src/data/processing_templates.input.translation", "res://src/data/processing_templates.output.translation", "res://src/data/processing_templates.target.translation", "res://src/data/processing_templates.collection.translation", "res://src/data/processing_templates.collection.translation"]
+
+source_file="res://src/data/processing_templates.csv"
+dest_files=["res://src/data/processing_templates.type.translation", "res://src/data/processing_templates.job.translation", "res://src/data/processing_templates.max.translation", "res://src/data/processing_templates.input.translation", "res://src/data/processing_templates.output.translation", "res://src/data/processing_templates.target.translation", "res://src/data/processing_templates.collection.translation", "res://src/data/processing_templates.collection.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

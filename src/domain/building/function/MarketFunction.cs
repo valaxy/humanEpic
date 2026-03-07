@@ -5,7 +5,7 @@ using System.Linq;
 /// <summary>
 /// 市场
 /// </summary>
-public class Market : IInfo, IPersistence<Market>
+public class MarketFunction : IInfo, IPersistence<MarketFunction>
 {
 	private const string initialDt = "INIT";
 
@@ -20,7 +20,7 @@ public class Market : IInfo, IPersistence<Market>
 	public LabourMarket LabourMarket { get; }
 
 
-	public Market()
+	public MarketFunction()
 	{
 		ProductMarket = new ProductMarket();
 		LabourMarket = new LabourMarket();
@@ -36,15 +36,13 @@ public class Market : IInfo, IPersistence<Market>
 		marketInfo.AddText("职业种类", Enum.GetValues<JobType.Enums>().Length.ToString());
 
 		float totalDemand = Enum.GetValues<ProductType.Enums>()
-			.Select(type => ProductMarket.ConsumerDemands.Get(type) + ProductMarket.IndustryDemands.Get(type))
-			.Sum();
+			.Sum(type => ProductMarket.ConsumerDemands.Get(type) + ProductMarket.IndustryDemands.Get(type));
 		float totalSupply = Enum.GetValues<ProductType.Enums>()
-			.Select(type => ProductMarket.Supplies.Get(type))
-			.Sum();
+			.Sum(type => ProductMarket.Supplies.Get(type));
 		marketInfo.AddText("总需求", totalDemand.ToString("0.00"));
 		marketInfo.AddText("总供给", totalSupply.ToString("0.00"));
-		marketInfo.AddGroup("商品价格历史", buildProductPriceHistoryInfo());
-		marketInfo.AddGroup("劳动力价格历史", buildLabourPriceHistoryInfo());
+		// marketInfo.AddGroup("商品价格历史", buildProductPriceHistoryInfo());
+		// marketInfo.AddGroup("劳动力价格历史", buildLabourPriceHistoryInfo());
 
 		return marketInfo;
 	}
@@ -71,9 +69,9 @@ public class Market : IInfo, IPersistence<Market>
 	/// <summary>
 	/// 从持久化数据恢复市场模块。
 	/// </summary>
-	public static Market LoadSaveData(Dictionary<string, object> data)
+	public static MarketFunction LoadSaveData(Dictionary<string, object> data)
 	{
-		Market market = new();
+		MarketFunction market = new();
 
 		applySavedBucket(data, "product_consumer_demands", market.ProductMarket.ConsumerDemands);
 		applySavedBucket(data, "product_industry_demands", market.ProductMarket.IndustryDemands);

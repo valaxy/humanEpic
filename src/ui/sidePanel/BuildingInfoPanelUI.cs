@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,8 +16,6 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 
 	// 劳动力市场表场景。
 	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_table_ui.tscn");
-	// 劳动力市场历史图场景。
-	private static readonly PackedScene labourMarketHistoryChartScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_history_chart_ui.tscn");
 
 	// 标题节点。
 	private Label titleLabel = null!;
@@ -40,6 +39,31 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 建筑集合。
 	private BuildingCollection buildingCollection = null!;
 
+	// 当前展示建筑。
+	private Building currentBuilding = null!;
+	// 当前绑定商品市场。
+	private ProductMarket activeProductMarket = null!;
+	// 当前绑定劳动力市场。
+	private LabourMarket activeLabourMarket = null!;
+	// 当前是否已绑定市场刷新事件。
+	private bool isMarketBound;
+
+	// 商品市场表。
+	private ProductMarketTableUI productTable = null!;
+	// 商品折线图容器。
+	private VBoxContainer productChartContainer = null!;
+	// 商品折线图标题。
+	private Label productChartTitle = null!;
+	// 商品折线图关闭按钮。
+	private Button productChartCloseButton = null!;
+	// 商品折线图组件。
+	private ProductMarketHistoryChartUI productHistoryChart = null!;
+	// 当前选中的商品。
+	private ProductType.Enums? selectedProductType;
+
+	// 劳动力市场表。
+	private LabourMarketTableUI labourTable = null!;
+
 	/// <summary>
 	/// 初始化节点引用。
 	/// </summary>
@@ -58,6 +82,18 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 		closeButton.Pressed += hidePanel;
 		mainPanel.GuiInput += onMainPanelGuiInput;
 		setMarketModulesVisible(false);
+	}
+
+	/// <summary>
+	/// 退出树前清理事件订阅。
+	/// </summary>
+	public override void _ExitTree()
+	{
+		unbindMarketEvents();
+		if (productTable != null)
+		{
+			productTable.ProductRowPressed -= onProductRowPressed;
+		}
 	}
 
 	/// <summary>
@@ -94,28 +130,37 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 渲染建筑模块信息。
 	private void renderBuildingModules(Building building)
 	{
+		currentBuilding = building;
 		titleLabel.Text = $"建筑信息 - {building.Name}";
 		clearInfoEntries();
 		appendInfoEntries(infoContent, building.GetInfoData());
 		clearMarketSlots();
+		unbindMarketEvents();
+		selectedProductType = null;
 
 		if (building.Market != null)
 		{
-			ProductMarketTableUI productTable = productMarketTableScene.Instantiate<ProductMarketTableUI>();
+			productTable = productMarketTableScene.Instantiate<ProductMarketTableUI>();
 			productMarketSlot.AddChild(productTable); // 必须先addChild后Render
-			productTable.RenderMarket(building.Market.ProductMarket);
+			productTable.ProductRowPressed += onProductRowPressed;
 
-			ProductMarketHistoryChartUI productHistoryChart = productMarketHistoryChartScene.Instantiate<ProductMarketHistoryChartUI>();
-			productMarketSlot.AddChild(productHistoryChart); // 必须先addChild后Render
-			productHistoryChart.RenderMarket(building.Market.ProductMarket);
+			productChartContainer = createProductChartContainer();
+			productHistoryChart = productMarketHistoryChartScene.Instantiate<ProductMarketHistoryChartUI>();
+			productChartContainer.AddChild(productHistoryChart);
+			productMarketSlot.AddChild(productChartContainer);
+			productChartContainer.Visible = false;
 
-			LabourMarketTableUI labourTable = labourMarketTableScene.Instantiate<LabourMarketTableUI>();
+			activeProductMarket = building.Market.ProductMarket;
+			activeLabourMarket = building.Market.LabourMarket;
+			isMarketBound = true;
+			activeProductMarket.MarketChanged += onProductMarketChanged;
+			activeLabourMarket.LabourMarketChanged += onLabourMarketChanged;
+
+			refreshProductMarketSection();
+
+			labourTable = labourMarketTableScene.Instantiate<LabourMarketTableUI>();
 			labourMarketSlot.AddChild(labourTable); // 必须先addChild后Render
-			labourTable.RenderMarket(building.Market.LabourMarket);
-
-			LabourMarketHistoryChartUI labourHistoryChart = labourMarketHistoryChartScene.Instantiate<LabourMarketHistoryChartUI>();
-			labourMarketSlot.AddChild(labourHistoryChart); // 必须先addChild后Render
-			labourHistoryChart.RenderMarket(building.Market.LabourMarket);
+			labourTable.RenderMarket(activeLabourMarket);
 			setMarketModulesVisible(true);
 		}
 		else
@@ -124,6 +169,93 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 		}
 
 		Visible = true;
+	}
+
+	// 商品市场数据更新时刷新。
+	private void onProductMarketChanged()
+	{
+		refreshProductMarketSection();
+	}
+
+	// 劳动力市场数据更新时刷新。
+	private void onLabourMarketChanged()
+	{
+		if (labourTable != null)
+		{
+			labourTable.RenderMarket(activeLabourMarket);
+		}
+	}
+
+	// 点击商品行。
+	private void onProductRowPressed(ProductType.Enums productType)
+	{
+		selectedProductType = selectedProductType.HasValue && selectedProductType.Value == productType
+			? null
+			: productType;
+		refreshProductMarketSection();
+	}
+
+	// 关闭商品折线图。
+	private void onProductChartClosePressed()
+	{
+		selectedProductType = null;
+		refreshProductMarketSection();
+	}
+
+	// 刷新商品市场区块（表格 + 折线图显隐）。
+	private void refreshProductMarketSection()
+	{
+		if (productTable != null)
+		{
+			productTable.RenderMarket(activeProductMarket, selectedProductType);
+		}
+
+		if (productChartContainer == null)
+		{
+			return;
+		}
+
+		if (!selectedProductType.HasValue)
+		{
+			productChartContainer.Visible = false;
+			return;
+		}
+
+		productChartContainer.Visible = true;
+		ProductType.Enums selectedType = selectedProductType.Value;
+		string productName = ProductTemplate.GetTemplate(selectedType).Name;
+		productChartTitle.Text = $"{productName} 价格历史";
+		productHistoryChart.RenderSingleProduct(activeProductMarket, selectedType);
+	}
+
+	// 创建商品折线图容器。
+	private VBoxContainer createProductChartContainer()
+	{
+		VBoxContainer container = new VBoxContainer();
+		container.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		container.AddThemeConstantOverride("separation", 6);
+
+		HBoxContainer headerRow = new HBoxContainer();
+		headerRow.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+
+		productChartTitle = new Label();
+		productChartTitle.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		productChartTitle.Text = "商品价格历史";
+		productChartTitle.HorizontalAlignment = HorizontalAlignment.Left;
+
+		productChartCloseButton = new Button();
+		productChartCloseButton.Text = "关闭";
+		productChartCloseButton.Flat = true;
+		productChartCloseButton.Pressed += onProductChartClosePressed;
+
+		headerRow.AddChild(productChartTitle);
+		headerRow.AddChild(productChartCloseButton);
+		container.AddChild(headerRow);
+
+		HSeparator separator = new HSeparator();
+		container.AddChild(separator);
+
+		return container;
 	}
 
 	// 将结构化信息追加为 KV 行。
@@ -215,11 +347,41 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 清理市场模块内容。
 	private void clearMarketSlots()
 	{
+		if (productTable != null)
+		{
+			productTable.ProductRowPressed -= onProductRowPressed;
+		}
+
+		if (productChartCloseButton != null)
+		{
+			productChartCloseButton.Pressed -= onProductChartClosePressed;
+		}
+
 		List<Node> productChildren = productMarketSlot.GetChildren().Cast<Node>().ToList();
 		productChildren.ForEach(child => child.QueueFree());
 
 		List<Node> labourChildren = labourMarketSlot.GetChildren().Cast<Node>().ToList();
 		labourChildren.ForEach(child => child.QueueFree());
+
+		productTable = null!;
+		productChartContainer = null!;
+		productChartTitle = null!;
+		productChartCloseButton = null!;
+		productHistoryChart = null!;
+		labourTable = null!;
+	}
+
+	// 解除市场事件绑定。
+	private void unbindMarketEvents()
+	{
+		if (!isMarketBound)
+		{
+			return;
+		}
+
+		activeProductMarket.MarketChanged -= onProductMarketChanged;
+		activeLabourMarket.LabourMarketChanged -= onLabourMarketChanged;
+		isMarketBound = false;
 	}
 
 	// 控制市场模块显隐。
@@ -233,6 +395,8 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	private void hidePanel()
 	{
 		Visible = false;
+		unbindMarketEvents();
+		selectedProductType = null;
 	}
 
 	// 拦截滚轮输入，防止触发地平面与镜头缩放逻辑。

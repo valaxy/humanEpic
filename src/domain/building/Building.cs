@@ -83,12 +83,17 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 	/// <summary>
 	/// 市场建筑的市场功能组件，可以没有
 	/// </summary>
-	public Market? Market { get; private set; }
+	public MarketFunction? Market { get; private set; }
 
 	/// <summary>
 	/// 建筑仓库（所有建筑固定拥有）。
 	/// </summary>
 	public Warehouse Warehouse { get; private set; }
+
+	/// <summary>
+	/// 建筑生产流程组件（可为空）。
+	/// </summary>
+	public Processing? Processing { get; private set; }
 
 
 
@@ -112,7 +117,10 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
 		Market = template.TypeId == BuildingType.Enums.Market
-			? new global::Market()
+			? new global::MarketFunction()
+			: null;
+		Processing = ProcessingTemplate.HasTemplate(template.TypeId)
+			? ProcessingTemplate.GetTemplate(template.TypeId).CreateProcessing()
 			: null;
 	}
 
@@ -139,6 +147,11 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		if (Market != null)
 		{
 			data.AddGroup("市场信息", Market.GetInfoData());
+		}
+
+		if (Processing != null)
+		{
+			data.AddGroup("生产信息", Processing.GetInfoData());
 		}
 
 		data.AddGroup("仓库信息", Warehouse.GetInfoData());
@@ -202,7 +215,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		if (data.ContainsKey("market"))
 		{
 			Dictionary<string, object> marketData = (Dictionary<string, object>)data["market"];
-			building.Market = global::Market.LoadSaveData(marketData);
+			building.Market = global::MarketFunction.LoadSaveData(marketData);
 		}
 
 		if (data.ContainsKey("warehouse"))

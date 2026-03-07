@@ -15,9 +15,21 @@ public class BuildingType
         /// </summary>
         Residential,
         /// <summary>
-        /// 采集建筑。
+        /// 伐木场。
         /// </summary>
-        Harvest,
+        LoggingCamp,
+        /// <summary>
+        /// 矿场。
+        /// </summary>
+        Mine,
+        /// <summary>
+        /// 家具工厂。
+        /// </summary>
+        FurnitureFactory,
+        /// <summary>
+        /// 工具工厂。
+        /// </summary>
+        ToolFactory,
         /// <summary>
         /// 市场建筑。
         /// </summary>

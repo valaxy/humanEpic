@@ -26,10 +26,12 @@ public partial class Brush : MeshInstance3D
 	public override void _Ready()
 	{
 		forbiddenIcon = GetNode<Label3D>("%ForbiddenIcon");
-		Mesh = (Mesh)Mesh.Duplicate();
+		BoxMesh sourceMesh = (Mesh as BoxMesh)!;
+		BoxMesh instanceMesh = (BoxMesh)sourceMesh.Duplicate();
+		Mesh = instanceMesh;
 
-		StandardMaterial3D mat = (GetSurfaceOverrideMaterial(0) as StandardMaterial3D)!;
-		SetSurfaceOverrideMaterial(0, (StandardMaterial3D)mat.Duplicate());
+		StandardMaterial3D sourceMaterial = (instanceMesh.Material as StandardMaterial3D)!;
+		SetSurfaceOverrideMaterial(0, (StandardMaterial3D)sourceMaterial.Duplicate());
 
 		Visible = false;
 		updateVisualSize();

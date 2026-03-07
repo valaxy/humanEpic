@@ -39,4 +39,20 @@ public partial class ProductMarketHistoryChartUI : LineChart
 		DataSource source = DataSource.CreateLineChart("产品价格历史（dt）", xLabels, seriesList);
 		Render(source);
 	}
+
+	/// <summary>
+	/// 根据指定商品刷新单条历史折线图。
+	/// </summary>
+	public void RenderSingleProduct(ProductMarket market, ProductType.Enums productType)
+	{
+		List<PriceHistorySnapshot<ProductType.Enums>> snapshots = market.PriceHistory.Snapshots.ToList();
+		List<string> xLabels = snapshots.Select(snapshot => snapshot.Dt).ToList();
+		DataSeries series = DataSeries.Create(
+			ProductTemplate.GetTemplate(productType).Name,
+			chartColors[((int)productType) % chartColors.Count].ToHtml(),
+			snapshots.Select(snapshot => snapshot.Prices.ContainsKey(productType) ? snapshot.Prices[productType] : 0.0f).ToList());
+
+		DataSource source = DataSource.CreateLineChart($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
+		Render(source);
+	}
 }

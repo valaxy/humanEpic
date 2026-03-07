@@ -1,0 +1,5 @@
+type_id         ,job_inputs         ,input_products  ,output_products,target_overlay_type,collection_radius,collection_speed
+LoggingCamp     ,LUMBERJACK:10      ,                ,WOOD:1.0       ,FOREST             ,11.0             ,10.0
+Mine            ,MINER:10           ,                ,ORE:1.0        ,ORE                ,11.9             ,15.0
+FurnitureFactory,FACTORY_WORKER:24  ,WOOD:2.0        ,FURNITURE:1.0  ,NONE               ,0.0              ,0.0
+ToolFactory     ,FACTORY_WORKER:24  ,WOOD:1.0;ORE:1.0,TOOLS:1.0      ,NONE               ,0.0              ,0.0

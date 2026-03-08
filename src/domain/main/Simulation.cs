@@ -21,8 +21,8 @@ public class Simulation
 	public Simulation(GameWorld world)
 	{
 		logics.Add(new HelloWorldLogic());
-		logics.Add(new ConsumptionPurchaseLogic(world.Populations, world.Buildings, world.TimeSystem));
-		logics.Add(new EconomyLogiV1(world.Buildings, world.TimeSystem));
+		// logics.Add(new ConsumptionPurchaseLogic(world.Populations, world.Buildings, world.TimeSystem));
+		// logics.Add(new EconomyLogiV1(world.Buildings, world.TimeSystem));
 		logics.ForEach(logic => logic.Triggered += onLogicTriggered);
 	}
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Diagnostics;
 using System.Linq;
 
@@ -20,8 +21,8 @@ public class ProcessingTemplate : ITemplate<BuildingType.Enums, ProcessingTempla
 			CsvColumnDefinition.EnumFloatDictionary<ProductType.Enums>("input_products", allowEmpty: true, minValue: 0.0f),
 			CsvColumnDefinition.EnumFloatDictionary<ProductType.Enums>("output_products", allowEmpty: false, minValue: 0.0f),
 			CsvColumnDefinition.Enum<OverlayType.Enums>("target_overlay_type"),
-			CsvColumnDefinition.Float("collection_radius", minInclusive: 0.0f),
-			CsvColumnDefinition.Float("collection_speed", minInclusive: 0.0f),
+			CsvColumnDefinition.String("collection_radius", allowEmpty: true),
+			CsvColumnDefinition.String("collection_speed", allowEmpty: true),
 		]);
 
 	// 模板集合。
@@ -128,14 +129,32 @@ public class ProcessingTemplate : ITemplate<BuildingType.Enums, ProcessingTempla
 	private static Dictionary<BuildingType.Enums, ProcessingTemplate> loadTemplates()
 	{
 		List<ProcessingTemplate> loadedTemplates = CsvReader.ReadRows(schema)
-			.Select(row => new ProcessingTemplate(
-				row.Get<BuildingType.Enums>("type_id"),
-				row.Get<Dictionary<JobType.Enums, int>>("job_inputs"),
-				row.Get<Dictionary<ProductType.Enums, float>>("input_products"),
-				row.Get<Dictionary<ProductType.Enums, float>>("output_products"),
-				row.Get<OverlayType.Enums>("target_overlay_type"),
-				row.Get<float>("collection_radius"),
-				row.Get<float>("collection_speed")))
+			.Select(row =>
+			{
+				OverlayType.Enums targetOverlayType = row.Get<OverlayType.Enums>("target_overlay_type");
+				bool hasHarvest = targetOverlayType != OverlayType.Enums.NONE;
+
+				float collectionRadius = parseHarvestFloatColumn(
+					row.Get<string>("collection_radius"),
+					hasHarvest,
+					"collection_radius",
+					row.LineNumber);
+
+				float collectionSpeed = parseHarvestFloatColumn(
+					row.Get<string>("collection_speed"),
+					hasHarvest,
+					"collection_speed",
+					row.LineNumber);
+
+				return new ProcessingTemplate(
+					row.Get<BuildingType.Enums>("type_id"),
+					row.Get<Dictionary<JobType.Enums, int>>("job_inputs"),
+					row.Get<Dictionary<ProductType.Enums, float>>("input_products"),
+					row.Get<Dictionary<ProductType.Enums, float>>("output_products"),
+					targetOverlayType,
+					collectionRadius,
+					collectionSpeed);
+			})
 			.ToList();
 
 		BuildingType.Enums duplicatedType = loadedTemplates
@@ -149,5 +168,38 @@ public class ProcessingTemplate : ITemplate<BuildingType.Enums, ProcessingTempla
 		}
 
 		return loadedTemplates.ToDictionary(template => template.TypeId, template => template);
+	}
+
+	// 解析采集参数：有 Harvest 时必须填写正数，无 Harvest 时必须留空。
+	private static float parseHarvestFloatColumn(string rawValue, bool hasHarvest, string columnName, int lineNumber)
+	{
+		string normalizedText = rawValue.Trim();
+
+		if (!hasHarvest)
+		{
+			if (!string.IsNullOrWhiteSpace(normalizedText))
+			{
+				throw new InvalidOperationException($"Processing template data error: column '{columnName}' must be empty when target_overlay_type is NONE. line={lineNumber}, file={CsvPath}");
+			}
+
+			return 0.0f;
+		}
+
+		if (string.IsNullOrWhiteSpace(normalizedText))
+		{
+			throw new InvalidOperationException($"Processing template data error: column '{columnName}' is required when Harvest exists. line={lineNumber}, file={CsvPath}");
+		}
+
+		if (!float.TryParse(normalizedText, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedValue))
+		{
+			throw new InvalidOperationException($"Processing template data error: column '{columnName}' must be float, got '{rawValue}'. line={lineNumber}, file={CsvPath}");
+		}
+
+		if (parsedValue <= 0.0f)
+		{
+			throw new InvalidOperationException($"Processing template data error: column '{columnName}' must be > 0 when Harvest exists. line={lineNumber}, file={CsvPath}");
+		}
+
+		return parsedValue;
 	}
 }

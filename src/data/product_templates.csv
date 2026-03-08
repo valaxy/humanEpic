@@ -1,6 +1,6 @@
 product_type_id, is_consumer_good, demand_satisfaction_ratios          , name  , description
-WATER          , true            , FOOD:0.30                           , 水    , 可直接饮用的基础生活资源
-FOOD           , true            , FOOD:1.00;SPIRITUAL:0.10            , 食物  , 维持人口生存并提供少量精神满足
+WATER          , true            , FOOD:0.10                           , 水    , 可直接饮用的基础生活资源
+FOOD           , true            , FOOD:0.40;SPIRITUAL:0.10            , 食物  , 维持人口生存并提供少量精神满足
 FURNITURE      , true            , ENTERTAINMENT:0.50;SPIRITUAL:0.20   , 家具  , 提升居住舒适度并增强娱乐体验
 TOOLS          , true            , ENTERTAINMENT:0.20;SPIRITUAL:0.10   , 工具  , 支撑生产与日常活动的基础器具
 WOOD           , false           ,                                     , 木材  , 常见建材与制造原料

@@ -86,11 +86,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 	public MarketFunction? Market { get; private set; }
 
 	/// <summary>
-	/// 建筑仓库（所有建筑固定拥有）。
-	/// </summary>
-	public Warehouse Warehouse { get; private set; }
-
-	/// <summary>
 	/// 建筑生产流程组件（可为空）。
 	/// </summary>
 	public Processing? Processing { get; private set; }
@@ -112,7 +107,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		Id = idAllocator.AllocateId(id);
 		Country = country;
 		Collision = new AtomCollision(pos);
-		Warehouse = new Warehouse(1000000000.0f); // 暂时等同于无限
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
 			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
@@ -154,8 +148,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 			data.AddGroup("生产信息", Processing.GetInfoData());
 		}
 
-		data.AddGroup("仓库信息", Warehouse.GetInfoData());
-
 		return data;
 	}
 
@@ -172,7 +164,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 			{ "type_id", (int)TypeId },
 			{ "type_name", TypeId.ToString() },
 			{ "country_id", Country.Id },
-			{ "warehouse", Warehouse.GetSaveData() }
 		};
 
 		if (Residential != null)
@@ -216,12 +207,6 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		{
 			Dictionary<string, object> marketData = (Dictionary<string, object>)data["market"];
 			building.Market = global::MarketFunction.LoadSaveData(marketData);
-		}
-
-		if (data.ContainsKey("warehouse"))
-		{
-			Dictionary<string, object> warehouseData = (Dictionary<string, object>)data["warehouse"];
-			building.Warehouse = Warehouse.LoadSaveData(warehouseData);
 		}
 
 		return building;

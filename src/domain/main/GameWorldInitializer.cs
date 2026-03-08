@@ -124,10 +124,10 @@ public class GameWorldInitializer
     /// </summary>
     public static void ApplyInitialPopulationCurrency(BuildingCollection buildings)
     {
-        List<(Warehouse Warehouse, int PopulationId, int Count)> residentialEntries = buildings.GetAll()
+        List<(int PopulationId, int Count)> residentialEntries = buildings.GetAll()
             .Where(building => building.Residential != null)
             .SelectMany(building => building.Residential!.GetPopulationEntries()
-                .Select(entry => (building.Warehouse, PopulationId: entry.Population.Id, entry.Count)))
+                .Select(entry => (PopulationId: entry.Population.Id, entry.Count)))
             .Where(entry => entry.Count > 0)
             .ToList();
 
@@ -136,17 +136,5 @@ public class GameWorldInitializer
         {
             return;
         }
-
-        residentialEntries.ForEach(entry =>
-        {
-            float existedCurrency = entry.Warehouse.GetAmount(ProductType.Enums.CURRENCY, entry.PopulationId);
-            if (existedCurrency > 0.0f)
-            {
-                entry.Warehouse.ConsumeProduct(ProductType.Enums.CURRENCY, existedCurrency, entry.PopulationId);
-            }
-
-            float initialCurrency = initialPopulationCurrencyTotal * entry.Count / totalResidentialPopulationCount;
-            entry.Warehouse.AddProduct(ProductType.Enums.CURRENCY, initialCurrency, entry.PopulationId);
-        });
     }
 }

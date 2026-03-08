@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 /// <summary>
 /// 订单簿单边结构。
@@ -64,28 +65,20 @@ public abstract class Side
     }
 
 
-    // /// <summary>
-    // /// 按订单号删除订单。
-    // /// </summary>
-    // public bool RemoveOrder(long orderId, out Order? removed)
-    // {
-    //     if (!ordersById.TryGetValue(orderId, out Order? order))
-    //     {
-    //         removed = null;
-    //         return false;
-    //     }
+    /// <summary>
+    /// 按订单号删除订单。
+    /// </summary>
+    public void ClearAgentOrders(IAgent agent)
+    {
+        if (!hasOrders.ContainsKey(agent.AgentId)) { return; }
 
-    //     bool sideRemoved = orders.Remove(order);
-    //     if (!sideRemoved)
-    //     {
-    //         removed = null;
-    //         return false;
-    //     }
-
-    //     ordersById.Remove(orderId);
-    //     removed = order;
-    //     return true;
-    // }
+        Order? orderToRemove = orders.FirstOrDefault(order => order.Agent.AgentId == agent.AgentId);
+        if (orderToRemove != null)
+        {
+            orders.Remove(orderToRemove);
+            hasOrders.Remove(agent.AgentId);
+        }
+    }
 
 
 

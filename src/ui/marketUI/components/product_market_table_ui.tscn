@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/marketUI/components/ProductMarketTableUI.cs" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/chart/reusable_data_table.tscn" id="2_table_scene"]
+[ext_resource type="Script" uid="uid://boysgb6is0m1v" path="res://src/ui/marketUI/components/ProductMarketTableUI.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/chart/table/reusable_data_table.tscn" id="2_table_scene"]
+
 
 [node name="ProductMarketTableUI" instance=ExtResource("2_table_scene")]
 script = ExtResource("1_script")

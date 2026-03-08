@@ -38,6 +38,11 @@ public sealed class DataSource
 	public IReadOnlyList<string> XLabels { get; init; } = Array.Empty<string>();
 
 	/// <summary>
+	/// 折线图 X 轴数值。
+	/// </summary>
+	public IReadOnlyList<float> XValues { get; init; } = Array.Empty<float>();
+
+	/// <summary>
 	/// 折线图序列集合。
 	/// </summary>
 	public IReadOnlyList<DataSeries> SeriesList { get; init; } = Array.Empty<DataSeries>();
@@ -74,14 +79,20 @@ public sealed class DataSource
 	/// <param name="title">标题。</param>
 	/// <param name="xLabels">X 轴标签。</param>
 	/// <param name="seriesList">序列集合。</param>
+	/// <param name="xValues">X 轴数值，可选；未提供时按索引（0..n-1）处理。</param>
 	/// <returns>用于折线图渲染的数据源。</returns>
-	public static DataSource CreateLineChart(string title, IEnumerable<string> xLabels, IEnumerable<DataSeries> seriesList)
+	public static DataSource CreateLineChart(
+		string title,
+		IEnumerable<string> xLabels,
+		IEnumerable<DataSeries> seriesList,
+		IEnumerable<float>? xValues = null)
 	{
 		return new DataSource
 		{
 			Title = title,
 			XLabels = xLabels.ToList(),
-			SeriesList = seriesList.ToList()
+			SeriesList = seriesList.ToList(),
+			XValues = xValues == null ? Array.Empty<float>() : xValues.ToList()
 		};
 	}
 }

@@ -108,7 +108,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		Country = country;
 		Collision = new AtomCollision(pos);
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
-			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
+			? new Residential(this, ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
 		Market = template.TypeId == BuildingType.Enums.Market
 			? new global::MarketFunction()

@@ -65,7 +65,7 @@ public class GameWorldInitializer
         Dictionary<string, object> data = JsonUtility.LoadDataFromJsonFile(savePath);
         GameWorld world = GameWorld.LoadSaveData(data);
         ensureColdStart(world);
-        ApplyInitialPopulationCurrency(world.Buildings);
+        // ApplyInitialPopulationCurrency(world.Buildings);
 
         hasLoadedFromDisk = true;
         GD.Print($"[Perf] GameWorldInitializer Load took {Time.GetTicksMsec() - start} ms");
@@ -119,22 +119,22 @@ public class GameWorldInitializer
         // gameWorld.UnitCollection.AddUnit(topLeftUnit);
     }
 
-    /// <summary>
-    /// 启动时按人口占比发放总计初始货币。
-    /// </summary>
-    public static void ApplyInitialPopulationCurrency(BuildingCollection buildings)
-    {
-        List<(int PopulationId, int Count)> residentialEntries = buildings.GetAll()
-            .Where(building => building.Residential != null)
-            .SelectMany(building => building.Residential!.GetPopulationEntries()
-                .Select(entry => (PopulationId: entry.Population.Id, entry.Count)))
-            .Where(entry => entry.Count > 0)
-            .ToList();
+    // /// <summary>
+    // /// 启动时按人口占比发放总计初始货币。
+    // /// </summary>
+    // public static void ApplyInitialPopulationCurrency(BuildingCollection buildings)
+    // {
+    //     List<(int PopulationId, int Count)> residentialEntries = buildings.GetAll()
+    //         .Where(building => building.Residential != null)
+    //         .SelectMany(building => building.Residential!.GetPopulationEntries()
+    //             .Select(entry => (PopulationId: entry.Population.Id, entry.Count)))
+    //         .Where(entry => entry.Count > 0)
+    //         .ToList();
 
-        int totalResidentialPopulationCount = residentialEntries.Sum(entry => entry.Count);
-        if (totalResidentialPopulationCount <= 0)
-        {
-            return;
-        }
-    }
+    //     int totalResidentialPopulationCount = residentialEntries.Sum(entry => entry.Count);
+    //     if (totalResidentialPopulationCount <= 0)
+    //     {
+    //         return;
+    //     }
+    // }
 }

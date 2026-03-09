@@ -17,8 +17,8 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 劳动力市场表场景。
 	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_table_ui.tscn");
 
-	// 标题节点。
-	private Label titleLabel = null!;
+	// 通用侧边栏容器。
+	private SidePanel sidePanel = null!;
 
 	// Info 模块内容容器。
 	private VBoxContainer infoContent = null!;
@@ -30,11 +30,6 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	private PanelContainer labourMarketModuleCard = null!;
 	// 劳动力市场模块内容槽位。
 	private VBoxContainer labourMarketSlot = null!;
-
-	// 关闭按钮。
-	private Button closeButton = null!;
-	// 主面板，用于拦截滚轮输入避免穿透到底层地面。
-	private Control mainPanel = null!;
 
 	// 建筑集合。
 	private BuildingCollection buildingCollection = null!;
@@ -69,18 +64,15 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	/// </summary>
 	public override void _Ready()
 	{
-		titleLabel = GetNode<Label>("MainPanel/VBoxContainer/TitleLabel");
-		infoContent = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/InfoModuleCard/Margin/Wrapper/InfoContent");
-		productMarketModuleCard = GetNode<PanelContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard");
-		productMarketSlot = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/ProductMarketModuleCard/Margin/Wrapper/ProductMarketSlot");
-		labourMarketModuleCard = GetNode<PanelContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard");
-		labourMarketSlot = GetNode<VBoxContainer>("MainPanel/VBoxContainer/ScrollContainer/ModuleGrid/LabourMarketModuleCard/Margin/Wrapper/LabourMarketSlot");
-		closeButton = GetNode<Button>("MainPanel/CloseButton");
-		mainPanel = GetNode<Control>("MainPanel");
+		sidePanel = GetNode<SidePanel>("%SidePanel");
+		infoContent = GetNode<VBoxContainer>("%InfoContent");
+		productMarketModuleCard = GetNode<PanelContainer>("%ProductMarketModuleCard");
+		productMarketSlot = GetNode<VBoxContainer>("%ProductMarketSlot");
+		labourMarketModuleCard = GetNode<PanelContainer>("%LabourMarketModuleCard");
+		labourMarketSlot = GetNode<VBoxContainer>("%LabourMarketSlot");
 
 		Visible = false;
-		closeButton.Pressed += hidePanel;
-		mainPanel.GuiInput += onMainPanelGuiInput;
+		sidePanel.CloseRequested += hidePanel;
 		setMarketModulesVisible(false);
 	}
 
@@ -131,7 +123,7 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	private void renderBuildingModules(Building building)
 	{
 		currentBuilding = building;
-		titleLabel.Text = $"建筑信息 - {building.Name}";
+		sidePanel.SetTitle($"建筑信息 - {building.Name}");
 		clearInfoEntries();
 		appendInfoEntries(infoContent, building.GetInfoData());
 		clearMarketSlots();
@@ -397,15 +389,5 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 		Visible = false;
 		unbindMarketEvents();
 		selectedProductType = null;
-	}
-
-	// 拦截滚轮输入，防止触发地平面与镜头缩放逻辑。
-	private void onMainPanelGuiInput(InputEvent inputEvent)
-	{
-		if (inputEvent is InputEventMouseButton mouseButton
-			&& (mouseButton.ButtonIndex == MouseButton.WheelUp || mouseButton.ButtonIndex == MouseButton.WheelDown))
-		{
-			GetViewport().SetInputAsHandled();
-		}
 	}
 }

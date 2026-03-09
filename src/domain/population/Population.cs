@@ -51,7 +51,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// <summary>
 	/// 人口的居住情况
 	/// </summary>
-	public PopulationResidential PopulationResidential { get; } = new PopulationResidential();
+	public PopulationResidential PopulationResidential { get; }
 
 
 
@@ -63,6 +63,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		Id = idAllocator.AllocateId(id);
 		Name = name;
 		Count = count;
+		PopulationResidential = new PopulationResidential(this);
 	}
 
 

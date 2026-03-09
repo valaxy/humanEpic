@@ -1,7 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/infoUI/InfoUI.cs" id="1_script"]
-
+[ext_resource type="Script" path="res://src/ui/container/infoPanel/InfoUI.cs" id="1_script"]
 
 [node name="InfoUI" type="CanvasLayer"]
 script = ExtResource("1_script")

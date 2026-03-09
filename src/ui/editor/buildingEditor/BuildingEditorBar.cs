@@ -184,7 +184,7 @@ public partial class BuildingEditorBar : EditorWindow
 		view.BuildingCollection.UpdateBuildingVisuals();
 	}
 
-	// 新建民宅时，随机让全部人口中的一部分入住。
+	// 新建民宅时，随机生成一些人口入住进去，可以不住满或者住满
 	private void assignRandomResidents(Building building)
 	{
 		if (building.Residential == null)
@@ -192,52 +192,40 @@ public partial class BuildingEditorBar : EditorWindow
 			return;
 		}
 
-		int remainingCapacity = building.Residential.MaxPopulation - building.Residential.TotalCount;
-		if (remainingCapacity <= 0)
-		{
-			return;
-		}
-
-		List<Population> candidatePopulations = world.Populations.GetAll()
-			.Where(population => population.UnassignedResidentialCount > 0)
-			.OrderBy(_ => Random.Shared.Next())
+		List<Population> availablePopulations = world.Populations.GetAll()
+			.Where(population => population.Count > population.PopulationResidential.TotalPopCount)
 			.ToList();
-		if (candidatePopulations.Count == 0)
+
+		if (availablePopulations.Count == 0)
 		{
 			return;
 		}
 
-		int guaranteedGroups = Math.Min(remainingCapacity, candidatePopulations.Count);
-		candidatePopulations
-			.Take(guaranteedGroups)
-			.ToList()
-			.ForEach(population =>
-			{
-				building.Residential.EnterPopulation(population, 1);
-				remainingCapacity -= 1;
-			});
-
-		candidatePopulations.ForEach(population =>
+		int maxAssignable = Math.Min(
+			building.Residential.OptimalCount,
+			availablePopulations.Sum(population => population.Count - population.PopulationResidential.TotalPopCount));
+		if (maxAssignable <= 0)
 		{
-			if (remainingCapacity <= 0)
-			{
-				return;
-			}
+			return;
+		}
 
-			int maxAssignable = Math.Min(population.UnassignedResidentialCount, remainingCapacity);
-			if (maxAssignable <= 0)
+		int targetResidentCount = (int)GD.RandRange(0, maxAssignable);
+		Enumerable.Range(0, targetResidentCount)
+			.ToList()
+			.ForEach(_ =>
 			{
-				return;
-			}
+				List<Population> currentAvailable = availablePopulations
+					.Where(population => population.Count > population.PopulationResidential.TotalPopCount)
+					.ToList();
 
-			int randomAssignCount = Random.Shared.Next(maxAssignable + 1);
-			if (randomAssignCount <= 0)
-			{
-				return;
-			}
+				if (currentAvailable.Count == 0)
+				{
+					return;
+				}
 
-			building.Residential.EnterPopulation(population, randomAssignCount);
-			remainingCapacity -= randomAssignCount;
-		});
+				int randomIndex = (int)GD.RandRange(0, currentAvailable.Count - 1);
+				Population selected = currentAvailable[randomIndex];
+				selected.PopulationResidential.Birth(building, 1);
+			});
 	}
 }

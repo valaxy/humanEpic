@@ -80,3 +80,11 @@ public abstract void LoadSaveData(List<Dictionary<string, object>> data);
 ## Controller类
 - 类名命名为`XXXNode`，例如：`ControllerNode`
 - 包括游戏世界对象的交互、控制的逻辑，继承自`Godot.Node`，并通过组合其他对象实现控制过程
+
+
+
+
+
+
+
+- 效用和需求度的关系：

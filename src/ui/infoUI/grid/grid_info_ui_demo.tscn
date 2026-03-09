@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://src/ui/infoUI/info_ui.tscn" id="1_info_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/container/infoPanel/info_ui.tscn" id="1_info_ui"]
 [ext_resource type="Script" path="res://src/ui/infoUI/grid/GridInfoUIDemo.cs" id="2_demo_script"]
 [ext_resource type="Script" path="res://src/ui/infoUI/grid/GridInfoUI.cs" id="3_grid_info_script"]
 

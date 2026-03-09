@@ -1,37 +1,83 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 
 
 /// <summary>
-/// 表示人口和建筑的居住关系
+/// 表示人口的居住情况
 /// </summary>
-public class PopulationResidential : DictCollection<int, PopulationResidentialHold>
+public class PopulationResidential
 {
-	private int popCount = 0;
+	// 人口居住在哪些建筑
+	private Dictionary<int, (Building Reside, int PopCount)> holds = new Dictionary<int, (Building Reside, int PopCount)>();
+	// 缓存总人口数
+	private int totalPopCount = 0;
+	// 反向持有引用
+	private Population population;
 
 	/// <summary>
 	/// 总人数
 	/// </summary>
-	public int PopCount => popCount;
+	public int TotalPopCount => totalPopCount;
 
-	protected override int GetKey(PopulationResidentialHold value) => value.Reside.Id;
 
-	public override void Add(PopulationResidentialHold hold)
+	/// <summary>
+	/// 构造函数
+	/// </summary>
+	public PopulationResidential(Population population)
 	{
-		base.Add(hold);
-		popCount += hold.PopCount;
+		this.population = population;
 	}
 
-	public override void Remove(PopulationResidentialHold item)
+
+	/// <summary>
+	/// 目前只有出生才会凭空产生新人口
+	/// </summary>
+	public void Birth(Building reside, int count)
 	{
-		base.Remove(item);
-		popCount -= item.PopCount;
+		Debug.Assert(count > 0, "迁入人数必须大于0");
+
+		// 同步建筑物信息
+		reside.Residential!.Add(population, count);
+
+		// 同步人口居住信息
+		if (holds.TryGetValue(reside.Id, out var hold))
+		{
+			holds[reside.Id] = (reside, hold.PopCount + count);
+		}
+		else
+		{
+			holds[reside.Id] = (reside, count);
+		}
+		totalPopCount += count;
 	}
 
-	public override void Clear()
+
+	/// <summary>
+	/// 死亡会导致人口消失
+	/// </summary>
+	public void Death(Building reside, int count)
 	{
-		base.Clear();
-		popCount = 0;
+		Debug.Assert(count > 0, "死亡人数必须大于0");
+		Debug.Assert(holds.ContainsKey(reside.Id), "死亡时必须存在对应居住记录");
+
+		(Building Reside, int PopCount) hold = holds[reside.Id];
+		Debug.Assert(hold.PopCount >= count, "死亡人数不能超过该建筑内登记人数");
+
+		// 同步建筑物信息
+		int remain = hold.PopCount - count;
+		bool isEmpty = remain == 0;
+		reside.Residential!.Remove(population, count, isEmpty);
+
+		// 同步人口居住信息
+		if (isEmpty)
+		{
+			holds.Remove(reside.Id);
+		}
+		else
+		{
+			holds[reside.Id] = (reside, remain);
+		}
+
+		totalPopCount -= count;
 	}
 }

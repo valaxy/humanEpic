@@ -10,7 +10,7 @@ using System.Linq;
 public partial class LineChart : Control
 {
     // 图表左侧内边距（为 Y 轴刻度留白）。
-    private const float PlotPaddingLeft = 56f;
+    private const float PlotPaddingLeft = 72f;
 
     // 图表右侧内边距。
     private const float PlotPaddingRight = 18f;
@@ -20,6 +20,12 @@ public partial class LineChart : Control
 
     // 图表下侧内边距。
     private const float PlotPaddingBottom = 30f;
+
+    // Y 轴标签与轴线间距。
+    private const float YLabelGap = 8f;
+
+    // Y 轴标签可用宽度。
+    private const float YLabelWidth = 56f;
 
     // 标题区域高度。
     private const float TitleHeight = 24f;
@@ -197,16 +203,23 @@ public partial class LineChart : Control
     // 绘制 Y 轴刻度。
     private void drawYTicks(Rect2 plotRect, PlotBounds bounds, Font font, int fontSize, Color color)
     {
-        int tickCount = 5;
-        List<float> yTicks = Enumerable.Range(0, tickCount)
-            .Select(index => bounds.YMin + (bounds.YRange * index / (tickCount - 1)))
+        List<float> yTicks = chart.YAxis.GenerateTicks(bounds.YMin, bounds.YMax)
+            .Distinct()
+            .Where(tick => tick >= bounds.YMin && tick <= bounds.YMax)
+            .OrderBy(tick => tick)
             .ToList();
+
+        if (yTicks.Count == 0)
+        {
+            yTicks = [bounds.YMin, bounds.YMax];
+        }
 
         yTicks.ForEach(tick =>
         {
             float y = mapY(plotRect, bounds, tick);
             DrawLine(new Vector2(plotRect.Position.X - 4f, y), new Vector2(plotRect.Position.X, y), color, 1f, true);
-            DrawString(font, new Vector2(plotRect.Position.X - 8f, y + fontSize / 3f), chart.YAxis.Format(tick), HorizontalAlignment.Right, 44f, fontSize - 1, color);
+            float labelX = plotRect.Position.X - YLabelGap - YLabelWidth;
+            DrawString(font, new Vector2(labelX, y + fontSize / 3f), chart.YAxis.Format(tick), HorizontalAlignment.Right, YLabelWidth, fontSize - 1, color);
         });
     }
 

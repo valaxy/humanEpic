@@ -24,6 +24,11 @@ public sealed class Axis
     public TickFormatter TickFormatter { get; init; } = TickFormatter.Default;
 
     /// <summary>
+    /// 刻度生成器。
+    /// </summary>
+    public Tick Tick { get; init; } = Tick.Linear();
+
+    /// <summary>
     /// 判断数值是否落在轴范围内。
     /// </summary>
     public bool IsInRange(float value)
@@ -42,16 +47,25 @@ public sealed class Axis
     }
 
     /// <summary>
+    /// 生成轴刻度集合。
+    /// </summary>
+    public System.Collections.Generic.IReadOnlyList<float> GenerateTicks(float min, float max)
+    {
+        return Tick.Generate(min, max);
+    }
+
+    /// <summary>
     /// 创建轴配置。
     /// </summary>
-    public static Axis Create(string name, float? minTick = null, float? maxTick = null, TickFormatter? tickFormatter = null)
+    public static Axis Create(string name, float? minTick = null, float? maxTick = null, TickFormatter? tickFormatter = null, Tick? tick = null)
     {
         return new Axis
         {
             Name = name,
             MinTick = minTick,
             MaxTick = maxTick,
-            TickFormatter = tickFormatter ?? TickFormatter.Default
+            TickFormatter = tickFormatter ?? TickFormatter.Default,
+            Tick = tick ?? Tick.Linear()
         };
     }
 }

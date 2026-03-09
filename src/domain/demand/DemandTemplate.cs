@@ -21,15 +21,21 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 	/// </summary>
 	public string Name { get; }
 
+	/// <summary>
+	/// 单人单日需求度耗损量基数系数。
+	/// </summary>
+	public float PerCapitaDailyDecayBase { get; }
+
 
 	/// <summary>
 	/// 初始化需求模板
 	/// </summary>
-	public DemandTemplate(DemandType.Enums type, string name, IDemandUtility demandUtility)
+	public DemandTemplate(DemandType.Enums type, string name, IDemandUtility demandUtility, float perCapitaDailyDecayBase)
 	{
 		Type = type;
 		Name = name;
 		DemandUtility = demandUtility;
+		PerCapitaDailyDecayBase = perCapitaDailyDecayBase;
 	}
 
 	/// <summary>
@@ -47,11 +53,12 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 			CsvPath,
 			[
 				CsvColumnDefinition.Enum<DemandType.Enums>("type"),
-				CsvColumnDefinition.String("name"),
 				CsvColumnDefinition.String("utility_type"),
 				CsvColumnDefinition.Float("target_degree", 0.001f),
 				CsvColumnDefinition.Float("target_utility_ratio", 0.001f, 0.999f),
-				CsvColumnDefinition.Float("max_utility", 0.0f)
+				CsvColumnDefinition.Float("max_utility", 0.0f),
+				CsvColumnDefinition.Float("daily_decay_base", 0.0f),
+				CsvColumnDefinition.String("name")
 			]);
 
 		return CsvReader
@@ -62,7 +69,8 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 				DemandTemplate template = new DemandTemplate(
 					type,
 					row.Get<string>("name"),
-					createDemandUtility(row));
+					createDemandUtility(row),
+					row.Get<float>("daily_decay_base"));
 				return (type, template);
 			})
 			.ToDictionary(item => item.type, item => item.template);

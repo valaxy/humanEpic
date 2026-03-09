@@ -34,7 +34,8 @@ public partial class LabourMarketTableUI : ReusableDataTable
 			DataTextAlignment.Right
 		];
 
-		DataSource source = DataSource.CreateTable("职业工资（日）", headers, rows, alignments, alignments);
-		Render(source);
+		DataSource source = DataSource.CreateTable("职业工资（日）", headers, rows);
+		DataTable table = DataTable.Create("职业工资（日）", alignments, alignments, sortableColumns: [0, 1]);
+		Render(source, table);
 	}
 }

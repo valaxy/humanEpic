@@ -30,7 +30,7 @@ public partial class LineChartDemo : Control
         DataSource dataSource = createDataSource(0.0f);
         chart = Chart.Create(
             Axis.Create("月份", 2.0f, 10.0f, TickFormatter.Custom(value => $"M{value:0}")),
-            Axis.Create("产量", 40.0f, 92.0f, TickFormatter.Number(1)),
+            Axis.Create("产量", 40.0f, 92.0f, TickFormatter.Number(1), Tick.PowerOfTen()),
             dataSource);
         lineChart.UpdateChart(chart);
     }

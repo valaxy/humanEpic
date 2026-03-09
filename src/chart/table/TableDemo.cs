@@ -17,7 +17,7 @@ public partial class TableDemo : Control
     public override void _Ready()
     {
         dataTable = GetNode<ReusableDataTable>("%DataTable");
-        dataTable.Render(createTableData());
+        dataTable.Render(createTableData(), createTableConfig());
     }
 
     // 构建表格演示数据。
@@ -41,6 +41,12 @@ public partial class TableDemo : Control
             })
             .ToList();
 
+        return DataSource.CreateTable("资源统计表", headers, rows);
+    }
+
+    // 构建表格演示配置。
+    private static DataTable createTableConfig()
+    {
         List<DataTextAlignment> alignments =
         [
             DataTextAlignment.Left,
@@ -49,6 +55,10 @@ public partial class TableDemo : Control
             DataTextAlignment.Right
         ];
 
-        return DataSource.CreateTable("资源统计表", headers, rows, alignments, alignments);
+        return DataTable.Create(
+            "资源统计表",
+            alignments,
+            alignments,
+            sortableColumns: Enumerable.Range(0, 4));
     }
 }

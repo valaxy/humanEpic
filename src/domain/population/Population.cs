@@ -27,22 +27,10 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// </summary>
 	public int Count { get; private set; }
 
-
-	/// <summary>
-	/// 已经定居的人数
-	/// </summary>
-	public int ResidentialCount { get; private set; } = 0;
-
-
 	/// <summary>
 	/// 已经工作的人数
 	/// </summary>
 	public int LabourCount { get; private set; } = 0;
-
-	/// <summary>
-	/// 仍未分配居住的人口数量。
-	/// </summary>
-	public int UnassignedResidentialCount => Math.Max(0, Count - ResidentialCount);
 
 	/// <summary>
 	/// 仍未分配工作的人口数量。
@@ -54,6 +42,16 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// 需求
 	/// </summary>
 	public DemandCollection Demands { get; } = new DemandCollection();
+
+	/// <summary>
+	/// 资产
+	/// </summary>
+	public Asset Asset { get; } = new Asset();
+
+	/// <summary>
+	/// 人口的居住情况
+	/// </summary>
+	public PopulationResidential PopulationResidential { get; } = new PopulationResidential();
 
 
 
@@ -88,22 +86,11 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 
 		// 确保死亡人数不会为负数
 		Count = Count - amount;
-		ResidentialCount = Math.Min(ResidentialCount, Count); // TODO 这里逻辑可能需要调整，先不懂
+		// ResidentialCount = Math.Min(ResidentialCount, Count); // TODO 这里逻辑可能需要调整，先不懂
 		LabourCount = Math.Min(LabourCount, Count); // TODO 这里逻辑可能需要调整，先不懂
 	}
 
 
-
-
-	/// <summary>
-	/// 分配居住人数。
-	/// </summary>
-	public void AddResidential(int amount)
-	{
-		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(ResidentialCount + amount <= Count, "居住分配不能超过人口总数");
-		ResidentialCount += amount;
-	}
 
 
 	/// <summary>
@@ -115,17 +102,6 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		Debug.Assert(LabourCount + amount <= Count, "劳动力分配不能超过人口总数");
 		LabourCount += amount;
 	}
-
-	/// <summary>
-	/// 释放居住人数。
-	/// </summary>
-	public void RemoveResidential(int amount)
-	{
-		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(ResidentialCount - amount >= 0, "居住人数不能为负数");
-		ResidentialCount -= amount;
-	}
-
 
 
 	/// <summary>
@@ -148,6 +124,16 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		LabourCount -= amount;
 	}
 
+	/// <summary>
+	/// 按模板配置执行每日需求耗损。
+	/// </summary>
+	public void ConsumeDemandDaily()
+	{
+		Demands.GetAll()
+			.ToList()
+			.ForEach(demand => demand.ApplyDailyDecay(Count));
+	}
+
 
 
 
@@ -160,8 +146,6 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		InfoData basicInfo = new InfoData();
 		basicInfo.AddText("名称", Name);
 		basicInfo.AddNumber("人口总数", Count);
-		basicInfo.AddNumber("已居住", ResidentialCount);
-		basicInfo.AddNumber("未居住", UnassignedResidentialCount);
 		basicInfo.AddNumber("已就业", LabourCount);
 		basicInfo.AddNumber("未就业", UnassignedLabourCount);
 
@@ -188,9 +172,9 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 			{ "id", Id },
 			{ "name", Name },
 			{ "count", Count },
-			{ "residential_count", ResidentialCount },
 			{ "work_count", LabourCount },
 			{ "demands", Demands.GetSaveData() },
+			{ "asset", Asset.GetSaveData() },
 		};
 	}
 
@@ -205,11 +189,9 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 			? data["name"].ToString() ?? $"人口#{id}"
 			: $"人口#{id}";
 		int count = Convert.ToInt32(data["count"]);
-		int residentialCount = Convert.ToInt32(data["residential_count"]);
 		int workCount = Convert.ToInt32(data["work_count"]);
 
 		Population population = new Population(name, count, id);
-		population.AddResidential(residentialCount);
 		population.AddWork(workCount);
 
 		// TODO 这里可以优化一下？
@@ -217,6 +199,17 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 			.Select(item => (Dictionary<string, object>)item)
 			.ToList();
 		population.Demands.LoadSaveData(demandSaveData);
+
+		if (data.ContainsKey("asset"))
+		{
+			Dictionary<string, object> assetData = (Dictionary<string, object>)data["asset"];
+			Asset loadedAsset = Asset.LoadSaveData(assetData);
+			Enum
+				.GetValues<ProductType.Enums>()
+				.ToList()
+				.ForEach(type => population.Asset.SetAmount(type, loadedAsset.GetAmount(type)));
+		}
+
 		return population;
 	}
 }

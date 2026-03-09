@@ -23,14 +23,9 @@ public sealed class DataSource
 	public IReadOnlyList<IReadOnlyList<string>> Rows { get; init; } = Array.Empty<IReadOnlyList<string>>();
 
 	/// <summary>
-	/// 头部单元格对齐方式。
+	/// 表格数据标题。
 	/// </summary>
-	public IReadOnlyList<DataTextAlignment> HeaderAlignments { get; init; } = Array.Empty<DataTextAlignment>();
-
-	/// <summary>
-	/// 内容单元格对齐方式。
-	/// </summary>
-	public IReadOnlyList<DataTextAlignment> CellAlignments { get; init; } = Array.Empty<DataTextAlignment>();
+	public string TableTitle { get; init; } = string.Empty;
 
 	/// <summary>
 	/// 折线图 X 轴标签。
@@ -53,23 +48,17 @@ public sealed class DataSource
 	/// <param name="title">标题。</param>
 	/// <param name="headers">头部列。</param>
 	/// <param name="rows">行数据，内部每行按顺序对应列。</param>
-	/// <param name="headerAlignments">头部对齐方式。</param>
-	/// <param name="cellAlignments">内容对齐方式。</param>
 	/// <returns>用于表格渲染的数据源。</returns>
 	public static DataSource CreateTable(
 		string title,
 		IEnumerable<string> headers,
-		IEnumerable<IEnumerable<string>> rows,
-		IEnumerable<DataTextAlignment>? headerAlignments = null,
-		IEnumerable<DataTextAlignment>? cellAlignments = null)
+		IEnumerable<IEnumerable<string>> rows)
 	{
 		return new DataSource
 		{
-			Title = title,
+			TableTitle = title,
 			Headers = headers.ToList(),
-			Rows = rows.Select(row => (IReadOnlyList<string>)row.ToList()).ToList(),
-			HeaderAlignments = headerAlignments == null ? Array.Empty<DataTextAlignment>() : headerAlignments.ToList(),
-			CellAlignments = cellAlignments == null ? Array.Empty<DataTextAlignment>() : cellAlignments.ToList()
+			Rows = rows.Select(row => (IReadOnlyList<string>)row.ToList()).ToList()
 		};
 	}
 

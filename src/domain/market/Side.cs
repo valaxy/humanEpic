@@ -5,13 +5,26 @@ using System.Linq;
 /// <summary>
 /// 订单簿单边结构。
 /// </summary>
+[Persistable]
 public abstract class Side
 {
     // 价格优先、时间优先的有序订单集。
-    private readonly SortedSet<Order> orders;
+    [PersistField]
+    private SortedSet<Order> orders;
 
     // 每个Agent只能登记一次订单
-    private readonly Dictionary<int, bool> hasOrders = new();
+    [PersistField]
+    private Dictionary<int, bool> hasOrders = new();
+
+    /// <summary>
+    /// 当前订单快照。
+    /// </summary>
+    public IReadOnlyList<Order> Orders => orders.ToList();
+
+    /// <summary>
+    /// 当前挂单总数量。
+    /// </summary>
+    public int TotalQuantity => orders.Sum(order => order.Quantity);
 
     /// <summary>
     /// 订单数量。
@@ -30,7 +43,6 @@ public abstract class Side
     /// 初始化订单排序规则。
     /// </summary>
     protected abstract SortedSet<Order> Init();
-
 
 
     /// <summary>
@@ -61,6 +73,7 @@ public abstract class Side
     {
         Order order = orders.Min!;
         orders.Remove(order);
+        hasOrders.Remove(order.AgentId);
         return order;
     }
 
@@ -83,30 +96,6 @@ public abstract class Side
 
 
 
-    // /// <summary>
-    // /// 根据订单号查询订单。
-    // /// </summary>
-    // public bool TryGetOrder(long orderId, out Order? order)
-    // {
-    //     bool found = ordersById.TryGetValue(orderId, out Order? foundOrder);
-    //     order = foundOrder;
-    //     return found;
-    // }
-
-    // /// <summary>
-    // /// 清空全部订单。
-    // /// </summary>
-    // public IReadOnlyCollection<long> ClearAllOrders()
-    // {
-    //     List<long> removedIds = ordersById.Keys.ToList();
-    //     orders.Clear();
-    //     ordersById.Clear();
-    //     return removedIds;
-    // }
-
-
-
-    //protected abstract Order consume(Order[] orders);
 
 
     //public void UpdatePrice(Order order, float price)
@@ -168,16 +157,6 @@ public abstract class Side
     //    return (float)(mean + standardDeviation * z0);
     //}
 
-
-    //public void Print()
-    //{
-    //    var sortedOrders = orders.OrderBy(o => o.Price);
-
-    //    foreach (Order order in sortedOrders)
-    //    {
-    //        Console.WriteLine($"{order.Price:F2} × {order.Num}, {order.Agent}");
-    //    }
-    //}
 }
 
 

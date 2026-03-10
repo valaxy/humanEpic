@@ -10,6 +10,21 @@ public class Demand
 	// 需求模板
 	private DemandTemplate template = default!;
 
+	[PersistField]
+	private float satisfiedAmount = default!;
+
+	/// <summary>
+	/// 需求类型
+	/// </summary>
+	[PersistProperty]
+	public DemandType.Enums TypeId
+	{
+		get => template.Type;
+		private set => template = DemandTemplate.GetTemplate(value);
+	}
+
+
+
 
 	/// <summary>
 	/// 需求名称
@@ -22,21 +37,14 @@ public class Demand
 	public float PerCapitaDailyDecayBase => template.PerCapitaDailyDecayBase;
 
 	/// <summary>
-	/// 需求类型
-	/// </summary>
-	[PersistProperty]
-	public DemandType.Enums Type
-	{
-		get => template.Type;
-		private set => template = DemandTemplate.GetTemplate(value);
-	}
-
-	/// <summary>
 	/// 已满足需求量，它是一个大于等于0的实数
 	/// 但真实情况下，这个数除以总人数会收敛到人均[0, 1]之间
 	/// </summary>
-	[PersistProperty]
-	public float SatisfiedAmount { get; set; }
+	public float SatisfiedAmount
+	{
+		get => satisfiedAmount;
+		set => satisfiedAmount = MathF.Max(0.0f, value);
+	}
 
 
 	/// <summary>
@@ -51,7 +59,7 @@ public class Demand
 	/// </summary>
 	public Demand(DemandType.Enums type, float satisfiedAmount)
 	{
-		Type = type;
+		TypeId = type;
 		SatisfiedAmount = satisfiedAmount;
 	}
 
@@ -77,6 +85,6 @@ public class Demand
 	public void DecayNaturally(int populationCount)
 	{
 		float decayAmount = PerCapitaDailyDecayBase * populationCount;
-		SatisfiedAmount = MathF.Max(0.0f, SatisfiedAmount - decayAmount);
+		SatisfiedAmount = SatisfiedAmount - decayAmount;
 	}
 }

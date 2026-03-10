@@ -54,7 +54,7 @@ public partial class FeatureButtons : VBoxContainer
 	{
 		gridButton.Setup(gridRender);
 		saveButton.Setup(world);
-		populationWindowUi.Setup(world);
+		populationWindowUi.Setup(world.Populations);
 		worldLogicStatusUi.Setup(simulation);
 		encyclopediaPanelUi.Setup();
 		populationWindowUi.SetWindowVisible(false);

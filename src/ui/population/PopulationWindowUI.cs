@@ -40,18 +40,11 @@ public partial class PopulationWindowUI : CanvasLayer
 		populationList.ItemSelected += onPopulationSelected;
 	}
 
+ 
 	/// <summary>
-	/// 绑定游戏世界数据。
+	/// 直接绑定人口集合
 	/// </summary>
-	public void Setup(GameWorld world)
-	{
-		SetupFromPopulations(world.Populations);
-	}
-
-	/// <summary>
-	/// 直接绑定人口集合（用于演示或独立场景）。
-	/// </summary>
-	public void SetupFromPopulations(PopulationCollection populationCollection)
+	public void Setup(PopulationCollection populationCollection)
 	{
 		populations = populationCollection;
 		refreshPopulationList();

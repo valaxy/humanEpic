@@ -11,7 +11,7 @@ using System.Reflection;
 public static partial class DomainModelJsonPersistence
 {
 	// 基础类型集合。
-	private static bool isBasicType(Type type)
+	internal static bool isBasicType(Type type)
 	{
 		return type == typeof(string)
 			|| type == typeof(bool)
@@ -29,7 +29,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 判断是否为值元组类型。
-	private static bool isValueTupleType(Type type)
+	internal static bool isValueTupleType(Type type)
 	{
 		if (!type.IsValueType || !type.IsGenericType)
 		{
@@ -48,7 +48,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 获取值元组元素类型。
-	private static Type[] getValueTupleElementTypes(Type tupleType)
+	internal static Type[] getValueTupleElementTypes(Type tupleType)
 	{
 		if (!isValueTupleType(tupleType))
 		{
@@ -65,6 +65,29 @@ public static partial class DomainModelJsonPersistence
 		{
 			throw new InvalidOperationException($"类型未标记 [Persistable]: {type.FullName}");
 		}
+	}
+
+	internal static bool isEntityType(Type type)
+	{
+		return type.GetCustomAttribute<PersistEntityAttribute>() != null;
+	}
+
+	internal static Type getEntityCollectionType(Type entityType)
+	{
+		PersistEntityAttribute? attr = entityType.GetCustomAttribute<PersistEntityAttribute>();
+		if (attr == null)
+		{
+			throw new InvalidOperationException($"类型未标记 [PersistEntity]: {entityType.FullName}");
+		}
+
+		return attr.CollectionType;
+	}
+
+	internal static bool shouldSerializeEntityAsFullObject(Type entityType)
+	{
+		Type ownerType = getCurrentOwnerType();
+		Type collectionType = getEntityCollectionType(entityType);
+		return collectionType.IsAssignableFrom(ownerType);
 	}
 
 	// 获取被持久化标记的字段集合。
@@ -123,7 +146,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 尝试获取列表元素类型。
-	private static bool tryGetListElementType(Type type, out Type elementType)
+	internal static bool tryGetListElementType(Type type, out Type elementType)
 	{
 		if (type.IsArray)
 		{
@@ -148,7 +171,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 尝试获取集合元素类型（HashSet/ISet）。
-	private static bool tryGetSetElementType(Type type, out Type elementType)
+	internal static bool tryGetSetElementType(Type type, out Type elementType)
 	{
 		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>))
 		{
@@ -176,7 +199,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 尝试获取字典键值类型。
-	private static bool tryGetDictionaryTypes(Type type, out Type keyType, out Type valueType)
+	internal static bool tryGetDictionaryTypes(Type type, out Type keyType, out Type valueType)
 	{
 		Type? dictInterface = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>)
 			? type
@@ -197,13 +220,13 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 字典键支持基础类型和枚举。
-	private static bool isSupportedDictionaryKeyType(Type type)
+	internal static bool isSupportedDictionaryKeyType(Type type)
 	{
 		return isBasicType(type) || type.IsEnum;
 	}
 
 	// 创建列表实例。
-	private static IList createList(Type declaredListType, Type elementType)
+	internal static IList createList(Type declaredListType, Type elementType)
 	{
 		if (declaredListType.IsArray)
 		{
@@ -225,7 +248,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 创建字典实例。
-	private static IDictionary createDictionary(Type declaredDictType, Type keyType, Type valueType)
+	internal static IDictionary createDictionary(Type declaredDictType, Type keyType, Type valueType)
 	{
 		if (declaredDictType.IsInterface || declaredDictType.IsAbstract)
 		{
@@ -240,7 +263,7 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	// 创建集合实例。
-	private static object createSet(Type declaredSetType, Type elementType)
+	internal static object createSet(Type declaredSetType, Type elementType)
 	{
 		if (declaredSetType.IsGenericType && declaredSetType.GetGenericTypeDefinition() == typeof(SortedSet<>))
 		{

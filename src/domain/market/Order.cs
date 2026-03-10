@@ -3,17 +3,28 @@
 /// <summary>
 /// 订单实体，在市场中记录当前订单状态
 /// </summary>
+[Persistable]
 public sealed class Order
 {
+    [PersistField]
     private static long nextTimestamp = 1;
+
+    [PersistField]
+    private long timestamp;
+
+    [PersistField]
     private int agentId;
+
+    [PersistField]
     private float price;
+
+    [PersistField]
     private int quantity;
 
     /// <summary>
     /// 订单时间戳，用于同价位先后顺序。
     /// </summary>
-    public long Timestamp { get; } = nextTimestamp++;
+    public long Timestamp => timestamp;
 
     /// <summary>
     /// 订单所属代理。
@@ -39,10 +50,16 @@ public sealed class Order
         Debug.Assert(price > 0.0f, "Order price must be greater than 0.");
         Debug.Assert(quantity > 0, "Order quantity must be greater than 0.");
 
+        this.timestamp = nextTimestamp++;
         this.agentId = agentId;
         this.price = price;
         this.quantity = quantity;
     }
+
+    /// <summary>
+    /// 从存档回填订单。
+    /// </summary>
+    private Order() { }
 
     /// <summary>
     /// 扣减已成交数量。

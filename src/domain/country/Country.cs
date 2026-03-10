@@ -5,6 +5,7 @@ using Godot;
 /// 国家实体，表示单位和建筑的所属国家
 /// </summary>
 [Persistable]
+[PersistEntity(typeof(CountryCollection))]
 public class Country : IIdModel
 {
 	[PersistField]

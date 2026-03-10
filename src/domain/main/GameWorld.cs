@@ -35,8 +35,8 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		return new Dictionary<string, object>
 		{
 			{ "time", TimeSystem.TotalSeconds },
-			{ "countries", DomainModelJsonPersistence.SaveToObject(Countries)["items"] },
-			{ "populations", DomainModelJsonPersistence.SaveToObject(Populations)["items"] }
+			{ "countries_node", DomainModelJsonPersistence.SaveToObject(Countries) },
+			{ "populations_node", DomainModelJsonPersistence.SaveToObject(Populations) }
 		};
 	}
 
@@ -87,6 +87,16 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 
 	private static CountryCollection loadCountries(Dictionary<string, object> data)
 	{
+		if (data.TryGetValue("countries_node", out object? countriesNodeRaw))
+		{
+			if (countriesNodeRaw is not Dictionary<string, object> countriesNode)
+			{
+				throw new System.InvalidOperationException("countries_node 结构非法");
+			}
+
+			return DomainModelJsonPersistence.LoadFromObject<CountryCollection>(countriesNode);
+		}
+
 		if (!data.ContainsKey("countries"))
 		{
 			return new CountryCollection();
@@ -101,6 +111,16 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 
 	private static PopulationCollection loadPopulations(Dictionary<string, object> data)
 	{
+		if (data.TryGetValue("populations_node", out object? populationsNodeRaw))
+		{
+			if (populationsNodeRaw is not Dictionary<string, object> populationsNode)
+			{
+				throw new System.InvalidOperationException("populations_node 结构非法");
+			}
+
+			return DomainModelJsonPersistence.LoadFromObject<PopulationCollection>(populationsNode);
+		}
+
 		if (!data.ContainsKey("populations"))
 		{
 			return new PopulationCollection();

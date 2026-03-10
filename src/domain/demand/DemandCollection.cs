@@ -9,7 +9,7 @@ using System.Linq;
 [Persistable]
 public sealed class DemandCollection : DictCollection<DemandType.Enums, Demand>, IInfo
 {
-	protected override DemandType.Enums GetKey(Demand item) => item.Type;
+	protected override DemandType.Enums GetKey(Demand item) => item.TypeId;
 
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。

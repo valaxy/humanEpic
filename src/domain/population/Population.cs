@@ -8,63 +8,79 @@ using System.Linq;
 /// - 人口具有三种功能：消费、劳动、投资
 /// </summary>
 [Persistable]
+[PersistEntity(typeof(PopulationCollection))]
 public class Population : IIdModel, IInfo
 {
-	private static IdAllocator idAllocator = new IdAllocator();
-	private int id;
+	[PersistField]
+	private static int nextId = 1;
+
+	[PersistField]
+	private int id = default!;
+
+	[PersistField]
+	private string name = default!;
+
+	[PersistField]
+	private int count = default!;
+
+	[PersistField]
+	private int labourCount = 0; // TODO 不要在这里赋值
+
+	[PersistField]
+	private DemandCollection demands = default!;
+
+	[PersistField]
+	private Asset asset = default!;
+
+	[PersistField]
+	private PopulationResidential populationResidential = default!;
+
 
 	/// <summary>
 	/// 人口模型唯一标识（自增主键）
 	/// </summary>
-	[PersistProperty]
-	public int Id
-	{
-		get => id;
-		private set => id = idAllocator.AllocateId(value);
-	}
+
+	public int Id => id;
 
 	/// <summary>
 	/// 人口名称（自然语言描述）
 	/// </summary>
-	[PersistProperty]
-	public string Name { get; private set; } = default!;
+	public string Name => name;
 
 	/// <summary>
 	/// 人口人数
 	/// </summary>
-	[PersistProperty]
-	public int Count { get; private set; }
+	public int Count => count;
 
 	/// <summary>
 	/// 已经工作的人数
 	/// </summary>
-	[PersistProperty]
-	public int LabourCount { get; private set; } = 0; // TODO 不要在这里赋值
+	public int LabourCount => labourCount;
 
-	/// <summary>
-	/// 仍未分配工作的人口数量。
-	/// </summary>
-	public int UnassignedLabourCount => Math.Max(0, Count - LabourCount);
 
 
 	/// <summary>
 	/// 需求
 	/// </summary>
-	[PersistProperty]
-	public DemandCollection Demands { get; private set; } = default!;
+	public DemandCollection Demands => demands;
 
 	/// <summary>
 	/// 资产
 	/// </summary>
-	[PersistProperty]
-	public Asset Asset { get; private set; } = default!;
+	public Asset Asset => asset;
 
 	/// <summary>
 	/// 人口的居住情况
 	/// </summary>
-	[PersistProperty]
-	public PopulationResidential PopulationResidential { get; private set; } = default!;
+	public PopulationResidential PopulationResidential => populationResidential;
 
+
+
+
+	/// <summary>
+	/// 仍未分配工作的人口数量。
+	/// </summary>
+	public int UnassignedLabourCount => Math.Max(0, Count - LabourCount);
 
 
 	/// <summary>
@@ -80,12 +96,12 @@ public class Population : IIdModel, IInfo
 	/// </summary>
 	public Population(string name, int count)
 	{
-		id = idAllocator.AllocateId();
-		Name = name;
-		Count = count;
-		Demands = new DemandCollection(true);
-		Asset = new Asset(new());
-		PopulationResidential = new PopulationResidential(Id);
+		id = nextId++;
+		this.name = name;
+		this.count = count;
+		this.demands = new DemandCollection(true);
+		this.asset = new Asset(new());
+		this.populationResidential = new PopulationResidential(Id);
 	}
 
 
@@ -96,7 +112,7 @@ public class Population : IIdModel, IInfo
 	public void Addup(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Count += amount;
+		count += amount;
 	}
 
 	/// <summary>
@@ -108,9 +124,9 @@ public class Population : IIdModel, IInfo
 		Debug.Assert(amount <= Count, "死亡人数不能超过总人口数");
 
 		// 确保死亡人数不会为负数
-		Count = Count - amount;
+		count = count - amount;
 		// ResidentialCount = Math.Min(ResidentialCount, Count); // TODO 这里逻辑可能需要调整，先不懂
-		LabourCount = Math.Min(LabourCount, Count); // TODO 这里逻辑可能需要调整，先不懂
+		labourCount = Math.Min(labourCount, count); // TODO 这里逻辑可能需要调整，先不懂
 	}
 
 
@@ -122,8 +138,8 @@ public class Population : IIdModel, IInfo
 	public void AddLabour(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(LabourCount + amount <= Count, "劳动力分配不能超过人口总数");
-		LabourCount += amount;
+		Debug.Assert(labourCount + amount <= count, "劳动力分配不能超过人口总数");
+		labourCount += amount;
 	}
 
 
@@ -133,8 +149,8 @@ public class Population : IIdModel, IInfo
 	public void AddWork(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(LabourCount + amount <= Count, "就业分配不能超过人口总数");
-		LabourCount += amount;
+		Debug.Assert(labourCount + amount <= count, "就业分配不能超过人口总数");
+		labourCount += amount;
 	}
 
 	/// <summary>
@@ -143,8 +159,8 @@ public class Population : IIdModel, IInfo
 	public void RemoveWork(int amount)
 	{
 		Debug.Assert(amount >= 0, "不能为负数");
-		Debug.Assert(LabourCount - amount >= 0, "就业人数不能为负数");
-		LabourCount -= amount;
+		Debug.Assert(labourCount - amount >= 0, "就业人数不能为负数");
+		labourCount -= amount;
 	}
 
 	/// <summary>

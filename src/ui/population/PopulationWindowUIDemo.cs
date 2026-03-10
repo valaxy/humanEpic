@@ -19,7 +19,7 @@ public partial class PopulationWindowUIDemo : Control
 		demoPopulations.Add(new Population("学院学徒", 95));
 		demoPopulations.Add(new Population("河运商贩", 72));
 
-		populationWindowUi.SetupFromPopulations(demoPopulations);
+		populationWindowUi.Setup(demoPopulations);
 		populationWindowUi.SetWindowVisible(true);
 	}
 }

@@ -9,7 +9,6 @@ using System.Linq;
 /// </summary>
 public class BuildingCollection : DictCollection<Vector2I, Building>, ICollectionPersistence
 {
-	private readonly Ground ground;
 	private readonly CountryCollection countryCollection;
 	private readonly PopulationCollection populationCollection;
 
@@ -21,9 +20,8 @@ public class BuildingCollection : DictCollection<Vector2I, Building>, ICollectio
 	/// <summary>
 	/// 构造函数，注入建筑系统依赖。
 	/// </summary>
-	public BuildingCollection(Ground ground, CountryCollection countryCollection, PopulationCollection populationCollection)
+	public BuildingCollection(CountryCollection countryCollection, PopulationCollection populationCollection)
 	{
-		this.ground = ground;
 		this.countryCollection = countryCollection;
 		this.populationCollection = populationCollection;
 	}

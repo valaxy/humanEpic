@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using GdUnit4;
 using Godot;
@@ -152,6 +153,53 @@ public class DomainModelJsonPersistenceTest
 		public HashSet<int> Tags => tags;
 	}
 
+	[Persistable]
+	private class SortedSetModel
+	{
+		[PersistField]
+		private SortedSet<int> scores;
+
+		public SortedSetModel()
+		{
+			scores = new SortedSet<int>();
+		}
+
+		public SortedSetModel(IEnumerable<int> scores)
+		{
+			this.scores = new SortedSet<int>(scores);
+		}
+
+		public IReadOnlyList<int> Scores => scores.ToList();
+	}
+
+	[Persistable]
+	private class StaticFieldModel
+	{
+		[PersistField]
+		private static int staticCounter;
+
+		[PersistField]
+		private int value;
+
+		public StaticFieldModel()
+		{
+			value = 0;
+		}
+
+		public StaticFieldModel(int value)
+		{
+			this.value = value;
+		}
+
+		public int Value => value;
+
+		public static int StaticCounter
+		{
+			get => staticCounter;
+			set => staticCounter = value;
+		}
+	}
+
 	[TestCase]
 	public void Save_ShouldContainExpectedJsonShape()
 	{
@@ -163,6 +211,11 @@ public class DomainModelJsonPersistenceTest
 		if (root.ValueKind != JsonValueKind.Object)
 		{
 			throw new Exception("JSON 根节点必须是对象");
+		}
+
+		if (!root.TryGetProperty("__static", out JsonElement staticNode) || staticNode.ValueKind != JsonValueKind.Object)
+		{
+			throw new Exception("根节点必须包含 __static 对象");
 		}
 
 		if (!root.TryGetProperty("alias_name", out JsonElement nameNode) || nameNode.GetString() != "alpha")
@@ -332,6 +385,50 @@ public class DomainModelJsonPersistenceTest
 		if (!loaded.Tags.SetEquals(model.Tags))
 		{
 			throw new Exception("HashSet 反序列化结果不正确");
+		}
+	}
+
+	[TestCase]
+	public void SaveAndLoad_SortedSet_ShouldRoundTrip()
+	{
+		SortedSetModel model = new SortedSetModel(new[] { 7, 3, 9, 3 });
+		string json = DomainModelJsonPersistence.Save(model);
+		SortedSetModel loaded = DomainModelJsonPersistence.Load<SortedSetModel>(json);
+
+		if (loaded.Scores.Count != 3)
+		{
+			throw new Exception("SortedSet 去重反序列化结果不正确");
+		}
+
+		if (loaded.Scores[0] != 3 || loaded.Scores[1] != 7 || loaded.Scores[2] != 9)
+		{
+			throw new Exception("SortedSet 排序反序列化结果不正确");
+		}
+	}
+
+	[TestCase]
+	public void SaveAndLoad_StaticField_ShouldPersistAtRootSidecar()
+	{
+		StaticFieldModel.StaticCounter = 42;
+		StaticFieldModel model = new StaticFieldModel(9);
+
+		Dictionary<string, object> saved = DomainModelJsonPersistence.SaveToObject(model);
+		if (!saved.ContainsKey("__static"))
+		{
+			throw new Exception("根节点缺少 __static");
+		}
+
+		StaticFieldModel.StaticCounter = 0;
+		StaticFieldModel loaded = DomainModelJsonPersistence.LoadFromObject<StaticFieldModel>(saved);
+
+		if (loaded.Value != 9)
+		{
+			throw new Exception("实例字段反序列化结果不正确");
+		}
+
+		if (StaticFieldModel.StaticCounter != 42)
+		{
+			throw new Exception("静态字段反序列化结果不正确");
 		}
 	}
 }

@@ -19,19 +19,14 @@ public static partial class DomainModelJsonPersistence
 
 		Type actualType = value.GetType();
 
-		if (isBasicType(actualType))
+		if (trySerializeAtomicValue(value, actualType, out object atomicSerialized))
 		{
-			return value;
+			return atomicSerialized;
 		}
 
 		if (actualType.IsEnum)
 		{
 			return Convert.ToInt32(value, CultureInfo.InvariantCulture);
-		}
-
-		if (isSupportedGodotValueType(actualType))
-		{
-			return serializeGodotValue(value, actualType);
 		}
 
 		if (isValueTupleType(actualType))
@@ -125,20 +120,15 @@ public static partial class DomainModelJsonPersistence
 	// 按目标类型递归反序列化值。
 	private static object deserializeValue(object rawValue, Type targetType)
 	{
-		if (isBasicType(targetType))
+		if (tryDeserializeAtomicValue(rawValue, targetType, out object atomicDeserialized))
 		{
-			return convertBasic(rawValue, targetType);
+			return atomicDeserialized;
 		}
 
 		if (targetType.IsEnum)
 		{
 			int enumId = Convert.ToInt32(rawValue, CultureInfo.InvariantCulture);
 			return Enum.ToObject(targetType, enumId);
-		}
-
-		if (isSupportedGodotValueType(targetType))
-		{
-			return deserializeGodotValue(rawValue, targetType);
 		}
 
 		if (isValueTupleType(targetType))

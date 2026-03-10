@@ -63,7 +63,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 	/// <summary>
 	/// 所属国家
 	/// </summary>
-	public Country Country { get; set; }
+	public Country Country { get; private set; }
 
 
 
@@ -85,10 +85,10 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 	/// </summary>
 	public MarketFunction? Market { get; private set; }
 
-	/// <summary>
-	/// 建筑生产流程组件（可为空）。
-	/// </summary>
-	public Processing? Processing { get; private set; }
+	// /// <summary>
+	// /// 建筑生产流程组件（可为空）。
+	// /// </summary>
+	// public Processing? Processing { get; private set; }
 
 
 
@@ -113,9 +113,9 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		Market = template.TypeId == BuildingType.Enums.Market
 			? new global::MarketFunction()
 			: null;
-		Processing = ProcessingTemplate.HasTemplate(template.TypeId)
-			? ProcessingTemplate.GetTemplate(template.TypeId).CreateProcessing()
-			: null;
+		// Processing = ProcessingTemplate.HasTemplate(template.TypeId)
+		// 	? ProcessingTemplate.GetTemplate(template.TypeId).CreateProcessing()
+		// 	: null;
 	}
 
 
@@ -143,10 +143,10 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 			data.AddGroup("市场信息", Market.GetInfoData());
 		}
 
-		if (Processing != null)
-		{
-			data.AddGroup("生产信息", Processing.GetInfoData());
-		}
+		// if (Processing != null)
+		// {
+		// 	data.AddGroup("生产信息", Processing.GetInfoData());
+		// }
 
 		return data;
 	}

@@ -7,8 +7,11 @@ using Godot;
 [Persistable]
 public class Country : IIdModel
 {
-	private static readonly IdAllocator idAllocator = new();
-	private int id;
+	[PersistField]
+	private static int nextId = 1;
+
+	[PersistField]
+	private int id = default!;
 
 	[PersistField]
 	private string name = default!;
@@ -19,12 +22,7 @@ public class Country : IIdModel
 	/// <summary>
 	/// 国家唯一标识
 	/// </summary>
-	[PersistProperty]
-	public int Id
-	{
-		get => id;
-		private set => id = idAllocator.AllocateId(value);
-	}
+	public int Id => id;
 
 	/// <summary>
 	/// 国家名称
@@ -52,6 +50,6 @@ public class Country : IIdModel
 	{
 		this.name = name;
 		this.color = color;
-		id = idAllocator.AllocateId();
+		this.id = nextId++;
 	}
 }

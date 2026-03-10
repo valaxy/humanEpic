@@ -27,32 +27,38 @@ public class ItemMarket
 	/// </summary>
 	public int SellQuantity => sellBook.TotalQuantity;
 
-	/// <summary>
-	/// 当前买单快照。
-	/// </summary>
-	public IReadOnlyList<Order> BuyOrders => buyBook.Orders;
 
 	/// <summary>
-	/// 当前卖单快照。
+	/// 无参构造函数，供业务创建与反持久化调用。
 	/// </summary>
-	public IReadOnlyList<Order> SellOrders => sellBook.Orders;
-
+	public ItemMarket() { }
 
 	/// <summary>
-	/// 无参构造函数，供反持久化调用。
+	/// 提交买单到买盘订单簿。
 	/// </summary>
-	private ItemMarket() { }
-
+	/// <param name="price">买方愿意支付的价格。</param>
+	/// <param name="quantity">买入数量。</param>
+	/// <param name="agentId">下单代理标识。</param>
 	public void PlaceBuyOrder(float price, int quantity, int agentId)
 	{
 		buyBook.AddOrder(new Order(agentId, price, quantity));
 	}
 
+	/// <summary>
+	/// 提交卖单到卖盘订单簿。
+	/// </summary>
+	/// <param name="price">卖方期望成交价格。</param>
+	/// <param name="quantity">卖出数量。</param>
+	/// <param name="agentId">下单代理标识。</param>
 	public void PlaceSellOrder(float price, int quantity, int agentId)
 	{
 		sellBook.AddOrder(new Order(agentId, price, quantity));
 	}
 
+	/// <summary>
+	/// 清理指定代理在买卖两侧的挂单。
+	/// </summary>
+	/// <param name="agent">待清理挂单的代理。</param>
 	public void ClearAgentOrders(IAgent agent)
 	{
 		buyBook.ClearAgentOrders(agent);
@@ -93,7 +99,7 @@ public class ItemMarket
 	}
 
 	/// <summary>
-	/// 按买盘价格排序的挂单快照。
+	/// 按买盘优先级（价格高优先、同价时间早优先）返回挂单快照。
 	/// </summary>
 	public IReadOnlyList<(float price, int quantity)> GetBuyOrderBookSnapshot()
 	{
@@ -105,7 +111,7 @@ public class ItemMarket
 	}
 
 	/// <summary>
-	/// 按卖盘价格排序的挂单快照。
+	/// 按卖盘优先级（价格低优先、同价时间早优先）返回挂单快照。
 	/// </summary>
 	public IReadOnlyList<(float price, int quantity)> GetSellOrderBookSnapshot()
 	{
@@ -116,7 +122,7 @@ public class ItemMarket
 			.ToList();
 	}
 
-	// 撮合交易。
+	// 按价格优先、时间优先规则撮合一笔成交，并回写订单剩余数量。
 	private Trade closeOrder(Order sellOrder, Order buyOrder)
 	{
 		Debug.Assert(sellOrder.Price <= buyOrder.Price, "卖盘价格必须小于等于买盘价格");

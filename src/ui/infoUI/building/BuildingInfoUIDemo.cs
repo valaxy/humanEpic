@@ -45,7 +45,7 @@ public partial class BuildingInfoUIDemo : Control
 		Country demoCountry = new Country("演示国家", Colors.CornflowerBlue);
 		countries.Add(demoCountry);
 
-		buildingCollection = new BuildingCollection(world.Ground, countries, populations);
+		buildingCollection = new BuildingCollection(countries, populations);
 		buildingCollection.Add(new Building(BuildingTemplate.GetTemplate(BuildingType.Enums.Residential), new Vector2I(1, 1), demoCountry));
 		buildingCollection.Add(new Building(BuildingTemplate.GetTemplate(BuildingType.Enums.Market), new Vector2I(2, 1), demoCountry));
 	}

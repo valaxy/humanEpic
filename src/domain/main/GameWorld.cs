@@ -59,7 +59,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		Ground ground = Ground.LoadSaveData(data);
 		CountryCollection countries = loadCountries(data);
 		PopulationCollection populations = loadPopulations(data);
-		BuildingCollection buildings = new BuildingCollection(ground, countries, populations);
+		BuildingCollection buildings = new BuildingCollection(countries, populations);
 		loadBuildings(data, buildings);
 
 		GameWorld world = new GameWorld

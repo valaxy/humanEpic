@@ -29,6 +29,8 @@ public static partial class DomainModelJsonPersistence
 	private const string godotType = "type";
 	// Godot 值类型元数据键：数据体。
 	private const string godotData = "data";
+	// 根节点静态成员键：按类型分组保存静态字段/属性。
+	private const string staticMembers = "__static";
 
 
 	/// <summary>
@@ -67,7 +69,7 @@ public static partial class DomainModelJsonPersistence
 
 		Type modelType = model.GetType();
 		ensurePersistableClass(modelType);
-		return serializePersistableObject(model, modelType);
+		return saveRootObject(model, modelType);
 	}
 
 	/// <summary>
@@ -77,6 +79,6 @@ public static partial class DomainModelJsonPersistence
 	{
 		Type modelType = typeof(TModel);
 		ensurePersistableClass(modelType);
-		return (TModel)deserializePersistableObject(data, modelType);
+		return (TModel)loadRootObject(data, modelType);
 	}
 }

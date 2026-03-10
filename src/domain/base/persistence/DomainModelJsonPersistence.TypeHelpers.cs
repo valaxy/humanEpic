@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Reflection;
-using Godot;
 
 /// <summary>
 /// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
@@ -79,11 +78,33 @@ public static partial class DomainModelJsonPersistence
 			.ToList();
 	}
 
+	// 获取被持久化标记的静态字段集合。
+	private static List<(FieldInfo field, PersistFieldAttribute attr)> getPersistStaticFields(Type type)
+	{
+		return enumerateTypeChain(type)
+			.SelectMany(currentType => currentType.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+			.Select(field => (field, attr: field.GetCustomAttribute<PersistFieldAttribute>(true)))
+			.Where(item => item.attr != null)
+			.Select(item => (item.field, item.attr!))
+			.ToList();
+	}
+
 	// 获取被持久化标记的属性集合。
 	private static List<(PropertyInfo property, PersistPropertyAttribute attr)> getPersistProperties(Type type)
 	{
 		return enumerateTypeChain(type)
 			.SelectMany(currentType => currentType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+			.Select(property => (property, attr: property.GetCustomAttribute<PersistPropertyAttribute>(true)))
+			.Where(item => item.attr != null)
+			.Select(item => (item.property, item.attr!))
+			.ToList();
+	}
+
+	// 获取被持久化标记的静态属性集合。
+	private static List<(PropertyInfo property, PersistPropertyAttribute attr)> getPersistStaticProperties(Type type)
+	{
+		return enumerateTypeChain(type)
+			.SelectMany(currentType => currentType.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
 			.Select(property => (property, attr: property.GetCustomAttribute<PersistPropertyAttribute>(true)))
 			.Where(item => item.attr != null)
 			.Select(item => (item.property, item.attr!))
@@ -181,78 +202,6 @@ public static partial class DomainModelJsonPersistence
 		return isBasicType(type) || type.IsEnum;
 	}
 
-	// 基础类型转换。
-	private static object convertBasic(object value, Type targetType)
-	{
-		if (targetType == typeof(string))
-		{
-			return value.ToString()
-				?? throw new InvalidOperationException("字符串转换失败");
-		}
-
-		if (targetType == typeof(bool))
-		{
-			return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(byte))
-		{
-			return Convert.ToByte(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(sbyte))
-		{
-			return Convert.ToSByte(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(short))
-		{
-			return Convert.ToInt16(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(ushort))
-		{
-			return Convert.ToUInt16(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(int))
-		{
-			return Convert.ToInt32(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(uint))
-		{
-			return Convert.ToUInt32(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(long))
-		{
-			return Convert.ToInt64(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(ulong))
-		{
-			return Convert.ToUInt64(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(float))
-		{
-			return Convert.ToSingle(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(double))
-		{
-			return Convert.ToDouble(value, CultureInfo.InvariantCulture);
-		}
-
-		if (targetType == typeof(decimal))
-		{
-			return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
-		}
-
-		throw new InvalidOperationException($"不支持的基础类型: {targetType.FullName}");
-	}
-
 	// 创建列表实例。
 	private static IList createList(Type declaredListType, Type elementType)
 	{
@@ -295,8 +244,7 @@ public static partial class DomainModelJsonPersistence
 	{
 		if (declaredSetType.IsGenericType && declaredSetType.GetGenericTypeDefinition() == typeof(SortedSet<>))
 		{
-			Type closedSortedSetType = typeof(SortedSet<>).MakeGenericType(elementType);
-			return Activator.CreateInstance(closedSortedSetType)
+			return createSortedSetWithFallbackComparer(elementType)
 				?? throw new InvalidOperationException($"无法创建有序集合实例: {declaredSetType.FullName}");
 		}
 
@@ -310,111 +258,46 @@ public static partial class DomainModelJsonPersistence
 			?? throw new InvalidOperationException($"无法创建集合实例: {declaredSetType.FullName}");
 	}
 
-	// 判断是否为受支持的 Godot 值类型。
-	private static bool isSupportedGodotValueType(Type type)
+	private static object createSortedSetWithFallbackComparer(Type elementType)
 	{
-		return type == typeof(Color)
-			|| type == typeof(Vector2)
-			|| type == typeof(Vector2I);
+		MethodInfo method = typeof(DomainModelJsonPersistence)
+			.GetMethod(nameof(createSortedSetWithFallbackComparerGeneric), BindingFlags.Static | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException("创建 SortedSet 失败：未找到工厂方法");
+		MethodInfo genericMethod = method.MakeGenericMethod(elementType);
+		return genericMethod.Invoke(null, null)
+			?? throw new InvalidOperationException($"无法创建有序集合实例: {elementType.FullName}");
 	}
 
-	// 序列化 Godot 值类型。
-	private static Dictionary<string, object> serializeGodotValue(object value, Type type)
+	private static SortedSet<T> createSortedSetWithFallbackComparerGeneric<T>()
 	{
-		if (type == typeof(Color))
-		{
-			Color color = (Color)value;
-			return new Dictionary<string, object>
+		IComparer<T> comparer = typeof(IComparable<T>).IsAssignableFrom(typeof(T)) || typeof(IComparable).IsAssignableFrom(typeof(T))
+			? Comparer<T>.Default
+			: Comparer<T>.Create((left, right) =>
 			{
-				{ godotTag, true },
-				{ godotType, nameof(Color) },
-				{ godotData, new Dictionary<string, object>
-					{
-						{ "r", color.R },
-						{ "g", color.G },
-						{ "b", color.B },
-						{ "a", color.A }
-					}
+				if (ReferenceEquals(left, right))
+				{
+					return 0;
 				}
-			};
-		}
 
-		if (type == typeof(Vector2))
-		{
-			Vector2 vector = (Vector2)value;
-			return new Dictionary<string, object>
-			{
-				{ godotTag, true },
-				{ godotType, nameof(Vector2) },
-				{ godotData, new Dictionary<string, object>
-					{
-						{ "x", vector.X },
-						{ "y", vector.Y }
-					}
+				if (left == null)
+				{
+					return -1;
 				}
-			};
-		}
 
-		if (type == typeof(Vector2I))
-		{
-			Vector2I vector = (Vector2I)value;
-			return new Dictionary<string, object>
-			{
-				{ godotTag, true },
-				{ godotType, nameof(Vector2I) },
-				{ godotData, new Dictionary<string, object>
-					{
-						{ "x", vector.X },
-						{ "y", vector.Y }
-					}
+				if (right == null)
+				{
+					return 1;
 				}
-			};
-		}
 
-		throw new InvalidOperationException($"不支持的 Godot 值类型: {type.FullName}");
-	}
+				int hashCompare = RuntimeHelpers.GetHashCode(left).CompareTo(RuntimeHelpers.GetHashCode(right));
+				if (hashCompare != 0)
+				{
+					return hashCompare;
+				}
 
-	// 反序列化 Godot 值类型。
-	private static object deserializeGodotValue(object rawValue, Type targetType)
-	{
-		if (rawValue is not Dictionary<string, object> node)
-		{
-			throw new InvalidOperationException($"Godot 值类型数据结构非法: {targetType.FullName}");
-		}
+				return string.CompareOrdinal(left.ToString(), right.ToString());
+			});
 
-		if (!node.ContainsKey(godotTag) || !node.ContainsKey(godotType) || !node.ContainsKey(godotData))
-		{
-			throw new InvalidOperationException($"Godot 值类型缺少必要键: {targetType.FullName}");
-		}
-
-		if (node[godotData] is not Dictionary<string, object> data)
-		{
-			throw new InvalidOperationException($"Godot 值类型 data 结构非法: {targetType.FullName}");
-		}
-
-		if (targetType == typeof(Color))
-		{
-			float r = Convert.ToSingle(data["r"], CultureInfo.InvariantCulture);
-			float g = Convert.ToSingle(data["g"], CultureInfo.InvariantCulture);
-			float b = Convert.ToSingle(data["b"], CultureInfo.InvariantCulture);
-			float a = Convert.ToSingle(data["a"], CultureInfo.InvariantCulture);
-			return new Color(r, g, b, a);
-		}
-
-		if (targetType == typeof(Vector2))
-		{
-			float x = Convert.ToSingle(data["x"], CultureInfo.InvariantCulture);
-			float y = Convert.ToSingle(data["y"], CultureInfo.InvariantCulture);
-			return new Vector2(x, y);
-		}
-
-		if (targetType == typeof(Vector2I))
-		{
-			int x = Convert.ToInt32(data["x"], CultureInfo.InvariantCulture);
-			int y = Convert.ToInt32(data["y"], CultureInfo.InvariantCulture);
-			return new Vector2I(x, y);
-		}
-
-		throw new InvalidOperationException($"不支持的 Godot 值类型: {targetType.FullName}");
+		return new SortedSet<T>(comparer);
 	}
 }

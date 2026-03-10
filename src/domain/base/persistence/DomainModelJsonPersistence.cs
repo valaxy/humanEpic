@@ -15,6 +15,10 @@ public static partial class DomainModelJsonPersistence
 	private const string entryKey = "k";
 	// 字典元数据键：条目 value 键名。
 	private const string entryValue = "v";
+	// 值元组元数据键：标记当前对象节点是值元组包装结构。
+	private const string tupleTag = "__tuple";
+	// 值元组元数据键：值序列键名。
+	private const string tupleItems = "items";
 
 
 	/// <summary>

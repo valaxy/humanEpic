@@ -72,7 +72,7 @@ public partial class BuildingEditorBar : EditorWindow
 		groundEditor.EditCellRequested -= onGroundCellClicked;
 		groundEditor.EditCellRequested += onGroundCellClicked;
 
-		countrySelector.Setup();
+		countrySelector.Setup(worldRef.Countries);
 		selectDefaultBuildingType();
 	}
 

@@ -22,6 +22,8 @@ public partial class MainUI : Node
 	private BuildingInfoPanelUI buildingInfoPanelUi = null!;
 	// 游戏编辑器按钮区域。
 	private GameEditorButtons gameEditorButtons = null!;
+	// 人口窗口 UI。
+	private PopulationWindowUI populationWindowUi = null!;
 
 	public override void _Ready()
 	{
@@ -33,6 +35,7 @@ public partial class MainUI : Node
 		buildingInfoUi = GetNode<BuildingInfoUI>("BuildingInfoUI");
 		buildingInfoPanelUi = GetNode<BuildingInfoPanelUI>("BuildingInfoPanelUI");
 		gameEditorButtons = GetNode<GameEditorButtons>("GameEditorButtons");
+		populationWindowUi = GetNode<PopulationWindowUI>("PopulationWindowUI");
 	}
 
 	/// <summary>
@@ -50,6 +53,7 @@ public partial class MainUI : Node
 		buildingInfoUi.Setup(world.Buildings, infoUiLeft);
 		buildingInfoUi.BindSelection(selection);
 		buildingInfoPanelUi.Setup(world.Buildings, selection);
+		populationWindowUi.Setup(world);
 
 		selection.CellHovered += gridInfoUi.OnCellHovered;
 		selection.CellHoverCleared += gridInfoUi.OnCellHoverCleared;

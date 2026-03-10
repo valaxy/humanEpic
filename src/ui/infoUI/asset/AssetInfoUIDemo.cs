@@ -80,7 +80,7 @@ public partial class AssetInfoUIDemo : Control
 	// 展示空资产样例。
 	private void showEmptyAsset()
 	{
-		asset = new Asset();
+		asset = new Asset(new());
 		showAssetInfo("资产信息 Demo（空资产）");
 	}
 

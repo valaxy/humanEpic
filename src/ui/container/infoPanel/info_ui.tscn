@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/container/infoPanel/InfoUI.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/container/infoPanel/info_content_block.tscn" id="2_content_block"]
 
 [node name="InfoUI" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -49,15 +50,10 @@ horizontal_alignment = 1
 [node name="HSeparator" type="HSeparator" parent="MainPanel/VBoxContainer"]
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MainPanel/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 0
-
-[node name="KVContainer" type="VBoxContainer" parent="MainPanel/VBoxContainer/ScrollContainer"]
+[node name="ContentBlock" parent="MainPanel/VBoxContainer" instance=ExtResource("2_content_block")]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_vertical = 3
 mouse_filter = 0
 
 [node name="CloseButton" type="Button" parent="MainPanel"]

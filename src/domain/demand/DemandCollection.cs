@@ -11,18 +11,6 @@ public sealed class DemandCollection : DictCollection<DemandType.Enums, Demand>,
 {
 	protected override DemandType.Enums GetKey(Demand item) => item.Type;
 
-	// 持久化桥接属性：通过通用持久化层序列化/反序列化集合内容。
-	[PersistProperty("items")]
-	public List<Demand> PersistItems
-	{
-		get => GetAll().ToList();
-		set
-		{
-			Clear();
-			value.ForEach(Add);
-		}
-	}
-
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
 	/// </summary>

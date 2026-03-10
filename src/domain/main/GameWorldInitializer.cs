@@ -92,9 +92,9 @@ public class GameWorldInitializer
         countries.Add(new Country("蓝色国家", Colors.DodgerBlue));
 
         // 人口数据
-        // populations.Add(new Population("青年劳工群体", 120));
-        // populations.Add(new Population("家庭居民群体", 180));
-        // populations.Add(new Population("技术服务群体", 90));
+        populations.Add(new Population("青年劳工群体", 120));
+        populations.Add(new Population("家庭居民群体", 180));
+        populations.Add(new Population("技术服务群体", 90));
 
         GD.Print("冷启动：已生成基础数据");
 

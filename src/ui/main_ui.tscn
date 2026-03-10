@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://src/ui/bubbleMessage/bubble_message_container_ui.tscn" id="7_bubble_container_scene"]
 [ext_resource type="PackedScene" path="res://src/ui/sidePanel/building_info_panel_ui.tscn" id="8_building_info_panel_scene"]
 [ext_resource type="Script" uid="uid://cskxy5sni4vjp" path="res://src/ui/infoUI/building/BuildingInfoUI.cs" id="9_building_info_script"]
+[ext_resource type="PackedScene" path="res://src/ui/population/population_window_ui.tscn" id="10_population_window_scene"]
 
 [node name="MainUI" type="Node" unique_id=1960510849]
 script = ExtResource("1_main_ui_script")
@@ -36,3 +37,5 @@ script = ExtResource("9_building_info_script")
 [node name="GameEditorButtons" parent="." unique_id=806009076 instance=ExtResource("6_game_editor_buttons_scene")]
 
 [node name="BubbleMessageContainerUI" parent="." unique_id=1009425273 instance=ExtResource("7_bubble_container_scene")]
+
+[node name="PopulationWindowUI" parent="." instance=ExtResource("10_population_window_scene")]

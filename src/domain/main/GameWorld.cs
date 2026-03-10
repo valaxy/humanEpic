@@ -24,8 +24,8 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	{
 		Dictionary<string, object> saveData = Ground.GetSaveData();
 		saveData["time"] = TimeSystem.TotalSeconds;
-		saveData["countries"] = Countries.GetSaveData();
-		saveData["populations"] = Populations.GetSaveData();
+		saveData["countries"] = DomainModelJsonPersistence.SaveToObject(Countries)["items"];
+		saveData["populations"] = DomainModelJsonPersistence.SaveToObject(Populations)["items"];
 		saveData["buildings"] = Buildings.GetSaveData();
 		return saveData;
 	}
@@ -55,29 +55,30 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 
 	private static CountryCollection loadCountries(Dictionary<string, object> data)
 	{
-		CountryCollection countries = new CountryCollection();
-		if (data.ContainsKey("countries"))
+		if (!data.ContainsKey("countries"))
 		{
-			List<Dictionary<string, object>> savedCountries = ((List<object>)data["countries"])
-				.Select(item => (Dictionary<string, object>)item)
-				.ToList();
-			countries.LoadSaveData(savedCountries);
+			return new CountryCollection();
 		}
-		return countries;
+
+		Dictionary<string, object> node = new Dictionary<string, object>
+		{
+			{ "items", data["countries"] }
+		};
+		return DomainModelJsonPersistence.LoadFromObject<CountryCollection>(node);
 	}
 
 	private static PopulationCollection loadPopulations(Dictionary<string, object> data)
 	{
-		PopulationCollection populations = new PopulationCollection();
-		if (data.ContainsKey("populations"))
+		if (!data.ContainsKey("populations"))
 		{
-			List<Dictionary<string, object>> savedPopulations = ((List<object>)data["populations"])
-				.Select(item => (Dictionary<string, object>)item)
-				.ToList();
-			populations.LoadSaveData(savedPopulations);
+			return new PopulationCollection();
 		}
 
-		return populations;
+		Dictionary<string, object> node = new Dictionary<string, object>
+		{
+			{ "items", data["populations"] }
+		};
+		return DomainModelJsonPersistence.LoadFromObject<PopulationCollection>(node);
 	}
 
 	private static void loadBuildings(Dictionary<string, object> data, BuildingCollection buildings)

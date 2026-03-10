@@ -21,15 +21,6 @@ public partial class CountrySelector : HBoxContainer
 	// 国家下拉框。
 	private OptionButton countryOptionButton = null!;
 
-	// 组件内置国家数据。
-	private readonly List<Country> localCountries =
-	[
-		new Country("晨曦邦", Colors.CornflowerBlue, 1),
-		new Country("赤岩领", Colors.IndianRed, 2),
-		new Country("霜叶国", Colors.SeaGreen, 3),
-		new Country("银湾城", Colors.Goldenrod, 4)
-	];
-
 	public override void _Ready()
 	{
 		countryOptionButton = GetNode<OptionButton>("%CountryOptionButton");
@@ -39,11 +30,11 @@ public partial class CountrySelector : HBoxContainer
 	/// <summary>
 	/// 初始化国家选择下拉框。
 	/// </summary>
-	public void Setup()
+	public void Setup(CountryCollection countries)
 	{
 		countryOptionButton.Clear();
 
-		localCountries
+		countries.GetAll()
 			.OrderBy(country => country.Id)
 			.ToList()
 			.ForEach(country => countryOptionButton.AddItem(country.Name, country.Id));

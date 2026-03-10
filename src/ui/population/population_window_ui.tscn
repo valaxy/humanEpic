@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/population/PopulationWindowUI.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/ui/container/draggableWindow/draggable_window.tscn" id="2_window"]
+[ext_resource type="PackedScene" path="res://src/ui/container/infoPanel/info_content_block.tscn" id="3_content_block"]
+
+[node name="PopulationWindowUI" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="PopulationEntryButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -170.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 58.0
+grow_horizontal = 0
+text = "人口"
+
+[node name="PopulationWindow" parent="." instance=ExtResource("2_window")]
+unique_name_in_owner = true
+visible = false
+offset_left = 180.0
+offset_top = 90.0
+offset_right = 780.0
+offset_bottom = 560.0
+
+[node name="MainSplit" type="HSplitContainer" parent="PopulationWindow/VBoxContainer/ContentRoot"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = 180
+
+[node name="ListPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ListMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="PopulationList" type="ItemList" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel/ListMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin" instance=ExtResource("3_content_block")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

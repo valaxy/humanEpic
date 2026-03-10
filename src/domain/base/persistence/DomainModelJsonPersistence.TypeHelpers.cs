@@ -28,6 +28,36 @@ public static partial class DomainModelJsonPersistence
 			|| type == typeof(decimal);
 	}
 
+	// 判断是否为值元组类型。
+	private static bool isValueTupleType(Type type)
+	{
+		if (!type.IsValueType || !type.IsGenericType)
+		{
+			return false;
+		}
+
+		Type genericType = type.GetGenericTypeDefinition();
+		return genericType == typeof(ValueTuple<>)
+			|| genericType == typeof(ValueTuple<,>)
+			|| genericType == typeof(ValueTuple<,,>)
+			|| genericType == typeof(ValueTuple<,,,>)
+			|| genericType == typeof(ValueTuple<,,,,>)
+			|| genericType == typeof(ValueTuple<,,,,,>)
+			|| genericType == typeof(ValueTuple<,,,,,,>)
+			|| genericType == typeof(ValueTuple<,,,,,,,>);
+	}
+
+	// 获取值元组元素类型。
+	private static Type[] getValueTupleElementTypes(Type tupleType)
+	{
+		if (!isValueTupleType(tupleType))
+		{
+			throw new InvalidOperationException($"类型不是值元组: {tupleType.FullName}");
+		}
+
+		return tupleType.GetGenericArguments();
+	}
+
 	// 校验类型是否有可持久化标记。
 	private static void ensurePersistableClass(Type type)
 	{

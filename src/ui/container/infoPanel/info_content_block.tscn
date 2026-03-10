@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/container/infoPanel/InfoContentBlock.cs" id="1_script"]
+
+[node name="InfoContentBlock" type="ScrollContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_script")
+
+[node name="ContentContainer" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3

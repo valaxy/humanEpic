@@ -76,6 +76,44 @@ public class DomainModelJsonPersistenceTest
 		}
 	}
 
+	[Persistable]
+	private class TupleModel
+	{
+		[PersistField]
+		private (int age, float ratio) metrics;
+
+		public TupleModel()
+		{
+			metrics = (0, 0.0f);
+		}
+
+		public TupleModel((int age, float ratio) metrics)
+		{
+			this.metrics = metrics;
+		}
+
+		public (int age, float ratio) Metrics => metrics;
+	}
+
+	[Persistable]
+	private class TupleWithInvalidChildModel
+	{
+		#pragma warning disable CS0414
+		[PersistField]
+		private (NotPersistableModel invalid, int value) tupleValue;
+		#pragma warning restore CS0414
+
+		public TupleWithInvalidChildModel()
+		{
+			tupleValue = (new NotPersistableModel(), 0);
+		}
+
+		public TupleWithInvalidChildModel(int value)
+		{
+			tupleValue = (new NotPersistableModel(), value);
+		}
+	}
+
 	[TestCase]
 	public void Save_ShouldContainExpectedJsonShape()
 	{
@@ -183,6 +221,45 @@ public class DomainModelJsonPersistenceTest
 		if (!hasThrown)
 		{
 			throw new Exception("未标记 [Persistable] 的类型应抛出异常");
+		}
+	}
+
+	[TestCase]
+	public void SaveAndLoad_ValueTuple_ShouldRoundTrip()
+	{
+		TupleModel model = new TupleModel((18, 0.75f));
+		string json = DomainModelJsonPersistence.Save(model);
+		TupleModel loaded = DomainModelJsonPersistence.Load<TupleModel>(json);
+
+		if (loaded.Metrics.age != 18)
+		{
+			throw new Exception("值元组 age 反序列化结果不正确");
+		}
+
+		if (Math.Abs(loaded.Metrics.ratio - 0.75f) > 0.001f)
+		{
+			throw new Exception("值元组 ratio 反序列化结果不正确");
+		}
+	}
+
+	[TestCase]
+	public void Save_TupleWithInvalidChild_ShouldThrow()
+	{
+		TupleWithInvalidChildModel model = new TupleWithInvalidChildModel(3);
+		bool hasThrown = false;
+
+		try
+		{
+			DomainModelJsonPersistence.Save(model);
+		}
+		catch (InvalidOperationException)
+		{
+			hasThrown = true;
+		}
+
+		if (!hasThrown)
+		{
+			throw new Exception("值元组子类型不可持久化时应抛出异常");
 		}
 	}
 }

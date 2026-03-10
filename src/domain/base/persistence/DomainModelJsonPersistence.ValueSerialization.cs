@@ -29,6 +29,26 @@ public static partial class DomainModelJsonPersistence
 			return Convert.ToInt32(value, CultureInfo.InvariantCulture);
 		}
 
+		if (isValueTupleType(actualType))
+		{
+			Type[] tupleElementTypes = getValueTupleElementTypes(actualType);
+			List<object> tupleValues = tupleElementTypes
+				.Select((elementType, index) =>
+				{
+					string fieldName = $"Item{index + 1}";
+					object tupleElement = actualType.GetField(fieldName)?.GetValue(value)
+						?? throw new InvalidOperationException($"值元组字段读取失败: {actualType.FullName}.{fieldName}");
+					return serializeValue(tupleElement, elementType);
+				})
+				.ToList();
+
+			return new Dictionary<string, object>
+			{
+				{ tupleTag, true },
+				{ tupleItems, tupleValues }
+			};
+		}
+
 		if (tryGetListElementType(actualType, out Type listElementType))
 		{
 			if (value is not IEnumerable enumerable)
@@ -90,6 +110,43 @@ public static partial class DomainModelJsonPersistence
 		{
 			int enumId = Convert.ToInt32(rawValue, CultureInfo.InvariantCulture);
 			return Enum.ToObject(targetType, enumId);
+		}
+
+		if (isValueTupleType(targetType))
+		{
+			if (rawValue is not Dictionary<string, object> tupleNode)
+			{
+				throw new InvalidOperationException($"类型 {targetType.FullName} 的数据不是对象");
+			}
+
+			if (!tupleNode.ContainsKey(tupleTag) || !tupleNode.ContainsKey(tupleItems))
+			{
+				throw new InvalidOperationException($"值元组数据结构非法: {targetType.FullName}");
+			}
+
+			if (tupleNode[tupleItems] is not IList tupleItemsRaw)
+			{
+				throw new InvalidOperationException($"值元组项结构非法: {targetType.FullName}");
+			}
+
+			Type[] tupleElementTypes = getValueTupleElementTypes(targetType);
+			if (tupleItemsRaw.Count != tupleElementTypes.Length)
+			{
+				throw new InvalidOperationException($"值元组元素数量不匹配: {targetType.FullName}");
+			}
+
+			object[] tupleValues = tupleElementTypes
+				.Select((elementType, index) =>
+				{
+					object rawTupleElement = tupleItemsRaw[index]
+						?? throw new InvalidOperationException($"值元组元素不能为空: {targetType.FullName}.Item{index + 1}");
+					return deserializeValue(rawTupleElement, elementType);
+				})
+				.ToArray();
+
+			object? tupleValue = Activator.CreateInstance(targetType, tupleValues);
+			return tupleValue
+				?? throw new InvalidOperationException($"值元组实例化失败: {targetType.FullName}");
 		}
 
 		if (tryGetListElementType(targetType, out Type listElementType))

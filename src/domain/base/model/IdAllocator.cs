@@ -12,7 +12,7 @@ public class IdAllocator
     /// <summary>
     /// 分配一个新的唯一ID
     /// </summary>
-    public int AllocateId(int? id)
+    public int AllocateId(int? id = null)
     {
         if (id.HasValue)
         {

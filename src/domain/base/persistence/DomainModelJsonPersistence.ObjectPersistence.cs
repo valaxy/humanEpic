@@ -43,7 +43,7 @@ public static partial class DomainModelJsonPersistence
 	// 反序列化字段字典为可持久化对象。
 	private static object deserializePersistableObject(Dictionary<string, object> node, Type modelType)
 	{
-		object instance = Activator.CreateInstance(modelType)
+		object instance = Activator.CreateInstance(modelType, true)
 			?? throw new InvalidOperationException($"类型 {modelType.FullName} 需要可用的无参构造函数");
 
 		List<(FieldInfo field, PersistFieldAttribute attr)> fields = getPersistFields(modelType);

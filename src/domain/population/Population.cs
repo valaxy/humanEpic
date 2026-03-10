@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -8,29 +7,39 @@ using System.Linq;
 /// - 人口是一种抽象的存在
 /// - 人口具有三种功能：消费、劳动、投资
 /// </summary>
-public class Population : IIdModel, IInfo, IPersistence<Population>
+[Persistable]
+public class Population : IIdModel, IInfo
 {
 	private static IdAllocator idAllocator = new IdAllocator();
+	private int id;
 
 	/// <summary>
 	/// 人口模型唯一标识（自增主键）
 	/// </summary>
-	public int Id { get; }
+	[PersistProperty]
+	public int Id
+	{
+		get => id;
+		private set => id = idAllocator.AllocateId(value);
+	}
 
 	/// <summary>
 	/// 人口名称（自然语言描述）
 	/// </summary>
-	public string Name { get; private set; }
+	[PersistProperty]
+	public string Name { get; private set; } = default!;
 
 	/// <summary>
 	/// 人口人数
 	/// </summary>
+	[PersistProperty]
 	public int Count { get; private set; }
 
 	/// <summary>
 	/// 已经工作的人数
 	/// </summary>
-	public int LabourCount { get; private set; } = 0;
+	[PersistProperty]
+	public int LabourCount { get; private set; } = 0; // TODO 不要在这里赋值
 
 	/// <summary>
 	/// 仍未分配工作的人口数量。
@@ -41,29 +50,42 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	/// <summary>
 	/// 需求
 	/// </summary>
-	public DemandCollection Demands { get; } = new DemandCollection();
+	[PersistProperty]
+	public DemandCollection Demands { get; private set; } = default!;
 
 	/// <summary>
 	/// 资产
 	/// </summary>
-	public Asset Asset { get; } = new Asset();
+	[PersistProperty]
+	public Asset Asset { get; private set; } = default!;
 
 	/// <summary>
 	/// 人口的居住情况
 	/// </summary>
-	public PopulationResidential PopulationResidential { get; }
+	[PersistProperty]
+	public PopulationResidential PopulationResidential { get; private set; } = default!;
 
+
+
+	/// <summary>
+	/// 无参构造函数，供反持久化调用。
+	/// </summary>
+	private Population()
+	{
+	}
 
 
 	/// <summary>
 	/// 初始化人口
 	/// </summary>
-	public Population(string name, int count, int? id = null)
+	public Population(string name, int count)
 	{
-		Id = idAllocator.AllocateId(id);
+		id = idAllocator.AllocateId();
 		Name = name;
 		Count = count;
-		PopulationResidential = new PopulationResidential(this);
+		Demands = new DemandCollection(true);
+		Asset = new Asset(new());
+		PopulationResidential = new PopulationResidential(Id);
 	}
 
 
@@ -132,7 +154,7 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 	{
 		Demands.GetAll()
 			.ToList()
-			.ForEach(demand => demand.ApplyDailyDecay(Count));
+			.ForEach(demand => demand.DecayNaturally(Count));
 	}
 
 
@@ -153,6 +175,12 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		InfoData data = new InfoData();
 		data.AddGroup("人口概览", basicInfo);
 
+		InfoData assetInfo = Asset.GetInfoData();
+		if (!assetInfo.IsEmpty)
+		{
+			data.AddGroup("资产情况", assetInfo);
+		}
+
 		InfoData demandInfo = Demands.GetInfoData();
 		if (!demandInfo.IsEmpty)
 		{
@@ -160,57 +188,5 @@ public class Population : IIdModel, IInfo, IPersistence<Population>
 		}
 
 		return data;
-	}
-
-
-	/// <summary>
-	/// 获取保存数据字典
-	/// </summary>
-	public Dictionary<string, object> GetSaveData()
-	{
-		return new Dictionary<string, object>
-		{
-			{ "id", Id },
-			{ "name", Name },
-			{ "count", Count },
-			{ "work_count", LabourCount },
-			{ "demands", Demands.GetSaveData() },
-			{ "asset", Asset.GetSaveData() },
-		};
-	}
-
-
-	/// <summary>
-	/// 从保存数据恢复人口对象
-	/// </summary>
-	public static Population LoadSaveData(Dictionary<string, object> data)
-	{
-		int id = Convert.ToInt32(data["id"]);
-		string name = data.ContainsKey("name")
-			? data["name"].ToString() ?? $"人口#{id}"
-			: $"人口#{id}";
-		int count = Convert.ToInt32(data["count"]);
-		int workCount = Convert.ToInt32(data["work_count"]);
-
-		Population population = new Population(name, count, id);
-		population.AddWork(workCount);
-
-		// TODO 这里可以优化一下？
-		List<Dictionary<string, object>> demandSaveData = ((List<object>)data["demands"])
-			.Select(item => (Dictionary<string, object>)item)
-			.ToList();
-		population.Demands.LoadSaveData(demandSaveData);
-
-		if (data.ContainsKey("asset"))
-		{
-			Dictionary<string, object> assetData = (Dictionary<string, object>)data["asset"];
-			Asset loadedAsset = Asset.LoadSaveData(assetData);
-			Enum
-				.GetValues<ProductType.Enums>()
-				.ToList()
-				.ForEach(type => population.Asset.SetAmount(type, loadedAsset.GetAmount(type)));
-		}
-
-		return population;
 	}
 }

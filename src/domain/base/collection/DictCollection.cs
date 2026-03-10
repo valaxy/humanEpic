@@ -12,6 +12,18 @@ public abstract class DictCollection<TKey, TValue> : ICollection<TValue>
 {
     private readonly Dictionary<TKey, TValue> items = new();
 
+    // 持久化桥接属性：通过通用持久化层序列化/反序列化集合内容。
+    [PersistProperty("items")]
+    public List<TValue> PersistItems
+    {
+        get => GetAll().ToList();
+        set
+        {
+            Clear();
+            value.ForEach(Add);
+        }
+    }
+
     public event Action<TValue>? Added;
 
     public event Action<TValue>? Removed;

@@ -15,10 +15,20 @@ public static partial class DomainModelJsonPersistence
 	private const string entryKey = "k";
 	// 字典元数据键：条目 value 键名。
 	private const string entryValue = "v";
+	// 集合元数据键：标记当前对象节点是集合包装结构。
+	private const string setTag = "__set";
+	// 集合元数据键：集合元素列表键名。
+	private const string setItems = "items";
 	// 值元组元数据键：标记当前对象节点是值元组包装结构。
 	private const string tupleTag = "__tuple";
 	// 值元组元数据键：值序列键名。
 	private const string tupleItems = "items";
+	// Godot 值类型元数据键：标记当前对象节点是 Godot 值类型包装结构。
+	private const string godotTag = "__godot";
+	// Godot 值类型元数据键：类型名。
+	private const string godotType = "type";
+	// Godot 值类型元数据键：数据体。
+	private const string godotData = "data";
 
 
 	/// <summary>

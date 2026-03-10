@@ -88,3 +88,17 @@ public abstract void LoadSaveData(List<Dictionary<string, object>> data);
 
 
 - 效用和需求度的关系：
+
+// 使用godot File API的原因是 res:// 路径的问题
+
+
+1 新增世界逻辑：每隔一段时间将所有人口的所有需求度全部重置为人均1，代码放在mock目录下，用于测试和调试之用
+2 将GameEditorTopRightTools重命名为FeatureButtons，并移动到featureButtons目录，它不应该被GameEditorButtons管理，就应该放在MainUI顶层对象里直接管理
+3 SaveButtonUI重命名为SaveButton
+4 population_window_ui.tscn默认改为可见，这样我才可以在godot编辑器中编辑
+
+持久化层需求：
+1 新增支持对Godot基本对象：Color，Vector2I，Vector2等的持久化
+2 新增对HashSet的持久化
+3 为AtomCollision/CircularCoverage/进行持久化标记
+4 为Residential进行持久化标记，移除对IPersistence<Residential, PopulationCollection>的实现，直接使用持久化层

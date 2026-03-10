@@ -108,7 +108,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		Country = country;
 		Collision = new AtomCollision(pos);
 		Residential = ResidentialTemplate.HasTemplate(template.TypeId)
-			? new Residential(this, ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
+			? new Residential(ResidentialTemplate.GetTemplate(template.TypeId).MaxPopulation)
 			: null;
 		Market = template.TypeId == BuildingType.Enums.Market
 			? new global::MarketFunction()
@@ -168,7 +168,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 
 		if (Residential != null)
 		{
-			saveData["residential"] = Residential.GetSaveData();
+			saveData["residential"] = DomainModelJsonPersistence.SaveToObject(Residential);
 		}
 
 		if (Market != null)
@@ -200,7 +200,7 @@ public class Building : IIdModel, IInfo, IPersistence<Building, Building.Persist
 		if (data.ContainsKey("residential"))
 		{
 			Dictionary<string, object> residentialData = (Dictionary<string, object>)data["residential"];
-			building.Residential = Residential.LoadSaveData(residentialData, persistenceContext.PopulationCollection);
+			building.Residential = DomainModelJsonPersistence.LoadFromObject<Residential>(residentialData);
 		}
 
 		if (data.ContainsKey("market"))

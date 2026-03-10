@@ -39,9 +39,18 @@ public partial class DraggableWindow : Control
 		titleBar = GetNode<Control>("%TitleBar");
 		closeButton = GetNode<Button>("%CloseButton");
 		contentRoot = GetNode<VBoxContainer>("%ContentRoot");
+		Panel panel = GetNode<Panel>("Panel");
+		VBoxContainer rootVBox = GetNode<VBoxContainer>("VBoxContainer");
 		dragBounds = getDragBounds();
 
+		MouseFilter = MouseFilterEnum.Stop;
+		panel.MouseFilter = MouseFilterEnum.Stop;
+		rootVBox.MouseFilter = MouseFilterEnum.Stop;
+		titleBar.MouseFilter = MouseFilterEnum.Stop;
+		contentRoot.MouseFilter = MouseFilterEnum.Stop;
+
 		titleBar.GuiInput += onTitleBarGuiInput;
+		GuiInput += onWindowGuiInput;
 		closeButton.Pressed += () => EmitSignal(SignalName.CloseRequested);
 		closeButton.Text = string.Empty;
 		closeButton.Icon = ThemeDB.GetDefaultTheme().GetIcon("Close", "EditorIcons");
@@ -82,6 +91,15 @@ public partial class DraggableWindow : Control
 		if (isDragging && inputEvent is InputEventMouseMotion motion)
 		{
 			Position = clampPosition(Position + motion.Relative);
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
+	// 拦截窗口上的鼠标事件，避免传递到游戏世界。
+	private void onWindowGuiInput(InputEvent inputEvent)
+	{
+		if (inputEvent is InputEventMouseButton || inputEvent is InputEventMouseMotion)
+		{
 			GetViewport().SetInputAsHandled();
 		}
 	}

@@ -1,26 +1,30 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 /// <summary>
 /// 住房的居住功能，核心数据还是在Population
 /// 这里利用一定的算法从PopulationResidential即时计算出需要的数据，数据不是真实的是模拟的
 /// </summary>
-public class Residential : IInfo, IPersistence<Residential, PopulationCollection>
+[Persistable]
+public class Residential : IInfo
 {
     // 缓存当前居住在该建筑中的人口总数
-    private int totalCount = 0;
+    [PersistField]
+    private int totalCount = default!;
+
     // 住了哪些人口（用于反查展示与持久化）
-    private HashSet<int> populations = new();
-    // 保存反向引用不对外暴露
-    private Building building;
+    [PersistField]
+    private HashSet<int> populations = default!;
+
+    // 适宜居住人口数。
+    [PersistField]
+    private int optimalCount = default!;
 
 
     /// <summary>
     /// 适宜居住人口数
     /// </summary>
-    public int OptimalCount { get; }
+    public int OptimalCount => optimalCount;
 
     /// <summary>
     /// 当前居住总人数。
@@ -29,13 +33,21 @@ public class Residential : IInfo, IPersistence<Residential, PopulationCollection
 
 
     /// <summary>
+    /// 无参构造函数，供反持久化调用。
+    /// </summary>
+    private Residential()
+    {
+    }
+
+    /// <summary>
     /// 初始化住房组件。
     /// </summary>
-    public Residential(Building building, int optimalCount)
+    public Residential(int optimalCount)
     {
         Debug.Assert(optimalCount > 0, "适宜居住人口数必须大于0");
-        OptimalCount = optimalCount;
-        this.building = building;
+        totalCount = 0;
+        populations = new();
+        this.optimalCount = optimalCount;
     }
 
 
@@ -89,17 +101,4 @@ public class Residential : IInfo, IPersistence<Residential, PopulationCollection
         return data;
     }
 
-    /// <summary>
-    /// 获取保存数据字典
-    /// </summary>
-    public Dictionary<string, object> GetSaveData()
-    {
-        throw new NotImplementedException();
-    }
-
-
-    public static Residential LoadSaveData(Dictionary<string, object> data, PopulationCollection? context = default)
-    {
-        throw new NotImplementedException();
-    }
 }

@@ -29,6 +29,11 @@ public static partial class DomainModelJsonPersistence
 			return Convert.ToInt32(value, CultureInfo.InvariantCulture);
 		}
 
+		if (isSupportedGodotValueType(actualType))
+		{
+			return serializeGodotValue(value, actualType);
+		}
+
 		if (isValueTupleType(actualType))
 		{
 			Type[] tupleElementTypes = getValueTupleElementTypes(actualType);
@@ -59,6 +64,25 @@ public static partial class DomainModelJsonPersistence
 			return enumerable.Cast<object>()
 				.Select(item => serializeValue(item, listElementType))
 				.ToList();
+		}
+
+		if (tryGetSetElementType(actualType, out Type setElementType))
+		{
+			if (value is not IEnumerable enumerable)
+			{
+				throw new InvalidOperationException($"类型 {actualType.FullName} 不是可枚举集合");
+			}
+
+			List<object> items = enumerable
+				.Cast<object>()
+				.Select(item => serializeValue(item, setElementType))
+				.ToList();
+
+			return new Dictionary<string, object>
+			{
+				{ setTag, true },
+				{ setItems, items }
+			};
 		}
 
 		if (tryGetDictionaryTypes(actualType, out Type keyType, out Type valueType))
@@ -112,6 +136,11 @@ public static partial class DomainModelJsonPersistence
 			return Enum.ToObject(targetType, enumId);
 		}
 
+		if (isSupportedGodotValueType(targetType))
+		{
+			return deserializeGodotValue(rawValue, targetType);
+		}
+
 		if (isValueTupleType(targetType))
 		{
 			if (rawValue is not Dictionary<string, object> tupleNode)
@@ -163,6 +192,37 @@ public static partial class DomainModelJsonPersistence
 				.ToList()
 				.ForEach(item => list.Add(item));
 			return list;
+		}
+
+		if (tryGetSetElementType(targetType, out Type setElementType))
+		{
+			if (rawValue is not Dictionary<string, object> setNode)
+			{
+				throw new InvalidOperationException($"类型 {targetType.FullName} 的数据不是对象");
+			}
+
+			if (!setNode.ContainsKey(setTag) || !setNode.ContainsKey(setItems))
+			{
+				throw new InvalidOperationException($"集合数据结构非法: {targetType.FullName}");
+			}
+
+			if (setNode[setItems] is not IList rawSetItems)
+			{
+				throw new InvalidOperationException($"集合项结构非法: {targetType.FullName}");
+			}
+
+			object set = createSet(targetType, setElementType);
+			Type setType = typeof(ISet<>).MakeGenericType(setElementType);
+			System.Reflection.MethodInfo addMethod = setType.GetMethod("Add")
+				?? throw new InvalidOperationException($"集合缺少 Add 方法: {targetType.FullName}");
+
+			rawSetItems
+				.Cast<object>()
+				.Select(item => deserializeValue(item, setElementType))
+				.ToList()
+				.ForEach(item => addMethod.Invoke(set, new[] { item }));
+
+			return set;
 		}
 
 		if (tryGetDictionaryTypes(targetType, out Type keyType, out Type valueType))

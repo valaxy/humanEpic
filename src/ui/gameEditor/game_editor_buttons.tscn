@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://src/ui/gameEditor/GameEditorButtons.cs" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="2_button"]
-[ext_resource type="PackedScene" path="res://src/ui/entryButtons/entry_buttons.tscn" id="3_top_right_tools"]
 [ext_resource type="PackedScene" path="res://src/ui/editor/overlayEditor/overlay_editor.tscn" id="4_overlay_editor"]
 [ext_resource type="PackedScene" path="res://src/ui/editor/surfaceEditor/surface_editor_bar.tscn" id="5_surface_editor"]
 [ext_resource type="PackedScene" path="res://src/ui/editor/buildingEditor/building_editor_bar.tscn" id="6_building_editor"]
@@ -18,9 +17,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-
-[node name="TopRightTools" parent="Control" instance=ExtResource("3_top_right_tools")]
-layout_mode = 1
 
 [node name="RightBottomContainer" type="HBoxContainer" parent="Control"]
 unique_name_in_owner = true

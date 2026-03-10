@@ -4,7 +4,7 @@ using Godot;
 /// 全局保存触发按钮。
 /// </summary>
 [GlobalClass]
-public partial class SaveButtonUI : EditorButton
+public partial class SaveButton : EditorButton
 {
 	// 顶级领域模型引用。
 	private GameWorld world = null!;

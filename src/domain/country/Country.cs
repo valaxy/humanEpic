@@ -10,6 +10,12 @@ public class Country : IIdModel
 	private static readonly IdAllocator idAllocator = new();
 	private int id;
 
+	[PersistField]
+	private string name = default!;
+
+	[PersistField]
+	private Color color = default!;
+
 	/// <summary>
 	/// 国家唯一标识
 	/// </summary>
@@ -23,21 +29,12 @@ public class Country : IIdModel
 	/// <summary>
 	/// 国家名称
 	/// </summary>
-	[PersistProperty]
-	public string Name { get; private set; } = default!;
+	public string Name => name;
 
 	/// <summary>
 	/// 国家颜色
 	/// </summary>
-	public Color Color { get; private set; }
-
-	// 国家颜色（持久化字符串）。
-	[PersistProperty("Color")]
-	private string colorHtml
-	{
-		get => Color.ToHtml();
-		set => Color = Color.FromHtml(value);
-	}
+	public Color Color => color;
 
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
@@ -53,8 +50,8 @@ public class Country : IIdModel
 	/// <param name="color">国家颜色</param>
 	public Country(string name, Color color)
 	{
-		Name = name;
-		Color = color;
+		this.name = name;
+		this.color = color;
 		id = idAllocator.AllocateId();
 	}
 }

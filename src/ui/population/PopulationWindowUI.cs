@@ -8,8 +8,12 @@ using Godot;
 [GlobalClass]
 public partial class PopulationWindowUI : CanvasLayer
 {
-	// 人口入口按钮。
-	private Button entryButton = null!;
+	/// <summary>
+	/// 人口窗口显隐变化时发出。
+	/// </summary>
+	[Signal]
+	public delegate void WindowVisibilityChangedEventHandler(bool visible);
+
 	// 可拖拽窗口。
 	private DraggableWindow draggableWindow = null!;
 	// 人口列表。
@@ -26,14 +30,12 @@ public partial class PopulationWindowUI : CanvasLayer
 	/// </summary>
 	public override void _Ready()
 	{
-		entryButton = GetNode<Button>("%PopulationEntryButton");
 		draggableWindow = GetNode<DraggableWindow>("%PopulationWindow");
 		populationList = GetNode<ItemList>("%PopulationList");
 		detailContentBlock = GetNode<InfoContentBlock>("%PopulationDetailContent");
 
 		draggableWindow.SetTitle("人口列表");
 		draggableWindow.Visible = false;
-		entryButton.Pressed += onEntryButtonPressed;
 		draggableWindow.CloseRequested += onCloseRequested;
 		populationList.ItemSelected += onPopulationSelected;
 	}
@@ -43,21 +45,49 @@ public partial class PopulationWindowUI : CanvasLayer
 	/// </summary>
 	public void Setup(GameWorld world)
 	{
-		populations = world.Populations;
+		SetupFromPopulations(world.Populations);
+	}
+
+	/// <summary>
+	/// 直接绑定人口集合（用于演示或独立场景）。
+	/// </summary>
+	public void SetupFromPopulations(PopulationCollection populationCollection)
+	{
+		populations = populationCollection;
 		refreshPopulationList();
 	}
 
-	// 入口按钮点击。
-	private void onEntryButtonPressed()
+	/// <summary>
+	/// 当前窗口是否可见。
+	/// </summary>
+	public bool IsWindowVisible => draggableWindow.Visible;
+
+	/// <summary>
+	/// 设置窗口显示状态。
+	/// </summary>
+	public void SetWindowVisible(bool visible)
 	{
-		refreshPopulationList();
-		draggableWindow.Visible = true;
+		if (visible)
+		{
+			refreshPopulationList();
+		}
+
+		draggableWindow.Visible = visible;
+		EmitSignal(SignalName.WindowVisibilityChanged, visible);
+	}
+
+	/// <summary>
+	/// 打开人口窗口。
+	/// </summary>
+	public void OpenWindow()
+	{
+		SetWindowVisible(true);
 	}
 
 	// 窗口关闭。
 	private void onCloseRequested()
 	{
-		draggableWindow.Visible = false;
+		SetWindowVisible(false);
 	}
 
 	// 人口列表选中。

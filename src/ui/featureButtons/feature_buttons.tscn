@@ -1,13 +1,14 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/gameEditor/GameEditorTopRightTools.cs" id="1_script"]
-[ext_resource type="PackedScene" path="res://src/ui/entryButtons/grid_helper_button.tscn" id="2_grid_button"]
-[ext_resource type="PackedScene" path="res://src/ui/entryButtons/save_button_ui.tscn" id="3_save_button"]
 [ext_resource type="PackedScene" path="res://src/ui/base/editor_button.tscn" id="4_editor_button"]
 [ext_resource type="PackedScene" path="res://src/ui/worldLogicUI/world_logic_status_ui.tscn" id="5_world_logic_ui"]
 [ext_resource type="PackedScene" path="res://src/ui/encyclopedia/encyclopedia_panel_ui.tscn" id="6_encyclopedia_ui"]
+[ext_resource type="PackedScene" path="res://src/ui/population/population_window_ui.tscn" id="7_population_window_ui"]
+[ext_resource type="Script" path="res://src/ui/featureButtons/FeatureButtons.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/ui/featureButtons/GridHelperButton.cs" id="8_grid_script"]
+[ext_resource type="Script" path="res://src/ui/featureButtons/SaveButton.cs" id="9_save_script"]
 
-[node name="TopRightTools" type="VBoxContainer"]
+[node name="FeatureButtons" type="VBoxContainer"]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -24,11 +25,21 @@ layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 2
 
-[node name="GridButton" parent="RightTopContainer" instance=ExtResource("2_grid_button")]
+[node name="GridButton" type="Button" parent="RightTopContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(80, 40)
+text = "网格"
+script = ExtResource("8_grid_script")
 
-[node name="SaveButton" parent="RightTopContainer" instance=ExtResource("3_save_button")]
+[node name="SaveButton" type="Button" parent="RightTopContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(80, 40)
+text = "保存地图"
+script = ExtResource("9_save_script")
+
+[node name="PopulationButton" parent="RightTopContainer" instance=ExtResource("4_editor_button")]
+layout_mode = 2
+text = "人口"
 
 [node name="WorldLogicButton" parent="RightTopContainer" instance=ExtResource("4_editor_button")]
 layout_mode = 2
@@ -45,3 +56,6 @@ visible = false
 [node name="EncyclopediaPanelUI" parent="." instance=ExtResource("6_encyclopedia_ui")]
 layout_mode = 2
 visible = false
+
+[node name="PopulationWindowUI" parent="." instance=ExtResource("7_population_window_ui")]
+layout_mode = 2

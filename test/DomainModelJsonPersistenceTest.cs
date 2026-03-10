@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using GdUnit4;
+using Godot;
 
 [TestSuite]
 public class DomainModelJsonPersistenceTest
@@ -112,6 +113,43 @@ public class DomainModelJsonPersistenceTest
 		{
 			tupleValue = (new NotPersistableModel(), value);
 		}
+	}
+
+	[Persistable]
+	private class GodotValueAndSetModel
+	{
+		[PersistField]
+		private Color color;
+
+		[PersistField]
+		private Vector2 position;
+
+		[PersistField]
+		private Vector2I cell;
+
+		[PersistField]
+		private HashSet<int> tags;
+
+		public GodotValueAndSetModel()
+		{
+			color = new Color(0, 0, 0, 1);
+			position = Vector2.Zero;
+			cell = Vector2I.Zero;
+			tags = new HashSet<int>();
+		}
+
+		public GodotValueAndSetModel(Color color, Vector2 position, Vector2I cell, HashSet<int> tags)
+		{
+			this.color = color;
+			this.position = position;
+			this.cell = cell;
+			this.tags = tags;
+		}
+
+		public Color Color => color;
+		public Vector2 Position => position;
+		public Vector2I Cell => cell;
+		public HashSet<int> Tags => tags;
 	}
 
 	[TestCase]
@@ -260,6 +298,40 @@ public class DomainModelJsonPersistenceTest
 		if (!hasThrown)
 		{
 			throw new Exception("值元组子类型不可持久化时应抛出异常");
+		}
+	}
+
+	[TestCase]
+	public void SaveAndLoad_GodotValueTypesAndHashSet_ShouldRoundTrip()
+	{
+		GodotValueAndSetModel model = new GodotValueAndSetModel(
+			new Color(0.12f, 0.34f, 0.56f, 0.78f),
+			new Vector2(12.5f, -3.25f),
+			new Vector2I(8, 9),
+			new HashSet<int> { 2, 5, 7 }
+		);
+
+		string json = DomainModelJsonPersistence.Save(model);
+		GodotValueAndSetModel loaded = DomainModelJsonPersistence.Load<GodotValueAndSetModel>(json);
+
+		if (!loaded.Color.IsEqualApprox(model.Color))
+		{
+			throw new Exception("Color 反序列化结果不正确");
+		}
+
+		if (!loaded.Position.IsEqualApprox(model.Position))
+		{
+			throw new Exception("Vector2 反序列化结果不正确");
+		}
+
+		if (loaded.Cell != model.Cell)
+		{
+			throw new Exception("Vector2I 反序列化结果不正确");
+		}
+
+		if (!loaded.Tags.SetEquals(model.Tags))
+		{
+			throw new Exception("HashSet 反序列化结果不正确");
 		}
 	}
 }

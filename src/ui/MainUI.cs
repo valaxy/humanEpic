@@ -20,10 +20,10 @@ public partial class MainUI : Node
 	private BuildingInfoUI buildingInfoUi = null!;
 	// 建筑信息总面板。
 	private BuildingInfoPanelUI buildingInfoPanelUi = null!;
+	// 顶层功能按钮区域。
+	private FeatureButtons featureButtons = null!;
 	// 游戏编辑器按钮区域。
 	private GameEditorButtons gameEditorButtons = null!;
-	// 人口窗口 UI。
-	private PopulationWindowUI populationWindowUi = null!;
 
 	public override void _Ready()
 	{
@@ -34,8 +34,8 @@ public partial class MainUI : Node
 		gridInfoUi = GetNode<GridInfoUI>("GridInfoUI");
 		buildingInfoUi = GetNode<BuildingInfoUI>("BuildingInfoUI");
 		buildingInfoPanelUi = GetNode<BuildingInfoPanelUI>("BuildingInfoPanelUI");
+		featureButtons = GetNode<FeatureButtons>("FeatureButtons");
 		gameEditorButtons = GetNode<GameEditorButtons>("GameEditorButtons");
-		populationWindowUi = GetNode<PopulationWindowUI>("PopulationWindowUI");
 	}
 
 	/// <summary>
@@ -45,6 +45,7 @@ public partial class MainUI : Node
 	{
 		zoomUi.Setup(camera, layerManager);
 		timeDisplayUi.Setup(world.TimeSystem);
+		featureButtons.Setup(world, view.GridRender, simulation);
 		gameEditorButtons.Setup(world, view, simulation);
 
 		infoUiLeft.SetPositionOffset(0.0f);
@@ -53,7 +54,6 @@ public partial class MainUI : Node
 		buildingInfoUi.Setup(world.Buildings, infoUiLeft);
 		buildingInfoUi.BindSelection(selection);
 		buildingInfoPanelUi.Setup(world.Buildings, selection);
-		populationWindowUi.Setup(world);
 
 		selection.CellHovered += gridInfoUi.OnCellHovered;
 		selection.CellHoverCleared += gridInfoUi.OnCellHoverCleared;

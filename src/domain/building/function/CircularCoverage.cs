@@ -6,16 +6,28 @@ using Vector2 = Godot.Vector2;
 /// <summary>
 /// 通用的圆形范围类，用于表示圆形的影响范围
 /// </summary>
+[Persistable]
 public class CircularCoverage
 {
+	// 范围半径。
+	[PersistField]
+	private float radius;
+
 	/// <summary>
 	/// 范围半径
 	/// </summary>
-	public float Radius { get; }
+	public float Radius => radius;
+
+	/// <summary>
+	/// 无参构造函数，供反持久化调用。
+	/// </summary>
+	private CircularCoverage()
+	{
+	}
 
 	public CircularCoverage(float radius)
 	{
-		Radius = radius;
+		this.radius = radius;
 	}
 
 	/// <summary>

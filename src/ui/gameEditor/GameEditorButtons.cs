@@ -6,8 +6,6 @@ using Godot;
 [GlobalClass]
 public partial class GameEditorButtons : CanvasLayer
 {
-	// 右上角工具组。
-	private GameEditorTopRightTools topRightTools = null!;
 	// 地表编辑开关按钮。
 	private EditorButton terrainButton = null!;
 	// 覆盖物编辑开关按钮。
@@ -35,7 +33,6 @@ public partial class GameEditorButtons : CanvasLayer
 
 	public override void _Ready()
 	{
-		topRightTools = GetNode<GameEditorTopRightTools>("Control/TopRightTools");
 		rightBottomContainer = GetNode<HBoxContainer>("Control/RightBottomContainer");
 		terrainButton = GetNode<EditorButton>("Control/RightBottomContainer/TerrainButton");
 		overlayButton = GetNode<EditorButton>("Control/RightBottomContainer/ToggleButton");
@@ -59,7 +56,6 @@ public partial class GameEditorButtons : CanvasLayer
 	{
 		groundEditor = view.GroundEditor;
 		Brush brush = groundEditor.GetBrush();
-		topRightTools.Setup(world, view.GridRender, simulation);
 		surfaceEditor.Setup(world.Ground, view.LayerManager, groundEditor, brush);
 		overlayEditor.Setup(world.Ground, view.LayerManager, groundEditor, brush);
 		buildingEditor.Setup(world, view, groundEditor, brush);

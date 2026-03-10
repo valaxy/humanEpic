@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Godot;
 
 /// <summary>
 /// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
@@ -111,6 +112,28 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		elementType = listInterface.GetGenericArguments()[0];
+		return true;
+	}
+
+	// 尝试获取集合元素类型（HashSet/ISet）。
+	private static bool tryGetSetElementType(Type type, out Type elementType)
+	{
+		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>))
+		{
+			elementType = type.GetGenericArguments()[0];
+			return true;
+		}
+
+		Type? setInterface = type.GetInterfaces()
+			.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ISet<>));
+
+		if (setInterface == null)
+		{
+			elementType = typeof(object);
+			return false;
+		}
+
+		elementType = setInterface.GetGenericArguments()[0];
 		return true;
 	}
 
@@ -248,5 +271,126 @@ public static partial class DomainModelJsonPersistence
 		object? dictionary = Activator.CreateInstance(declaredDictType);
 		return dictionary as IDictionary
 			?? throw new InvalidOperationException($"无法创建字典实例: {declaredDictType.FullName}");
+	}
+
+	// 创建集合实例。
+	private static object createSet(Type declaredSetType, Type elementType)
+	{
+		if (declaredSetType.IsInterface || declaredSetType.IsAbstract)
+		{
+			return Activator.CreateInstance(typeof(HashSet<>).MakeGenericType(elementType))
+				?? throw new InvalidOperationException($"无法创建集合实例: {declaredSetType.FullName}");
+		}
+
+		return Activator.CreateInstance(declaredSetType)
+			?? throw new InvalidOperationException($"无法创建集合实例: {declaredSetType.FullName}");
+	}
+
+	// 判断是否为受支持的 Godot 值类型。
+	private static bool isSupportedGodotValueType(Type type)
+	{
+		return type == typeof(Color)
+			|| type == typeof(Vector2)
+			|| type == typeof(Vector2I);
+	}
+
+	// 序列化 Godot 值类型。
+	private static Dictionary<string, object> serializeGodotValue(object value, Type type)
+	{
+		if (type == typeof(Color))
+		{
+			Color color = (Color)value;
+			return new Dictionary<string, object>
+			{
+				{ godotTag, true },
+				{ godotType, nameof(Color) },
+				{ godotData, new Dictionary<string, object>
+					{
+						{ "r", color.R },
+						{ "g", color.G },
+						{ "b", color.B },
+						{ "a", color.A }
+					}
+				}
+			};
+		}
+
+		if (type == typeof(Vector2))
+		{
+			Vector2 vector = (Vector2)value;
+			return new Dictionary<string, object>
+			{
+				{ godotTag, true },
+				{ godotType, nameof(Vector2) },
+				{ godotData, new Dictionary<string, object>
+					{
+						{ "x", vector.X },
+						{ "y", vector.Y }
+					}
+				}
+			};
+		}
+
+		if (type == typeof(Vector2I))
+		{
+			Vector2I vector = (Vector2I)value;
+			return new Dictionary<string, object>
+			{
+				{ godotTag, true },
+				{ godotType, nameof(Vector2I) },
+				{ godotData, new Dictionary<string, object>
+					{
+						{ "x", vector.X },
+						{ "y", vector.Y }
+					}
+				}
+			};
+		}
+
+		throw new InvalidOperationException($"不支持的 Godot 值类型: {type.FullName}");
+	}
+
+	// 反序列化 Godot 值类型。
+	private static object deserializeGodotValue(object rawValue, Type targetType)
+	{
+		if (rawValue is not Dictionary<string, object> node)
+		{
+			throw new InvalidOperationException($"Godot 值类型数据结构非法: {targetType.FullName}");
+		}
+
+		if (!node.ContainsKey(godotTag) || !node.ContainsKey(godotType) || !node.ContainsKey(godotData))
+		{
+			throw new InvalidOperationException($"Godot 值类型缺少必要键: {targetType.FullName}");
+		}
+
+		if (node[godotData] is not Dictionary<string, object> data)
+		{
+			throw new InvalidOperationException($"Godot 值类型 data 结构非法: {targetType.FullName}");
+		}
+
+		if (targetType == typeof(Color))
+		{
+			float r = Convert.ToSingle(data["r"], CultureInfo.InvariantCulture);
+			float g = Convert.ToSingle(data["g"], CultureInfo.InvariantCulture);
+			float b = Convert.ToSingle(data["b"], CultureInfo.InvariantCulture);
+			float a = Convert.ToSingle(data["a"], CultureInfo.InvariantCulture);
+			return new Color(r, g, b, a);
+		}
+
+		if (targetType == typeof(Vector2))
+		{
+			float x = Convert.ToSingle(data["x"], CultureInfo.InvariantCulture);
+			float y = Convert.ToSingle(data["y"], CultureInfo.InvariantCulture);
+			return new Vector2(x, y);
+		}
+
+		if (targetType == typeof(Vector2I))
+		{
+			int x = Convert.ToInt32(data["x"], CultureInfo.InvariantCulture);
+			int y = Convert.ToInt32(data["y"], CultureInfo.InvariantCulture);
+			return new Vector2I(x, y);
+		}
+
+		throw new InvalidOperationException($"不支持的 Godot 值类型: {targetType.FullName}");
 	}
 }

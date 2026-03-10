@@ -18,16 +18,36 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	private GameWorld() { }
 
 	/// <summary>
-	/// 获取世界对象的可持久化数据。
+	/// 获取地图内容的可持久化数据。
+	/// </summary>
+	public Dictionary<string, object> GetMapSaveData()
+	{
+		Dictionary<string, object> saveData = Ground.GetSaveData();
+		saveData["buildings"] = Buildings.GetSaveData();
+		return saveData;
+	}
+
+	/// <summary>
+	/// 获取非地图内容的可持久化数据。
+	/// </summary>
+	public Dictionary<string, object> GetWorldStateSaveData()
+	{
+		return new Dictionary<string, object>
+		{
+			{ "time", TimeSystem.TotalSeconds },
+			{ "countries", DomainModelJsonPersistence.SaveToObject(Countries)["items"] },
+			{ "populations", DomainModelJsonPersistence.SaveToObject(Populations)["items"] }
+		};
+	}
+
+	/// <summary>
+	/// 获取完整世界对象的可持久化数据（兼容旧存档流程）。
 	/// </summary>
 	public Dictionary<string, object> GetSaveData()
 	{
-		Dictionary<string, object> saveData = Ground.GetSaveData();
-		saveData["time"] = TimeSystem.TotalSeconds;
-		saveData["countries"] = DomainModelJsonPersistence.SaveToObject(Countries)["items"];
-		saveData["populations"] = DomainModelJsonPersistence.SaveToObject(Populations)["items"];
-		saveData["buildings"] = Buildings.GetSaveData();
-		return saveData;
+		return GetMapSaveData()
+			.Concat(GetWorldStateSaveData())
+			.ToDictionary(pair => pair.Key, pair => pair.Value);
 	}
 
 
@@ -51,6 +71,18 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 			Buildings = buildings,
 		};
 		return world;
+	}
+
+	/// <summary>
+	/// 通过地图数据与世界状态数据创建并恢复世界对象。
+	/// </summary>
+	public static GameWorld LoadSaveData(Dictionary<string, object> mapData, Dictionary<string, object> worldStateData)
+	{
+		Dictionary<string, object> mergedData = mapData
+			.Concat(worldStateData)
+			.GroupBy(pair => pair.Key)
+			.ToDictionary(group => group.Key, group => group.Last().Value);
+		return LoadSaveData(mergedData);
 	}
 
 	private static CountryCollection loadCountries(Dictionary<string, object> data)

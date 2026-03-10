@@ -11,7 +11,8 @@ using System.Linq;
 /// </summary>
 public class GameWorldInitializer
 {
-    private const string savePath = "res://config/map_config.json";
+    private const string mapSavePath = "res://config/map_content.json";
+    private const string worldStateSavePath = "res://config/world_state.json";
     private const float initialPopulationCurrencyTotal = 100000.0f;
     private static bool hasLoadedFromDisk;
 
@@ -27,21 +28,12 @@ public class GameWorldInitializer
 
         ulong start = Time.GetTicksMsec();
 
-        // 使用godot File API的原因是 res:// 路径的问题
-        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = false,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-        string jsonString = JsonSerializer.Serialize(gameWorld.GetSaveData(), jsonOptions);
-        using FileAccess file = FileAccess.Open(savePath, FileAccess.ModeFlags.Write);
-        if (file == null)
-        {
-            throw new InvalidOperationException($"Failed to open save file at {savePath}: {FileAccess.GetOpenError()}");
-        }
+        Dictionary<string, object> mapData = gameWorld.GetMapSaveData();
+        Dictionary<string, object> worldStateData = gameWorld.GetWorldStateSaveData();
 
-        file.StoreString(jsonString);
-        GD.Print($"Game saved successfully to {savePath}");
+        writeJsonFile(mapSavePath, mapData, false);
+        writeJsonFile(worldStateSavePath, worldStateData, true);
+        GD.Print($"Game saved successfully to {mapSavePath} and {worldStateSavePath}");
         GD.Print($"[Perf] GameWorldInitializer Save took {Time.GetTicksMsec() - start} ms");
     }
 
@@ -62,14 +54,40 @@ public class GameWorldInitializer
         // _ = ProductTemplate.GetTemplates().Count;
 
         // 2. 加载核心数据
-        Dictionary<string, object> data = JsonUtility.LoadDataFromJsonFile(savePath);
-        GameWorld world = GameWorld.LoadSaveData(data);
+        GameWorld world = loadWorldFromFiles();
         ensureColdStart(world);
         // ApplyInitialPopulationCurrency(world.Buildings);
 
         hasLoadedFromDisk = true;
         GD.Print($"[Perf] GameWorldInitializer Load took {Time.GetTicksMsec() - start} ms");
         return world;
+    }
+
+    // 从新结构双文件读取
+    private static GameWorld loadWorldFromFiles()
+    {
+
+        Dictionary<string, object> mapData = JsonUtility.LoadDataFromJsonFile(mapSavePath);
+        Dictionary<string, object> worldStateData = JsonUtility.LoadDataFromJsonFile(worldStateSavePath);
+        return GameWorld.LoadSaveData(mapData, worldStateData);
+    }
+
+    // 使用 Godot File API 写入 JSON，兼容 res:// 路径。
+    private static void writeJsonFile(string filePath, Dictionary<string, object> data, bool writeIndented)
+    {
+        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = writeIndented,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        string jsonString = JsonSerializer.Serialize(data, jsonOptions);
+        using FileAccess file = FileAccess.Open(filePath, FileAccess.ModeFlags.Write);
+        if (file == null)
+        {
+            throw new InvalidOperationException($"Failed to open save file at {filePath}: {FileAccess.GetOpenError()}");
+        }
+
+        file.StoreString(jsonString);
     }
 
 

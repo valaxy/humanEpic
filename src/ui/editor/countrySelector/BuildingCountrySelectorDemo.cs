@@ -17,7 +17,12 @@ public partial class BuildingCountrySelectorDemo : Control
 		countrySelector = GetNode<CountrySelector>("%CountrySelector");
 		statusLabel = GetNode<Label>("%StatusLabel");
 
-		countrySelector.Setup();
+		CountryCollection countries = new CountryCollection();
+		countries.Add(new Country("演示国 A", Colors.OrangeRed));
+		countries.Add(new Country("演示国 B", Colors.SeaGreen));
+		countries.Add(new Country("演示国 C", Colors.DeepSkyBlue));
+
+		countrySelector.Setup(countries);
 		countrySelector.CountrySelected += onCountrySelected;
 
 		onCountrySelected(countrySelector.SelectedCountryId);

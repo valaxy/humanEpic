@@ -7,12 +7,12 @@ using Godot;
 public partial class GridHelperButton : EditorButton
 {
 	// 被控制的网格辅助节点。
-	private Node3D gridNode = null!;
+	private GroundGridHelper gridNode = null!;
 
 	/// <summary>
 	/// 绑定网格辅助节点并同步按钮状态。
 	/// </summary>
-	public void Setup(Node3D targetGridNode)
+	public void Setup(GroundGridHelper targetGridNode)
 	{
 		gridNode = targetGridNode;
 		IsActive = gridNode.Visible;

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Godot;
 
 internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 {
@@ -84,6 +85,12 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 
 	private static string serializeDictionaryKey(object key, Type keyType)
 	{
+		if (keyType == typeof(Vector2I))
+		{
+			Vector2I vectorKey = (Vector2I)key;
+			return $"{vectorKey.X},{vectorKey.Y}";
+		}
+
 		object keyNode = DomainModelJsonPersistence.serializeValue(key, keyType);
 		return Convert.ToString(keyNode, CultureInfo.InvariantCulture)
 			?? throw new InvalidOperationException($"字典键无法转换为字符串: {keyType.FullName}");
@@ -100,6 +107,19 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 		{
 			int enumId = int.Parse(keyText, CultureInfo.InvariantCulture);
 			return Enum.ToObject(keyType, enumId);
+		}
+
+		if (keyType == typeof(Vector2I))
+		{
+			string[] parts = keyText.Split(',');
+			if (parts.Length != 2)
+			{
+				throw new InvalidOperationException($"字典键 Vector2I 格式非法: {targetType.FullName}");
+			}
+
+			int x = int.Parse(parts[0], CultureInfo.InvariantCulture);
+			int y = int.Parse(parts[1], CultureInfo.InvariantCulture);
+			return new Vector2I(x, y);
 		}
 
 		return Convert.ChangeType(keyText, keyType, CultureInfo.InvariantCulture)

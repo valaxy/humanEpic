@@ -50,6 +50,7 @@ public class GameWorldInitializer
     public static GameWorld Load()
     {
         ulong start = Time.GetTicksMsec();
+        GD.Print("[Load] GameWorldInitializer.Load started.");
 
         // 1. 初始化模板数据
         // ConstructionCostParser.Initialize();
@@ -73,9 +74,15 @@ public class GameWorldInitializer
     // 从新结构双文件读取
     private static GameWorld loadWorldFromFiles()
     {
-
+        GD.Print($"[Load] Reading map data from {mapSavePath}");
         Dictionary<string, object> mapData = JsonUtility.LoadDataFromJsonFile(mapSavePath);
+        GD.Print($"[Load] map keys: {string.Join(", ", mapData.Keys.OrderBy(key => key))}");
+
+        GD.Print($"[Load] Reading world state from {worldStateSavePath}");
         Dictionary<string, object> worldStateData = JsonUtility.LoadDataFromJsonFile(worldStateSavePath);
+        GD.Print($"[Load] world state keys: {string.Join(", ", worldStateData.Keys.OrderBy(key => key))}");
+
+        GD.Print("[Load] Merging map/world-state and constructing GameWorld.");
         return GameWorld.LoadSaveData(mapData, worldStateData);
     }
 

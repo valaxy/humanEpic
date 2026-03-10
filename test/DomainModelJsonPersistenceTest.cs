@@ -173,6 +173,25 @@ public class DomainModelJsonPersistenceTest
 	}
 
 	[Persistable]
+	private class Vector2IDictionaryModel
+	{
+		[PersistField]
+		private Dictionary<Vector2I, int> valueByCell;
+
+		public Vector2IDictionaryModel()
+		{
+			valueByCell = new Dictionary<Vector2I, int>();
+		}
+
+		public Vector2IDictionaryModel(Dictionary<Vector2I, int> valueByCell)
+		{
+			this.valueByCell = valueByCell;
+		}
+
+		public Dictionary<Vector2I, int> ValueByCell => valueByCell;
+	}
+
+	[Persistable]
 	private class StaticFieldModel
 	{
 		[PersistField]
@@ -397,6 +416,34 @@ public class DomainModelJsonPersistenceTest
 		if (loaded.Scores[0] != 3 || loaded.Scores[1] != 7 || loaded.Scores[2] != 9)
 		{
 			throw new Exception("SortedSet 排序反序列化结果不正确");
+		}
+	}
+
+	[TestCase]
+	public void SaveAndLoad_DictionaryWithVector2IKey_ShouldRoundTrip()
+	{
+		Vector2IDictionaryModel model = new Vector2IDictionaryModel(new Dictionary<Vector2I, int>
+		{
+			{ new Vector2I(1, 2), 10 },
+			{ new Vector2I(-3, 4), 20 }
+		});
+
+		string json = DomainModelJsonPersistence.Save(model);
+		Vector2IDictionaryModel loaded = DomainModelJsonPersistence.Load<Vector2IDictionaryModel>(json);
+
+		if (loaded.ValueByCell.Count != 2)
+		{
+			throw new Exception("Vector2I 键字典数量反序列化结果不正确");
+		}
+
+		if (!loaded.ValueByCell.ContainsKey(new Vector2I(1, 2)) || loaded.ValueByCell[new Vector2I(1, 2)] != 10)
+		{
+			throw new Exception("Vector2I 键字典第一个条目反序列化结果不正确");
+		}
+
+		if (!loaded.ValueByCell.ContainsKey(new Vector2I(-3, 4)) || loaded.ValueByCell[new Vector2I(-3, 4)] != 20)
+		{
+			throw new Exception("Vector2I 键字典第二个条目反序列化结果不正确");
 		}
 	}
 

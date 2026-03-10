@@ -9,6 +9,12 @@ using Godot;
 public partial class PopulationWindowUI : CanvasLayer
 {
 	/// <summary>
+	/// 打开窗口后全量刷新间隔（秒）。
+	/// </summary>
+	[Export(PropertyHint.Range, "0.1,10,0.1")]
+	public double RefreshIntervalSeconds { get; set; } = 1.0;
+
+	/// <summary>
 	/// 人口窗口显隐变化时发出。
 	/// </summary>
 	[Signal]
@@ -24,6 +30,8 @@ public partial class PopulationWindowUI : CanvasLayer
 	private PopulationCollection populations = null!;
 	// 列表缓存。
 	private List<Population> listCache = new List<Population>();
+	// 定时刷新计时器。
+	private Timer refreshTimer = null!;
 
 	/// <summary>
 	/// 初始化节点与交互。
@@ -62,7 +70,15 @@ public partial class PopulationWindowUI : CanvasLayer
 	{
 		if (visible)
 		{
+			GD.Print($"[UI] PopulationWindow opened. refresh interval={RefreshIntervalSeconds:0.0}s");
+			ensureRefreshTimer();
+			refreshTimer.Start();
 			refreshPopulationList();
+		}
+		else
+		{
+			GD.Print("[UI] PopulationWindow closed. refresh timer removed.");
+			releaseRefreshTimer();
 		}
 
 		draggableWindow.Visible = visible;
@@ -86,6 +102,12 @@ public partial class PopulationWindowUI : CanvasLayer
 	// 人口列表选中。
 	private void onPopulationSelected(long index)
 	{
+		if (populations == null)
+		{
+			detailContentBlock.Clear();
+			return;
+		}
+
 		if (index < 0 || index >= listCache.Count)
 		{
 			detailContentBlock.Clear();
@@ -99,7 +121,16 @@ public partial class PopulationWindowUI : CanvasLayer
 	// 刷新人口列表。
 	private void refreshPopulationList()
 	{
+		if (populations == null)
+		{
+			GD.PushWarning("[UI] PopulationWindow refresh skipped because Setup() has not been called.");
+			populationList.Clear();
+			detailContentBlock.Clear();
+			return;
+		}
+
 		populationList.Clear();
+		long selectedIndex = populationList.GetSelectedItems().FirstOrDefault(-1);
 		listCache = populations.GetAll()
 			.OrderBy(population => population.Id)
 			.ToList();
@@ -115,7 +146,47 @@ public partial class PopulationWindowUI : CanvasLayer
 			return;
 		}
 
-		populationList.Select(0);
-		onPopulationSelected(0);
+		long validIndex = selectedIndex >= 0 && selectedIndex < listCache.Count ? selectedIndex : 0;
+		populationList.Select((int)validIndex);
+		onPopulationSelected(validIndex);
+	}
+
+	// 定时全量刷新。
+	private void onRefreshTimerTimeout()
+	{
+		refreshPopulationList();
+	}
+
+	// 创建并启动定时器。
+	private void ensureRefreshTimer()
+	{
+		if (refreshTimer != null)
+		{
+			refreshTimer.WaitTime = RefreshIntervalSeconds;
+			return;
+		}
+
+		refreshTimer = new Timer
+		{
+			Autostart = false,
+			OneShot = false,
+			WaitTime = RefreshIntervalSeconds
+		};
+		refreshTimer.Timeout += onRefreshTimerTimeout;
+		AddChild(refreshTimer);
+	}
+
+	// 停止并移除定时器。
+	private void releaseRefreshTimer()
+	{
+		if (refreshTimer == null)
+		{
+			return;
+		}
+
+		refreshTimer.Stop();
+		refreshTimer.Timeout -= onRefreshTimerTimeout;
+		refreshTimer.QueueFree();
+		refreshTimer = null!;
 	}
 }

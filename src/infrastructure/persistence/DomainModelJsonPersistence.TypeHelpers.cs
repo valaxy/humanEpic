@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Reflection;
+using Godot;
 
 /// <summary>
 /// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
@@ -250,7 +251,7 @@ public static partial class DomainModelJsonPersistence
 	// 字典键支持基础类型和枚举。
 	internal static bool isSupportedDictionaryKeyType(Type type)
 	{
-		return isBasicType(type) || type.IsEnum;
+		return isBasicType(type) || type.IsEnum || type == typeof(Vector2I);
 	}
 
 	// 创建列表实例。

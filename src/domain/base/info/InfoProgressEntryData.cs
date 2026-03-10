@@ -21,10 +21,12 @@ public class InfoProgressEntryData : InfoEntryData
     /// </summary>
     /// <param name="progress">进度值。</param>
     /// <param name="valueText">展示文本。</param>
-    public InfoProgressEntryData(float progress, string valueText = "")
+    /// <param name="allowProgressGreaterOne">是否允许传入大于 1 的进度值。若允许则会自动截断为 1。</param>
+    public InfoProgressEntryData(float progress, string valueText = "", bool allowProgressGreaterOne = false)
     {
-        Debug.Assert(progress >= 0 && progress <= 1, "Progress value should be between 0 and 1.");
-        Progress = progress;
+        float normalizedProgress = allowProgressGreaterOne ? MathF.Min(progress, 1f) : progress;
+        Debug.Assert(normalizedProgress >= 0 && normalizedProgress <= 1, "Progress value should be between 0 and 1.");
+        Progress = normalizedProgress;
         ValueText = valueText;
     }
 

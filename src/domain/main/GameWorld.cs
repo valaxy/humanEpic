@@ -56,6 +56,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	/// </summary>
 	public static GameWorld LoadSaveData(Dictionary<string, object> data)
 	{
+		GD.Print($"[Load] GameWorld.LoadSaveData started. Root keys: {string.Join(", ", data.Keys.OrderBy(key => key))}");
 		applyRootStaticMembers(data);
 		Ground ground = Ground.LoadSaveData(data);
 		CountryCollection countries = loadCountries(data);
@@ -70,6 +71,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 			Populations = populations,
 			Buildings = buildings,
 		};
+		GD.Print($"[Load] GameWorld ready. countries={countries.Size}, populations={populations.Size}, buildings={buildings.Size}");
 		return world;
 	}
 
@@ -118,14 +120,22 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	private static BuildingCollection loadBuildings(Dictionary<string, object> data, CountryCollection countries, PopulationCollection populations)
 	{
 		object[] entityCollections = { countries, populations };
-
 		if (!data.TryGetValue("buildings", out object? buildingsNodeRaw))
 		{
+			GD.Print("[Load] buildings key not found, using empty BuildingCollection.");
+			return new BuildingCollection();
+		}
+
+		if (buildingsNodeRaw is List<object> listNode && listNode.Count == 0)
+		{
+			GD.Print("[Load] buildings is an empty array (legacy/abnormal shape), fallback to empty BuildingCollection.");
 			return new BuildingCollection();
 		}
 
 		if (buildingsNodeRaw is not Dictionary<string, object> buildingsNode)
 		{
+			string rawType = buildingsNodeRaw?.GetType().FullName ?? "null";
+			GD.PushError($"[Load] buildings node type invalid: {rawType}");
 			throw new System.InvalidOperationException("buildings 结构非法");
 		}
 

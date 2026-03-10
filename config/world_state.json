@@ -1,3 +1,179 @@
 {
-  "time": 182.04993
+  "time": 6.8890586,
+  "countries": {
+    "items": {
+      "__dict": true,
+      "kv": {
+        "1": {
+          "id": 1,
+          "name": "红色国家",
+          "color": {
+            "__godot": true,
+            "type": "Color",
+            "r": 1,
+            "g": 0,
+            "b": 0,
+            "a": 1
+          }
+        },
+        "2": {
+          "id": 2,
+          "name": "蓝色国家",
+          "color": {
+            "__godot": true,
+            "type": "Color",
+            "r": 0.11764706,
+            "g": 0.5647059,
+            "b": 1,
+            "a": 1
+          }
+        }
+      }
+    }
+  },
+  "populations": {
+    "items": {
+      "__dict": true,
+      "kv": {
+        "1": {
+          "id": 1,
+          "name": "青年劳工群体",
+          "count": 120,
+          "labourCount": 0,
+          "demands": {
+            "items": {
+              "__dict": true,
+              "kv": {
+                "0": {
+                  "satisfiedAmount": 16.238987,
+                  "TypeId": 0
+                },
+                "1": {
+                  "satisfiedAmount": 3.272456,
+                  "TypeId": 1
+                },
+                "2": {
+                  "satisfiedAmount": 0,
+                  "TypeId": 2
+                },
+                "3": {
+                  "satisfiedAmount": 5.695975,
+                  "TypeId": 3
+                }
+              }
+            }
+          },
+          "asset": {
+            "amounts": {
+              "__dict": true,
+              "kv": {
+                "1": 0,
+                "5": 0
+              }
+            }
+          },
+          "populationResidential": {
+            "holds": {
+              "__dict": true,
+              "kv": {}
+            },
+            "totalPopCount": 0,
+            "populationId": 1
+          }
+        },
+        "2": {
+          "id": 2,
+          "name": "家庭居民群体",
+          "count": 180,
+          "labourCount": 0,
+          "demands": {
+            "items": {
+              "__dict": true,
+              "kv": {
+                "0": {
+                  "satisfiedAmount": 4.183798,
+                  "TypeId": 0
+                },
+                "1": {
+                  "satisfiedAmount": 0,
+                  "TypeId": 1
+                },
+                "2": {
+                  "satisfiedAmount": 0,
+                  "TypeId": 2
+                },
+                "3": {
+                  "satisfiedAmount": 1.0459495,
+                  "TypeId": 3
+                }
+              }
+            }
+          },
+          "asset": {
+            "amounts": {
+              "__dict": true,
+              "kv": {
+                "0": 55.357555,
+                "1": 0
+              }
+            }
+          },
+          "populationResidential": {
+            "holds": {
+              "__dict": true,
+              "kv": {}
+            },
+            "totalPopCount": 0,
+            "populationId": 2
+          }
+        },
+        "3": {
+          "id": 3,
+          "name": "技术服务群体",
+          "count": 90,
+          "labourCount": 0,
+          "demands": {
+            "items": {
+              "__dict": true,
+              "kv": {
+                "0": {
+                  "satisfiedAmount": 0,
+                  "TypeId": 0
+                },
+                "1": {
+                  "satisfiedAmount": 4.5128417,
+                  "TypeId": 1
+                },
+                "2": {
+                  "satisfiedAmount": 0,
+                  "TypeId": 2
+                },
+                "3": {
+                  "satisfiedAmount": 2.2564209,
+                  "TypeId": 3
+                }
+              }
+            }
+          },
+          "asset": {
+            "amounts": {
+              "__dict": true,
+              "kv": {
+                "0": 27.725496,
+                "5": 0
+              }
+            }
+          },
+          "populationResidential": {
+            "holds": {
+              "__dict": true,
+              "kv": {}
+            },
+            "totalPopCount": 0,
+            "populationId": 3
+          }
+        }
+      }
+    }
+  }
 }

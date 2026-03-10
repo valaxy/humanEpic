@@ -197,7 +197,7 @@ public class Population : IIdModel, IInfo
 			data.AddGroup("资产情况", assetInfo);
 		}
 
-		InfoData demandInfo = Demands.GetInfoData();
+		InfoData demandInfo = Demands.GetInfoData(this);
 		if (!demandInfo.IsEmpty)
 		{
 			data.AddGroup("需求情况", demandInfo);

@@ -53,9 +53,9 @@ public class InfoData
 	/// <summary>
 	/// 添加进度型信息
 	/// </summary>
-	public void AddProgress(string key, float progress, string valueText = "")
+	public void AddProgress(string key, float progress, string valueText = "", bool allowProgressGreaterOne = false)
 	{
-		entries.Add((key, new InfoProgressEntryData(progress, valueText)));
+		entries.Add((key, new InfoProgressEntryData(progress, valueText, allowProgressGreaterOne)));
 	}
 
 	/// <summary>

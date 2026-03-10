@@ -7,7 +7,7 @@ using System.Linq;
 /// 需求集合类，管理多种需求类型及其满足情况
 /// </summary>
 [Persistable]
-public sealed class DemandCollection : DictCollection<DemandType.Enums, Demand>, IInfo
+public sealed class DemandCollection : DictCollection<DemandType.Enums, Demand>, IInfo<Population>
 {
 	protected override DemandType.Enums GetKey(Demand item) => item.TypeId;
 
@@ -37,14 +37,13 @@ public sealed class DemandCollection : DictCollection<DemandType.Enums, Demand>,
 	/// <summary>
 	/// 获取用于 UI 展示的需求满足度数据
 	/// </summary>
-	public InfoData GetInfoData()
+	public InfoData GetInfoData(Population population)
 	{
 		InfoData data = new();
 
 		GetAll()
-			.Select(demand => (label: $"{demand.Name}总满足度", degree: demand.SatisfiedAmount))
 			.ToList()
-			.ForEach(item => data.AddProgress(item.label, item.degree));
+			.ForEach(demand => data.AddProgress($"{demand.Name}总满足度", demand.SatisfiedAmount / population.Count, "", true));
 
 		return data;
 	}

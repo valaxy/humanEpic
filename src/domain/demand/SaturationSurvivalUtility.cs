@@ -6,7 +6,7 @@ using Godot;
 /// 其中 x 为需求度 (0~1)，a 为目标需求度，b 为目标效用比例 (0~1)
 /// TODO 还需要检查一下这个文件的逻辑
 /// </summary>
-public sealed class SaturationSurvivalUtilityFunction : IDemandUtility
+public sealed class SaturationSurvivalUtility : IDemandUtility
 {
 	private readonly float k;
 	private readonly float maxUtility; // 相当于放大效用值
@@ -16,7 +16,7 @@ public sealed class SaturationSurvivalUtilityFunction : IDemandUtility
 	/// </summary>
 	/// <param name="targetDegree">目标需求度 (a)</param>
 	/// <param name="targetUtilityRatio">目标效用比例 (b)，通常在 0 到 1 之间</param>
-	public SaturationSurvivalUtilityFunction(float targetDegree = 1.0f, float targetUtilityRatio = 0.95f, float maxUtility = 1.0f)
+	public SaturationSurvivalUtility(float targetDegree = 1.0f, float targetUtilityRatio = 0.95f, float maxUtility = 1.0f)
 	{
 		float a = Mathf.Max(0.001f, targetDegree);
 		float b = Mathf.Clamp(targetUtilityRatio, 0.001f, 0.999f);
@@ -27,7 +27,7 @@ public sealed class SaturationSurvivalUtilityFunction : IDemandUtility
 	/// <summary>
 	/// 根据需求度计算总效用
 	/// </summary>
-	public float CalculateTotalUtility(float demandDegree)
+	public float GetTotalUtility(float demandDegree)
 	{
 		float x = Mathf.Max(0.0f, demandDegree);
 		// y(x) = 1 - e^(-kx)

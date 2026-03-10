@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using System.Globalization;
 using System.Linq;
 
 
@@ -54,9 +55,7 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 			[
 				CsvColumnDefinition.Enum<DemandType.Enums>("type"),
 				CsvColumnDefinition.String("utility_type"),
-				CsvColumnDefinition.Float("target_degree", 0.001f),
-				CsvColumnDefinition.Float("target_utility_ratio", 0.001f, 0.999f),
-				CsvColumnDefinition.Float("max_utility", 0.0f),
+				CsvColumnDefinition.String("utility_params"),
 				CsvColumnDefinition.Float("daily_decay_base", 0.0f),
 				CsvColumnDefinition.String("name")
 			]);
@@ -80,15 +79,52 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 	private static IDemandUtility createDemandUtility(CsvRow row)
 	{
 		string utilityType = CsvValueUtility.NormalizeKey(row.Get<string>("utility_type"));
+		Dictionary<string, float> parameters = parseUtilityParameters(row.Get<string>("utility_params"));
 		return utilityType switch
 		{
 			"SATURATION_SURVIVAL" =>
-				new SaturationSurvivalUtilityFunction(
-					row.Get<float>("target_degree"),
-					row.Get<float>("target_utility_ratio"),
-					row.Get<float>("max_utility")),
+				new SaturationSurvivalUtility(
+					getUtilityParam(parameters, "target_degree", 1.0f),
+					getUtilityParam(parameters, "target_utility_ratio", 0.95f),
+					getUtilityParam(parameters, "max_utility", 1.0f)),
+			"LOGARITHMIC_DECAY" =>
+				new LogarithmicDecayUtility(
+					getUtilityParam(parameters, "decay_factor", 1.0f),
+					getUtilityParam(parameters, "max_utility", 1.0f)),
 			_ => throw new InvalidOperationException($"Unsupported demand utility type: {utilityType}")
 		};
+	}
+
+	// 解析效用函数参数，格式示例："target_degree=1.0;max_utility=1.0"。
+	private static Dictionary<string, float> parseUtilityParameters(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return new Dictionary<string, float>();
+		}
+
+		return value
+			.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.Select(item => item.Split('=', 2, StringSplitOptions.TrimEntries))
+			.Where(item => item.Length == 2)
+			.Select(item =>
+			{
+				bool success = float.TryParse(item[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float number);
+				if (!success)
+				{
+					throw new InvalidOperationException($"Invalid utility_params value '{item[1]}' for key '{item[0]}'");
+				}
+
+				return (key: CsvValueUtility.NormalizeKey(item[0]), value: number);
+			})
+			.ToDictionary(item => item.key, item => item.value);
+	}
+
+	// 从参数字典中读取值，若不存在则返回默认值。
+	private static float getUtilityParam(Dictionary<string, float> parameters, string key, float defaultValue)
+	{
+		string normalizedKey = CsvValueUtility.NormalizeKey(key);
+		return parameters.ContainsKey(normalizedKey) ? parameters[normalizedKey] : defaultValue;
 	}
 
 	/// <summary>

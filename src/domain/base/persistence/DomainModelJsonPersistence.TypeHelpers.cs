@@ -1,0 +1,222 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+
+/// <summary>
+/// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
+/// </summary>
+public static partial class DomainModelJsonPersistence
+{
+	// 基础类型集合。
+	private static bool isBasicType(Type type)
+	{
+		return type == typeof(string)
+			|| type == typeof(bool)
+			|| type == typeof(byte)
+			|| type == typeof(sbyte)
+			|| type == typeof(short)
+			|| type == typeof(ushort)
+			|| type == typeof(int)
+			|| type == typeof(uint)
+			|| type == typeof(long)
+			|| type == typeof(ulong)
+			|| type == typeof(float)
+			|| type == typeof(double)
+			|| type == typeof(decimal);
+	}
+
+	// 校验类型是否有可持久化标记。
+	private static void ensurePersistableClass(Type type)
+	{
+		if (type.GetCustomAttribute<PersistableAttribute>() == null)
+		{
+			throw new InvalidOperationException($"类型未标记 [Persistable]: {type.FullName}");
+		}
+	}
+
+	// 获取被持久化标记的字段集合。
+	private static List<(FieldInfo field, PersistFieldAttribute attr)> getPersistFields(Type type)
+	{
+		return type
+			.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			.Select(field => (field, attr: field.GetCustomAttribute<PersistFieldAttribute>(true)))
+			.Where(item => item.attr != null)
+			.Select(item => (item.field, item.attr!))
+			.ToList();
+	}
+
+	// 获取被持久化标记的属性集合。
+	private static List<(PropertyInfo property, PersistPropertyAttribute attr)> getPersistProperties(Type type)
+	{
+		return type
+			.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+			.Select(property => (property, attr: property.GetCustomAttribute<PersistPropertyAttribute>(true)))
+			.Where(item => item.attr != null)
+			.Select(item => (item.property, item.attr!))
+			.ToList();
+	}
+
+	// 尝试获取列表元素类型。
+	private static bool tryGetListElementType(Type type, out Type elementType)
+	{
+		if (type.IsArray)
+		{
+			elementType = type.GetElementType()
+				?? throw new InvalidOperationException($"数组元素类型不可用: {type.FullName}");
+			return true;
+		}
+
+		Type? listInterface = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)
+			? type
+			: type.GetInterfaces()
+				.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+
+		if (listInterface == null)
+		{
+			elementType = typeof(object);
+			return false;
+		}
+
+		elementType = listInterface.GetGenericArguments()[0];
+		return true;
+	}
+
+	// 尝试获取字典键值类型。
+	private static bool tryGetDictionaryTypes(Type type, out Type keyType, out Type valueType)
+	{
+		Type? dictInterface = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+			? type
+			: type.GetInterfaces()
+				.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+
+		if (dictInterface == null)
+		{
+			keyType = typeof(object);
+			valueType = typeof(object);
+			return false;
+		}
+
+		Type[] args = dictInterface.GetGenericArguments();
+		keyType = args[0];
+		valueType = args[1];
+		return true;
+	}
+
+	// 字典键支持基础类型和枚举。
+	private static bool isSupportedDictionaryKeyType(Type type)
+	{
+		return isBasicType(type) || type.IsEnum;
+	}
+
+	// 基础类型转换。
+	private static object convertBasic(object value, Type targetType)
+	{
+		if (targetType == typeof(string))
+		{
+			return value.ToString()
+				?? throw new InvalidOperationException("字符串转换失败");
+		}
+
+		if (targetType == typeof(bool))
+		{
+			return Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(byte))
+		{
+			return Convert.ToByte(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(sbyte))
+		{
+			return Convert.ToSByte(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(short))
+		{
+			return Convert.ToInt16(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(ushort))
+		{
+			return Convert.ToUInt16(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(int))
+		{
+			return Convert.ToInt32(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(uint))
+		{
+			return Convert.ToUInt32(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(long))
+		{
+			return Convert.ToInt64(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(ulong))
+		{
+			return Convert.ToUInt64(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(float))
+		{
+			return Convert.ToSingle(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(double))
+		{
+			return Convert.ToDouble(value, CultureInfo.InvariantCulture);
+		}
+
+		if (targetType == typeof(decimal))
+		{
+			return Convert.ToDecimal(value, CultureInfo.InvariantCulture);
+		}
+
+		throw new InvalidOperationException($"不支持的基础类型: {targetType.FullName}");
+	}
+
+	// 创建列表实例。
+	private static IList createList(Type declaredListType, Type elementType)
+	{
+		if (declaredListType.IsArray)
+		{
+			object? arrayList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+			return arrayList as IList
+				?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
+		}
+
+		if (declaredListType.IsInterface || declaredListType.IsAbstract)
+		{
+			object? interfaceList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+			return interfaceList as IList
+				?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
+		}
+
+		object? list = Activator.CreateInstance(declaredListType);
+		return list as IList
+			?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
+	}
+
+	// 创建字典实例。
+	private static IDictionary createDictionary(Type declaredDictType, Type keyType, Type valueType)
+	{
+		if (declaredDictType.IsInterface || declaredDictType.IsAbstract)
+		{
+			object? interfaceDict = Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(keyType, valueType));
+			return interfaceDict as IDictionary
+				?? throw new InvalidOperationException($"无法创建字典实例: {declaredDictType.FullName}");
+		}
+
+		object? dictionary = Activator.CreateInstance(declaredDictType);
+		return dictionary as IDictionary
+			?? throw new InvalidOperationException($"无法创建字典实例: {declaredDictType.FullName}");
+	}
+}

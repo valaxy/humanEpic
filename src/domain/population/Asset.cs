@@ -10,13 +10,13 @@ public class Asset : IInfo
 {
 	// 产品数量映射。
 	[PersistField]
-	private Dictionary<ProductType.Enums, float> amounts;
+	private Dictionary<ProductType.Enums, float> amounts = default!;
 
 
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
 	/// </summary>
-	public Asset() : this(new())
+	private Asset()
 	{
 	}
 

@@ -1,5 +1,5 @@
-type         ,utility_type        ,target_degree,target_utility_ratio,max_utility,daily_decay_base,name
-FOOD         ,SATURATION_SURVIVAL ,1.0          ,0.95                ,1.0        ,0.05            ,食物
-ENTERTAINMENT,SATURATION_SURVIVAL ,1.0          ,0.95                ,1.0        ,0.03            ,娱乐
-EDUCATION    ,SATURATION_SURVIVAL ,1.0          ,0.95                ,1.0        ,0.02            ,教育
-SPIRITUAL    ,SATURATION_SURVIVAL ,1.0          ,0.95                ,1.0        ,0.02            ,精神
+type          ,utility_type        ,utility_params                                              ,daily_decay_base, name
+FOOD          ,LOGARITHMIC_DECAY   ,decay_factor=1.0;max_utility=1.0                            ,0.05            , 食物
+ENTERTAINMENT ,LOGARITHMIC_DECAY   ,decay_factor=0.8;max_utility=1.0                            ,0.03            , 娱乐
+EDUCATION     ,SATURATION_SURVIVAL ,target_degree=1.0;target_utility_ratio=0.95;max_utility=1.0 ,0.02            , 教育
+SPIRITUAL     ,SATURATION_SURVIVAL ,target_degree=1.0;target_utility_ratio=0.95;max_utility=1.0 ,0.02            , 精神

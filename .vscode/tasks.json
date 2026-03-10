@@ -18,6 +18,39 @@
                 "clear": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "测试: GdUnit4 运行并生成报告",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                ".\\scripts\\run-gdunit-tests.ps1"
+            ],
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "测试: 一键刷新并运行 GdUnit4",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Godot: 主动触发资源刷新",
+                "测试: GdUnit4 运行并生成报告"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }

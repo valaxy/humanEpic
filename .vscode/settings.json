@@ -13,5 +13,6 @@
         "**/*.csv.import": true,
         "**/*.translation": true,
     },
+    "dotnet-test-explorer.runSettingsPath": ".runsettings",
     "chat.agent.maxRequests": 90,
 }

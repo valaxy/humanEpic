@@ -18,24 +18,30 @@ public partial class LabourMarketTableUI : ReusableDataTable
 			.Select(jobType =>
 			{
 				JobTemplate template = JobTemplate.GetTemplate(jobType);
-				float wage = labourMarket.JobPrices.Get(jobType);
+				float wage = labourMarket.GetPrice(jobType);
+				float demand = labourMarket.GetDemand(jobType);
+				float supply = labourMarket.GetSupply(jobType);
 				return new List<string>
 				{
 					template.Name,
-					$"{wage:0.00}"
+					$"{wage:0.00}",
+					$"{demand:0.00}",
+					$"{supply:0.00}"
 				};
 			})
 			.ToList();
 
-		List<string> headers = ["职业", "工资"];
+		List<string> headers = ["职业", "价格", "需求量", "供应量"];
 		List<DataTextAlignment> alignments =
 		[
 			DataTextAlignment.Left,
+			DataTextAlignment.Right,
+			DataTextAlignment.Right,
 			DataTextAlignment.Right
 		];
 
-		DataSource source = DataSource.CreateTable("职业工资（日）", headers, rows);
-		DataTable table = DataTable.Create("职业工资（日）", alignments, alignments, sortableColumns: [0, 1]);
+		DataSource source = DataSource.CreateTable("劳动力市场", headers, rows);
+		DataTable table = DataTable.Create("劳动力市场", alignments, alignments, sortableColumns: [0, 1, 2, 3]);
 		Render(source, table);
 	}
 }

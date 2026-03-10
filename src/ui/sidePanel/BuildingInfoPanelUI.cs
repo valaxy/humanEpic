@@ -10,12 +10,12 @@ using System.Linq;
 public partial class BuildingInfoPanelUI : CanvasLayer
 {
 	// 产品市场表场景。
-	private static readonly PackedScene productMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/product_market_table_ui.tscn");
+	private static readonly PackedScene productMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/marketTable/product_market_table_ui.tscn");
 	// 产品市场历史图场景。
-	private static readonly PackedScene productMarketHistoryChartScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/product_market_history_chart_ui.tscn");
+	private static readonly PackedScene productMarketHistoryChartScene = GD.Load<PackedScene>("res://src/ui/marketUI/priceHistory/product_market_history_chart_ui.tscn");
 
 	// 劳动力市场表场景。
-	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/components/labour_market_table_ui.tscn");
+	private static readonly PackedScene labourMarketTableScene = GD.Load<PackedScene>("res://src/ui/marketUI/marketTable/labour_market_table_ui.tscn");
 
 	// 通用侧边栏容器。
 	private SidePanel sidePanel = null!;
@@ -145,8 +145,8 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 			activeProductMarket = building.Market.ProductMarket;
 			activeLabourMarket = building.Market.LabourMarket;
 			isMarketBound = true;
-			activeProductMarket.MarketChanged += onProductMarketChanged;
-			activeLabourMarket.LabourMarketChanged += onLabourMarketChanged;
+			activeProductMarket.Changed += onProductMarketChanged;
+			activeLabourMarket.Changed += onLabourMarketChanged;
 
 			refreshProductMarketSection();
 
@@ -371,8 +371,8 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 			return;
 		}
 
-		activeProductMarket.MarketChanged -= onProductMarketChanged;
-		activeLabourMarket.LabourMarketChanged -= onLabourMarketChanged;
+		activeProductMarket.Changed -= onProductMarketChanged;
+		activeLabourMarket.Changed -= onLabourMarketChanged;
 		isMarketBound = false;
 	}
 

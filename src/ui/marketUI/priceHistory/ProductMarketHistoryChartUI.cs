@@ -33,7 +33,7 @@ public partial class ProductMarketHistoryChartUI : LineChart
 			.Select((productType, index) => DataSeries.Create(
 				ProductTemplate.GetTemplate(productType).Name,
 				chartColors[index % chartColors.Count].ToHtml(),
-				snapshots.Select(snapshot => snapshot.Prices.ContainsKey(productType) ? snapshot.Prices[productType] : 0.0f).ToList()))
+				snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList()))
 			.ToList();
 
 		DataSource source = DataSource.CreateLineChart("产品价格历史（dt）", xLabels, seriesList);
@@ -50,9 +50,17 @@ public partial class ProductMarketHistoryChartUI : LineChart
 		DataSeries series = DataSeries.Create(
 			ProductTemplate.GetTemplate(productType).Name,
 			chartColors[((int)productType) % chartColors.Count].ToHtml(),
-			snapshots.Select(snapshot => snapshot.Prices.ContainsKey(productType) ? snapshot.Prices[productType] : 0.0f).ToList());
+			snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList());
 
 		DataSource source = DataSource.CreateLineChart($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
 		Render(source);
+	}
+
+	// 获取快照中某商品的价格。
+	private static float getSnapshotPrice(PriceHistorySnapshot<ProductType.Enums> snapshot, ProductType.Enums productType)
+	{
+		return snapshot.Prices.TryGetValue(productType, out float price)
+			? price
+			: 0.0f;
 	}
 }

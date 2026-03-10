@@ -38,10 +38,10 @@ public abstract class Side
     /// </summary>
     public void AddOrder(Order order)
     {
-        Debug.Assert(!hasOrders.ContainsKey(order.Agent.AgentId), "同一个Agent只能登记一个订单。");
+        Debug.Assert(!hasOrders.ContainsKey(order.AgentId), "同一个Agent只能登记一个订单。");
 
         orders.Add(order);
-        hasOrders[order.Agent.AgentId] = true;
+        hasOrders[order.AgentId] = true;
     }
 
 
@@ -72,7 +72,7 @@ public abstract class Side
     {
         if (!hasOrders.ContainsKey(agent.AgentId)) { return; }
 
-        Order? orderToRemove = orders.FirstOrDefault(order => order.Agent.AgentId == agent.AgentId);
+        Order? orderToRemove = orders.FirstOrDefault(order => order.AgentId == agent.AgentId);
         if (orderToRemove != null)
         {
             orders.Remove(orderToRemove);

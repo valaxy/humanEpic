@@ -4,6 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 卖盘订单簿侧。
 /// </summary>
+[Persistable]
 public sealed class SellSide : Side
 {
     /// <summary>

@@ -33,10 +33,18 @@ public partial class LabourMarketHistoryChartUI : LineChart
 			.Select((jobType, index) => DataSeries.Create(
 				JobTemplate.GetTemplate(jobType).Name,
 				chartColors[index % chartColors.Count].ToHtml(),
-				snapshots.Select(snapshot => snapshot.Prices.ContainsKey(jobType) ? snapshot.Prices[jobType] : 0.0f).ToList()))
+				snapshots.Select(snapshot => getSnapshotPrice(snapshot, jobType)).ToList()))
 			.ToList();
 
 		DataSource source = DataSource.CreateLineChart("劳动力价格历史（dt）", xLabels, seriesList);
 		Render(source);
+	}
+
+	// 获取快照中某职业的价格。
+	private static float getSnapshotPrice(PriceHistorySnapshot<JobType.Enums> snapshot, JobType.Enums jobType)
+	{
+		return snapshot.Prices.TryGetValue(jobType, out float price)
+			? price
+			: 0.0f;
 	}
 }

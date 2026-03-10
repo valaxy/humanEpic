@@ -64,9 +64,9 @@ public partial class ProductMarketTableUI : ReusableDataTable
 			.Select(type =>
 			{
 				ProductTemplate template = ProductTemplate.GetTemplate(type);
-				float demandAmount = market.ConsumerDemands.Get(type) + market.IndustryDemands.Get(type);
-				float outputAmount = market.Supplies.Get(type);
-				float price = market.Prices.Get(type);
+				float demandAmount = market.GetDemand(type);
+				float outputAmount = market.GetSupply(type);
+				float price = market.GetPrice(type);
 				return (type, new List<string>
 				{
 					template.Name,

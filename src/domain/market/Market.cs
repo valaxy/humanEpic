@@ -1,14 +1,21 @@
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 /// <summary>
 /// 市场聚合基类，负责汇总多个商品或职业细分市场。
 /// </summary>
 /// <typeparam name="TItem">细分市场键类型（如商品类型、职业类型）。</typeparam>
-public abstract class Market<TItem> where TItem : notnull
+public abstract class Market<TItem> where TItem : struct, Enum
 {
     // 细分市场集合。
     private readonly IReadOnlyDictionary<TItem, ItemMarket> itemMarkets;
+    private readonly PriceHistory<TItem> priceHistory = new();
+
+    /// <summary>
+    /// 历史价格
+    /// </summary>
+    public PriceHistory<TItem> PriceHistory => priceHistory;
 
     /// <summary>
     /// 初始化市场聚合器。
@@ -24,17 +31,17 @@ public abstract class Market<TItem> where TItem : notnull
     /// <summary>
     /// 新增买单。
     /// </summary>
-    public void PlaceBuyOrder(TItem itemType, float price, int quantity, IAgent agent)
+    public void PlaceBuyOrder(TItem itemType, float price, int quantity, int agentId)
     {
-        itemMarkets[itemType].PlaceBuyOrder(price, quantity, agent);
+        itemMarkets[itemType].PlaceBuyOrder(price, quantity, agentId);
     }
 
     /// <summary>
     /// 新增卖单。
     /// </summary>
-    public void PlaceSellOrder(TItem itemType, float price, int quantity, IAgent agent)
+    public void PlaceSellOrder(TItem itemType, float price, int quantity, int agentId)
     {
-        itemMarkets[itemType].PlaceSellOrder(price, quantity, agent);
+        itemMarkets[itemType].PlaceSellOrder(price, quantity, agentId);
     }
 
     /// <summary>

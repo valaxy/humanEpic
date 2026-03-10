@@ -2,35 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// 价格历史快照。
-/// </summary>
-public class PriceHistorySnapshot<TEnum> where TEnum : struct, Enum
-{
-	/// <summary>
-	/// 时间戳。
-	/// </summary>
-	public string Dt { get; }
 
-	/// <summary>
-	/// 对应时间戳的价格快照。
-	/// </summary>
-	public IReadOnlyDictionary<TEnum, float> Prices { get; }
-
-	public PriceHistorySnapshot(string dt, IReadOnlyDictionary<TEnum, float> prices)
-	{
-		Dt = dt;
-		Prices = prices;
-	}
-}
 
 /// <summary>
 /// 通用价格历史，支持按时间戳覆盖与固定容量截断。
 /// </summary>
+[Persistable]
 public class PriceHistory<TEnum> where TEnum : struct, Enum
 {
 	private const int maxHistoryCount = 30;
-	private readonly List<PriceHistorySnapshot<TEnum>> snapshots = new();
+	[PersistField]
+	private List<PriceHistorySnapshot<TEnum>> snapshots = new();
 
 	/// <summary>
 	/// 当前历史快照（按时间先后）。

@@ -1,6 +1,6 @@
-using Godot;
 using System;
 using System.Linq;
+using Godot;
 
 /// <summary>
 /// MarketUI 组件演示入口。
@@ -14,6 +14,8 @@ public partial class MarketUIDemo : Control
 	private ProductMarket productMarket = null!;
 	// 劳动力市场实例。
 	private LabourMarket labourMarket = null!;
+	// 演示中递增代理编号。
+	private int nextAgentId = 1;
 
 	/// <summary>
 	/// 初始化 Demo。
@@ -29,8 +31,6 @@ public partial class MarketUIDemo : Control
 
 		marketUi.Setup();
 		marketUi.BindMarket(productMarket, labourMarket);
-		marketUi.Visible = true;
-
 		randomizeButton.Pressed += randomizeMarketData;
 		toggleButton.Pressed += marketUi.Toggle;
 
@@ -44,28 +44,35 @@ public partial class MarketUIDemo : Control
 			.ToList()
 			.ForEach(type =>
 			{
-				float demand = 20.0f + (float)Random.Shared.NextDouble() * 180.0f;
-				float supply = 20.0f + (float)Random.Shared.NextDouble() * 180.0f;
-				float price = 10.0f + (float)Random.Shared.NextDouble() * 120.0f;
+				float price = 20.0f + (float)Random.Shared.NextDouble() * 180.0f;
+				productMarket.SetPrice(type, price);
 
-				productMarket.ConsumerDemands.Set(type, demand * 0.65f);
-				productMarket.IndustryDemands.Set(type, demand * 0.35f);
-				productMarket.Supplies.Set(type, supply);
-				productMarket.Prices.Set(type, price);
+				Enumerable.Range(0, 4)
+					.ToList()
+					.ForEach(index =>
+					{
+						float buyPrice = price * (0.6f + 0.3f * (float)Random.Shared.NextDouble());
+						float sellPrice = price * (1.0f + 0.4f * (float)Random.Shared.NextDouble());
+						int quantity = Random.Shared.Next(20, 120);
+						productMarket.PlaceBuyOrder(type, buyPrice, quantity, nextAgentId++);
+						productMarket.PlaceSellOrder(type, sellPrice, quantity, nextAgentId++);
+					});
 			});
 
 		Enum.GetValues<JobType.Enums>()
 			.ToList()
 			.ForEach(jobType =>
 			{
-				float wage = 8.0f + (float)Random.Shared.NextDouble() * 32.0f;
-				float demand = 5.0f + (float)Random.Shared.NextDouble() * 60.0f;
-				float supply = 5.0f + (float)Random.Shared.NextDouble() * 60.0f;
-				labourMarket.JobPrices.Set(jobType, wage);
-				labourMarket.JobDemands.Set(jobType, demand);
-				labourMarket.JobSupplies.Set(jobType, supply);
+				float wage = 10.0f + (float)Random.Shared.NextDouble() * 35.0f;
+				labourMarket.SetPrice(jobType, wage);
+
+				labourMarket.PlaceBuyOrder(jobType, wage * 0.95f, Random.Shared.Next(10, 60), nextAgentId++);
+				labourMarket.PlaceSellOrder(jobType, wage * 1.05f, Random.Shared.Next(10, 60), nextAgentId++);
 			});
 
+		string dt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+		productMarket.RecordPriceSnapshot(dt);
+		labourMarket.RecordPriceSnapshot(dt);
 		productMarket.NotifyChanged();
 		labourMarket.NotifyChanged();
 	}

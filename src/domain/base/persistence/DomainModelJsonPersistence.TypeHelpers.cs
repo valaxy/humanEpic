@@ -71,8 +71,8 @@ public static partial class DomainModelJsonPersistence
 	// 获取被持久化标记的字段集合。
 	private static List<(FieldInfo field, PersistFieldAttribute attr)> getPersistFields(Type type)
 	{
-		return type
-			.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		return enumerateTypeChain(type)
+			.SelectMany(currentType => currentType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
 			.Select(field => (field, attr: field.GetCustomAttribute<PersistFieldAttribute>(true)))
 			.Where(item => item.attr != null)
 			.Select(item => (item.field, item.attr!))
@@ -82,12 +82,23 @@ public static partial class DomainModelJsonPersistence
 	// 获取被持久化标记的属性集合。
 	private static List<(PropertyInfo property, PersistPropertyAttribute attr)> getPersistProperties(Type type)
 	{
-		return type
-			.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+		return enumerateTypeChain(type)
+			.SelectMany(currentType => currentType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
 			.Select(property => (property, attr: property.GetCustomAttribute<PersistPropertyAttribute>(true)))
 			.Where(item => item.attr != null)
 			.Select(item => (item.property, item.attr!))
 			.ToList();
+	}
+
+	// 枚举从派生到基类（不含 object）的类型链。
+	private static IEnumerable<Type> enumerateTypeChain(Type type)
+	{
+		Type? current = type;
+		while (current != null && current != typeof(object))
+		{
+			yield return current;
+			current = current.BaseType;
+		}
 	}
 
 	// 尝试获取列表元素类型。
@@ -119,6 +130,12 @@ public static partial class DomainModelJsonPersistence
 	private static bool tryGetSetElementType(Type type, out Type elementType)
 	{
 		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>))
+		{
+			elementType = type.GetGenericArguments()[0];
+			return true;
+		}
+
+		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedSet<>))
 		{
 			elementType = type.GetGenericArguments()[0];
 			return true;
@@ -276,6 +293,13 @@ public static partial class DomainModelJsonPersistence
 	// 创建集合实例。
 	private static object createSet(Type declaredSetType, Type elementType)
 	{
+		if (declaredSetType.IsGenericType && declaredSetType.GetGenericTypeDefinition() == typeof(SortedSet<>))
+		{
+			Type closedSortedSetType = typeof(SortedSet<>).MakeGenericType(elementType);
+			return Activator.CreateInstance(closedSortedSetType)
+				?? throw new InvalidOperationException($"无法创建有序集合实例: {declaredSetType.FullName}");
+		}
+
 		if (declaredSetType.IsInterface || declaredSetType.IsAbstract)
 		{
 			return Activator.CreateInstance(typeof(HashSet<>).MakeGenericType(elementType))

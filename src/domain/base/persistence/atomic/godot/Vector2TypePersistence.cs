@@ -14,12 +14,8 @@ internal sealed class Vector2TypePersistence : IAtomicTypePersistence
 		{
 			{ "__godot", true },
 			{ "type", nameof(Vector2) },
-			{ "data", new Dictionary<string, object>
-				{
-					{ "x", vector.X },
-					{ "y", vector.Y }
-				}
-			}
+			{ "x", vector.X },
+			{ "y", vector.Y }
 		};
 	}
 

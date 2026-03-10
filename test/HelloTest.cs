@@ -2,11 +2,11 @@ using GdUnit4;
 using static GdUnit4.Assertions;
 
 [TestSuite]
-public class MyPlayerTest
+public class HelloTest
 {
 
     [TestCase]
-    public void TestHealthLogic()
+    public void TestHelloWorld()
     {
         AssertBool(true);
     }

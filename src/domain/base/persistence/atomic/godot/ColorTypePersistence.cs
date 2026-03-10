@@ -14,14 +14,10 @@ internal sealed class ColorTypePersistence : IAtomicTypePersistence
 		{
 			{ "__godot", true },
 			{ "type", nameof(Color) },
-			{ "data", new Dictionary<string, object>
-				{
-					{ "r", color.R },
-					{ "g", color.G },
-					{ "b", color.B },
-					{ "a", color.A }
-				}
-			}
+			{ "r", color.R },
+			{ "g", color.G },
+			{ "b", color.B },
+			{ "a", color.A }
 		};
 	}
 

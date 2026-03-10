@@ -23,7 +23,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	public Dictionary<string, object> GetMapSaveData()
 	{
 		Dictionary<string, object> saveData = Ground.GetSaveData();
-		saveData["buildings"] = Buildings.GetSaveData();
+		saveData["buildings_node"] = DomainModelJsonPersistence.SaveToObject(Buildings, new object[] { Countries, Populations });
 		return saveData;
 	}
 
@@ -59,8 +59,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		Ground ground = Ground.LoadSaveData(data);
 		CountryCollection countries = loadCountries(data);
 		PopulationCollection populations = loadPopulations(data);
-		BuildingCollection buildings = new BuildingCollection(countries, populations);
-		loadBuildings(data, buildings);
+		BuildingCollection buildings = loadBuildings(data, countries, populations);
 
 		GameWorld world = new GameWorld
 		{
@@ -133,17 +132,35 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		return DomainModelJsonPersistence.LoadFromObject<PopulationCollection>(node);
 	}
 
-	private static void loadBuildings(Dictionary<string, object> data, BuildingCollection buildings)
+	private static BuildingCollection loadBuildings(Dictionary<string, object> data, CountryCollection countries, PopulationCollection populations)
 	{
-		if (!data.ContainsKey("buildings"))
+		object[] entityCollections = { countries, populations };
+
+		if (data.TryGetValue("buildings_node", out object? buildingsNodeRaw))
 		{
-			return;
+			if (buildingsNodeRaw is not Dictionary<string, object> buildingsNode)
+			{
+				throw new System.InvalidOperationException("buildings_node 结构非法");
+			}
+
+			return DomainModelJsonPersistence.LoadFromObject<BuildingCollection>(buildingsNode, entityCollections);
 		}
 
-		List<Dictionary<string, object>> savedBuildings = ((List<object>)data["buildings"])
+		if (!data.ContainsKey("buildings"))
+		{
+			return new BuildingCollection();
+		}
+
+		BuildingCollection buildings = new BuildingCollection();
+		((List<object>)data["buildings"])
 			.Select(item => (Dictionary<string, object>)item)
-			.ToList();
-		buildings.LoadSaveData(savedBuildings);
+			.Select(item => DomainModelJsonPersistence.LoadFromObjectAsCollectionItem<Building>(
+				item,
+				typeof(BuildingCollection),
+				entityCollections))
+			.ToList()
+			.ForEach(buildings.Add);
+		return buildings;
 	}
 }
 

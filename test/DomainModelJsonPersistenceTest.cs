@@ -243,20 +243,14 @@ public class DomainModelJsonPersistenceTest
 			throw new Exception("Dictionary 缺少 __dict 标记");
 		}
 
-		if (!stockNode.TryGetProperty("entries", out JsonElement entriesNode) || entriesNode.ValueKind != JsonValueKind.Array || entriesNode.GetArrayLength() != 1)
+		if (!stockNode.TryGetProperty("kv", out JsonElement kvNode) || kvNode.ValueKind != JsonValueKind.Object)
 		{
-			throw new Exception("Dictionary entries 结构异常");
+			throw new Exception("Dictionary kv 结构异常");
 		}
 
-		JsonElement firstEntry = entriesNode[0];
-		if (!firstEntry.TryGetProperty("k", out JsonElement keyNode) || keyNode.GetString() != "apple")
+		if (!kvNode.TryGetProperty("apple", out JsonElement valueNode) || valueNode.GetInt32() != 3)
 		{
-			throw new Exception("Dictionary 条目键格式异常");
-		}
-
-		if (!firstEntry.TryGetProperty("v", out JsonElement valueNode) || valueNode.GetInt32() != 3)
-		{
-			throw new Exception("Dictionary 条目值格式异常");
+			throw new Exception("Dictionary kv 条目格式异常");
 		}
 	}
 

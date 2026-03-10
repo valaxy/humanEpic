@@ -38,14 +38,11 @@ public partial class BuildingInfoUIDemo : Control
 	// 初始化演示用建筑集合。
 	private void setupDemoData()
 	{
-		GameWorld world = GameWorldInitializer.Load();
-
 		CountryCollection countries = new CountryCollection();
-		PopulationCollection populations = new PopulationCollection();
 		Country demoCountry = new Country("演示国家", Colors.CornflowerBlue);
 		countries.Add(demoCountry);
 
-		buildingCollection = new BuildingCollection(countries, populations);
+		buildingCollection = new BuildingCollection();
 		buildingCollection.Add(new Building(BuildingTemplate.GetTemplate(BuildingType.Enums.Residential), new Vector2I(1, 1), demoCountry));
 		buildingCollection.Add(new Building(BuildingTemplate.GetTemplate(BuildingType.Enums.Market), new Vector2I(2, 1), demoCountry));
 	}

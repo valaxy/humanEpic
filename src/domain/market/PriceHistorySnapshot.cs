@@ -24,15 +24,12 @@ public class PriceHistorySnapshot<TEnum> where TEnum : struct, Enum
     public IReadOnlyDictionary<TEnum, float> Prices => prices;
 
     /// <summary>
-    /// 从存档回填历史。
+    /// 无参构造函数，供反持久化调用。
     /// </summary>
     private PriceHistorySnapshot() { }
 
     /// <summary>
-    /// 从存档回填历史。
-    /// </summary>
-    /// <param name="dt"></param>
-    /// <param name="prices"></param>
+    /// 初始化价格历史快照。
     public PriceHistorySnapshot(string dt, Dictionary<TEnum, float> prices)
     {
         this.dt = dt;

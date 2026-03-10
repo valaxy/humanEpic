@@ -11,6 +11,7 @@ using System.Linq;
 public class PriceHistory<TEnum> where TEnum : struct, Enum
 {
 	private const int maxHistoryCount = 30;
+
 	[PersistField]
 	private List<PriceHistorySnapshot<TEnum>> snapshots = new();
 
@@ -42,43 +43,6 @@ public class PriceHistory<TEnum> where TEnum : struct, Enum
 	{
 		snapshots.Clear();
 		Record(dt, prices);
-	}
-
-	/// <summary>
-	/// 导出历史存档。
-	/// </summary>
-	public List<Dictionary<string, object>> GetSaveData()
-	{
-		return snapshots
-			.Select(snapshot => new Dictionary<string, object>
-			{
-				{ "dt", snapshot.Dt },
-				{ "prices", snapshot.Prices.ToDictionary(item => item.Key.ToString(), item => (object)item.Value) }
-			})
-			.ToList();
-	}
-
-	/// <summary>
-	/// 从存档回填历史。
-	/// </summary>
-	public void LoadSaveData(List<Dictionary<string, object>> data)
-	{
-		snapshots.Clear();
-		data.ForEach(item =>
-		{
-			string dt = item["dt"].ToString() ?? string.Empty;
-			Dictionary<string, object> rawPrices = (Dictionary<string, object>)item["prices"];
-			Dictionary<TEnum, float> parsedPrices = rawPrices
-				.Where(priceEntry => Enum.TryParse(priceEntry.Key, true, out TEnum _))
-				.Select(priceEntry =>
-				{
-					Enum.TryParse(priceEntry.Key, true, out TEnum parsedType);
-					return (parsedType, Price: Convert.ToSingle(priceEntry.Value));
-				})
-				.ToDictionary(item => item.parsedType, item => item.Price);
-
-			Record(dt, parsedPrices);
-		});
 	}
 
 	private void trimHistoryToLimit()

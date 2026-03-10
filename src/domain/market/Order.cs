@@ -57,7 +57,7 @@ public sealed class Order
     }
 
     /// <summary>
-    /// 从存档回填订单。
+    /// 无参构造函数，供反持久化调用。
     /// </summary>
     private Order() { }
 

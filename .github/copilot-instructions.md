@@ -33,6 +33,9 @@
 - 拒绝null值检查过载：
   - 禁止对非空类型（如 `Array`）进行null检查
   - 使用`GetNode`获取节点或`GetSurfaceOverrideMaterial`等方法获取资源时，默认其必定存在，禁止编写`if (node != null)`这样的语句
+- 持久化：
+  - 优先使用`PersistField`
+  - 处理不了再使用`PersistProperty`，并使用`camelCase`命名持久化名称
 - csv文件：列要通过缩进对齐，方便人类阅读
 - tscn文件：优先使用`*.tscn`文件定义静态结构，避免在代码中动态创建节点
 

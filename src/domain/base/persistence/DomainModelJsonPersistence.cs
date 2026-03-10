@@ -10,11 +10,13 @@ public static partial class DomainModelJsonPersistence
 {
 	// 字典元数据键：标记当前对象节点是字典包装结构。
 	private const string dictTag = "__dict";
-	// 字典元数据键：字典条目列表键名。
-	private const string dictEntries = "entries";
-	// 字典元数据键：条目 key 键名。
+	// 字典元数据键：字典键值对象键名（扁平格式）。
+	private const string dictEntries = "kv";
+	// 字典元数据键：旧版字典条目列表键名。
+	private const string dictEntriesLegacy = "entries";
+	// 字典元数据键：旧版条目 key 键名。
 	private const string entryKey = "k";
-	// 字典元数据键：条目 value 键名。
+	// 字典元数据键：旧版条目 value 键名。
 	private const string entryValue = "v";
 	// 集合元数据键：标记当前对象节点是集合包装结构。
 	private const string setTag = "__set";
@@ -28,7 +30,7 @@ public static partial class DomainModelJsonPersistence
 	private const string godotTag = "__godot";
 	// Godot 值类型元数据键：类型名。
 	private const string godotType = "type";
-	// Godot 值类型元数据键：数据体。
+	// Godot 值类型元数据键：旧版数据体。
 	private const string godotData = "data";
 	// 根节点静态成员键：按类型分组保存静态字段/属性。
 	private const string staticMembers = "__static";

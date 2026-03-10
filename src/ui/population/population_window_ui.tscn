@@ -1,60 +1,62 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c0dwmgalb04a8"]
 
-[ext_resource type="Script" path="res://src/ui/population/PopulationWindowUI.cs" id="1_script"]
+[ext_resource type="Script" uid="uid://bbqdrfak0xti2" path="res://src/ui/population/PopulationWindowUI.cs" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/container/draggableWindow/draggable_window.tscn" id="2_window"]
 [ext_resource type="PackedScene" path="res://src/ui/container/infoPanel/info_content_block.tscn" id="3_content_block"]
 
-[node name="PopulationWindowUI" type="CanvasLayer"]
+[node name="PopulationWindowUI" type="CanvasLayer" unique_id=1247000377]
 script = ExtResource("1_script")
 
-[node name="PopulationWindow" parent="." instance=ExtResource("2_window")]
+[node name="PopulationWindow" parent="." unique_id=372648767 instance=ExtResource("2_window")]
 unique_name_in_owner = true
-visible = true
+layout_mode = 3
+anchors_preset = 0
 offset_left = 180.0
 offset_top = 90.0
 offset_right = 780.0
 offset_bottom = 560.0
 
-[node name="MainSplit" type="HSplitContainer" parent="PopulationWindow/VBoxContainer/ContentRoot"]
+[node name="MainSplit" type="HSplitContainer" parent="PopulationWindow/VBoxContainer/ContentRoot" index="0" unique_id=1244816493]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+split_offsets = PackedInt32Array(180)
 split_offset = 180
 
-[node name="ListPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit"]
+[node name="ListPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit" unique_id=844106373]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.5
 size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
 
-[node name="ListMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel"]
+[node name="ListMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel" unique_id=563237320]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="PopulationList" type="ItemList" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel/ListMargin"]
+[node name="PopulationList" type="ItemList" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/ListPanel/ListMargin" unique_id=253956251]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="DetailPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit"]
+[node name="DetailPanel" type="PanelContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit" unique_id=1342293461]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 size_flags_vertical = 3
+size_flags_stretch_ratio = 7.0
 
-[node name="DetailMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel"]
+[node name="DetailMargin" type="MarginContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel" unique_id=1868195492]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin" instance=ExtResource("3_content_block")]
+[node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin" unique_id=239856291 instance=ExtResource("3_content_block")]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+
+[editable path="PopulationWindow"]

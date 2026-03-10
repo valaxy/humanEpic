@@ -105,7 +105,7 @@ public partial class BuildingCollectionView : Node3D
 	// 将单建筑节点点击信号统一转发给外部系统。
 	private void onBuildingNodeClicked(Vector2I cellPos)
 	{
-		Building building = world.Buildings.Get(cellPos);
+		Building building = world.Buildings.GetByPos(cellPos);
 		selectedBuilding = building;
 		UpdateBuildingVisuals();
 		EmitSignal(SignalName.BuildingClicked, cellPos);

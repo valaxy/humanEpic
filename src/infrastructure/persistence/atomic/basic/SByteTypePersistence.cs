@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-internal sealed class SByteTypePersistence : IAtomicTypePersistence
+internal sealed class SByteTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(sbyte);
 	public object Serialize(object value, Type declaredType) => value;

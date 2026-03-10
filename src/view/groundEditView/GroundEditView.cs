@@ -237,7 +237,7 @@ public partial class GroundEditView : Node
 		List<Vector2I> insideCells = affectedCells.Where(ground.IsInsideGround).ToList();
 		bool hasOutOfBounds = affectedCells.Any(cell => !ground.IsInsideGround(cell));
 		bool hasInvalidOverlay = previewMode == PreviewMode.EditOverlay && insideCells.Any(cell => !OverlayTemplate.IsValid(ground.GetGrid(cell.X, cell.Y).SurfaceType, OverlayType));
-		bool hasInvalidBuilding = previewMode == PreviewMode.EditBuilding && insideCells.Any(buildingCollection.HasKey);
+		bool hasInvalidBuilding = previewMode == PreviewMode.EditBuilding && insideCells.Any(buildingCollection.HasKeyByPos); // TODO 为什么这里要检查方法？
 
 		brush.SetForbiddenIcon(hasOutOfBounds || hasInvalidOverlay || hasInvalidBuilding);
 		renderPreviewCells(insideCells, getPreviewColor());

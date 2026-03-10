@@ -1,14 +1,12 @@
 using System;
 using System.Globalization;
 
-internal sealed class EnumTypePersistence : IAtomicTypePersistence
+internal sealed class EnumTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type.IsEnum;
 
-	public object Serialize(object value, Type declaredType)
-	{
-		return Convert.ToInt32(value, CultureInfo.InvariantCulture);
-	}
+	// 重点是将枚举值转换为整数
+	public object Serialize(object value, Type declaredType) => Convert.ToInt32(value, CultureInfo.InvariantCulture);
 
 	public object Deserialize(object rawValue, Type targetType)
 	{

@@ -253,7 +253,7 @@ public partial class GroundView : Node3D
 		ShowCellSelection(cellPos);
 		EmitSignal(SignalName.CellSelected, cellPos);
 
-		if (buildings.HasKey(cellPos))
+		if (buildings.HasKeyByPos(cellPos))
 		{
 			EmitSignal(SignalName.BuildingSelected, cellPos);
 			return;

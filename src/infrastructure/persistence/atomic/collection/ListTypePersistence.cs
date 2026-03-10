@@ -2,13 +2,13 @@ using System;
 using System.Collections;
 using System.Linq;
 
-internal sealed class ListTypePersistence : IAtomicTypePersistence
+internal sealed class ListTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.isListLikeType(type);
+	public bool CanHandle(Type type) => TypeHelpers.isListLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		Type elementType = DomainModelJsonPersistence.getListElementType(declaredType);
+		Type elementType = TypeHelpers.getListElementType(declaredType);
 
 		if (value is not IEnumerable enumerable)
 		{
@@ -22,7 +22,7 @@ internal sealed class ListTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		Type elementType = DomainModelJsonPersistence.getListElementType(targetType);
+		Type elementType = TypeHelpers.getListElementType(targetType);
 
 		if (rawValue is not IList listRaw)
 		{

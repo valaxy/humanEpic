@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
 
-internal sealed class EntityReferenceTypePersistence : IAtomicTypePersistence
+internal sealed class EntityReferenceTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.isEntityType(type);
+	public bool CanHandle(Type type) => TypeHelpers.isEntityType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{

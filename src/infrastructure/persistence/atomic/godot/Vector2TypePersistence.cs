@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Godot;
 
-internal sealed class Vector2TypePersistence : IAtomicTypePersistence
+internal sealed class Vector2TypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(Vector2);
 

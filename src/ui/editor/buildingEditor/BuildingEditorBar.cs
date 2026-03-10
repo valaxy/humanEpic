@@ -171,7 +171,7 @@ public partial class BuildingEditorBar : EditorWindow
 			return;
 		}
 
-		if (!world.Ground.IsInsideGround(cellPos) || world.Buildings.HasKey(cellPos))
+		if (!world.Ground.IsInsideGround(cellPos) || world.Buildings.HasKeyByPos(cellPos))
 		{
 			return;
 		}

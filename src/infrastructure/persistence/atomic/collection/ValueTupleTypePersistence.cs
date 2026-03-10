@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-internal sealed class ValueTupleTypePersistence : IAtomicTypePersistence
+internal sealed class ValueTupleTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.isValueTupleType(type);
+	public bool CanHandle(Type type) => TypeHelpers.isValueTupleType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{

@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-internal sealed class DoubleTypePersistence : IAtomicTypePersistence
+internal sealed class DoubleTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(double);
 	public object Serialize(object value, Type declaredType) => value;

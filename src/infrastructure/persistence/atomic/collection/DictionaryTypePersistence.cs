@@ -5,20 +5,20 @@ using System.Globalization;
 using System.Linq;
 using Godot;
 
-internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
+internal sealed class DictionaryTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.isDictionaryLikeType(type);
+	public bool CanHandle(Type type) => TypeHelpers.isDictionaryLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		(Type keyType, Type valueType) = DomainModelJsonPersistence.getDictionaryTypes(declaredType);
+		(Type keyType, Type valueType) = TypeHelpers.getDictionaryTypes(declaredType);
 
 		if (value is not IDictionary dictionary)
 		{
 			throw new InvalidOperationException($"类型 {declaredType.FullName} 不是字典集合");
 		}
 
-		if (!DomainModelJsonPersistence.isSupportedDictionaryKeyType(keyType))
+		if (!TypeHelpers.isSupportedDictionaryKeyType(keyType))
 		{
 			throw new InvalidOperationException($"字典键类型不支持持久化: {keyType.FullName}");
 		}
@@ -45,7 +45,7 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		(Type keyType, Type valueType) = DomainModelJsonPersistence.getDictionaryTypes(targetType);
+		(Type keyType, Type valueType) = TypeHelpers.getDictionaryTypes(targetType);
 
 		if (rawValue is not Dictionary<string, object> dictNode)
 		{
@@ -57,7 +57,7 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 			throw new InvalidOperationException($"字典数据结构非法: {targetType.FullName}");
 		}
 
-		if (!DomainModelJsonPersistence.isSupportedDictionaryKeyType(keyType))
+		if (!TypeHelpers.isSupportedDictionaryKeyType(keyType))
 		{
 			throw new InvalidOperationException($"字典键类型不支持持久化: {keyType.FullName}");
 		}

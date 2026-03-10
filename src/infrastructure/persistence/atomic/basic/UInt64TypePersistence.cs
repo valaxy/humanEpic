@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-internal sealed class UInt64TypePersistence : IAtomicTypePersistence
+internal sealed class UInt64TypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(ulong);
 	public object Serialize(object value, Type declaredType) => value;

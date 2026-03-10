@@ -1,9 +1,9 @@
 using System;
 
 /// <summary>
-/// 原子类型持久化处理器接口。
+/// 特定类型持久化处理器接口。
 /// </summary>
-internal interface IAtomicTypePersistence
+internal interface ITypePersistence
 {
 	/// <summary>
 	/// 当前处理器是否支持该类型。

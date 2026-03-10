@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Godot;
 
-internal sealed class ColorTypePersistence : IAtomicTypePersistence
+internal sealed class ColorTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(Color);
 

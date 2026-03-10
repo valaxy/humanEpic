@@ -1,6 +1,6 @@
 using System;
 
-internal sealed class StringTypePersistence : IAtomicTypePersistence
+internal sealed class StringTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(string);
 	public object Serialize(object value, Type declaredType) => value;

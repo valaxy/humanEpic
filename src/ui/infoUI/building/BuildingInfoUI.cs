@@ -39,13 +39,13 @@ public partial class BuildingInfoUI : Node
 	/// </summary>
 	public void OnCellSelected(Vector2I cellPos)
 	{
-		if (!buildingCollection.HasKey(cellPos))
+		if (!buildingCollection.HasKeyByPos(cellPos))
 		{
 			clearBuildingSelection();
 			return;
 		}
 
-		selectedBuilding = buildingCollection.Get(cellPos);
+		selectedBuilding = buildingCollection.GetByPos(cellPos);
 		hasSelectedBuilding = true;
 		refreshBuildingInfo();
 	}

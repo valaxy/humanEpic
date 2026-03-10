@@ -109,7 +109,7 @@ public partial class BuildingInfoPanelUI : CanvasLayer
 	// 响应建筑选中。
 	private void onBuildingSelected(Vector2I cellPos)
 	{
-		Building building = buildingCollection.Get(cellPos);
+		Building building = buildingCollection.GetByPos(cellPos);
 		renderBuildingModules(building);
 	}
 

@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-internal sealed class SetTypePersistence : IAtomicTypePersistence
+internal sealed class SetTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.isSetLikeType(type);
+	public bool CanHandle(Type type) => TypeHelpers.isSetLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		Type elementType = DomainModelJsonPersistence.getSetElementType(declaredType);
+		Type elementType = TypeHelpers.getSetElementType(declaredType);
 
 		if (value is not IEnumerable enumerable)
 		{
@@ -31,7 +31,7 @@ internal sealed class SetTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		Type elementType = DomainModelJsonPersistence.getSetElementType(targetType);
+		Type elementType = TypeHelpers.getSetElementType(targetType);
 
 		if (rawValue is not Dictionary<string, object> setNode)
 		{

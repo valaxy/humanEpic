@@ -8,16 +8,16 @@ using System.Linq;
 public static partial class DomainModelJsonPersistence
 {
 	// 原子类型持久化处理器集合。
-	private static readonly List<IAtomicTypePersistence> atomicTypePersistences = createAtomicTypePersistences();
+	private static readonly List<ITypePersistence> atomicTypePersistences = createAtomicTypePersistences();
 
-	private static IAtomicTypePersistence? getAtomicTypePersistenceOrNull(Type type)
+	private static ITypePersistence? getAtomicTypePersistenceOrNull(Type type)
 	{
 		return atomicTypePersistences.FirstOrDefault(handler => handler.CanHandle(type));
 	}
 
-	private static List<IAtomicTypePersistence> createAtomicTypePersistences()
+	private static List<ITypePersistence> createAtomicTypePersistences()
 	{
-		return new List<IAtomicTypePersistence>
+		return new List<ITypePersistence>
 		{
 			new StringTypePersistence(),
 			new BoolTypePersistence(),

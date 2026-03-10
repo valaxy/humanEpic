@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-internal sealed class DecimalTypePersistence : IAtomicTypePersistence
+internal sealed class DecimalTypePersistence : ITypePersistence
 {
 	public bool CanHandle(Type type) => type == typeof(decimal);
 	public object Serialize(object value, Type declaredType) => value;

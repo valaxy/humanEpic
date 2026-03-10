@@ -7,44 +7,46 @@ using System.Linq;
 /// 统一建筑集合，负责管理世界中所有建筑对象。
 /// </summary>
 [Persistable]
-public class BuildingCollection : DictCollection<Vector2I, Building>
+public class BuildingCollection : DictCollection<int, Building>
 {
-	private readonly Dictionary<int, Building> idToItem = new();
+	private readonly Dictionary<Vector2I, Building> posToItem = new();
 
 	/// <summary>
 	/// 获取建筑键值（地格坐标）。
 	/// </summary>
-	protected override Vector2I GetKey(Building item) => item.Collision.Center;
+	protected override int GetKey(Building item) => item.Id;
 
 	public override void Add(Building item)
 	{
 		base.Add(item);
-		idToItem[item.Id] = item;
+		posToItem[item.Collision.Center] = item;
 	}
 
 	public override void Remove(Building item)
 	{
 		base.Remove(item);
-		idToItem.Remove(item.Id);
+		posToItem.Remove(item.Collision.Center);
 	}
 
 	public override void Clear()
 	{
 		base.Clear();
-		idToItem.Clear();
+		posToItem.Clear();
 	}
 
-
-
-	public Building GetById(int id)
+	/// <summary>
+	/// 根据地格坐标获取建筑对象。
+	/// </summary>
+	public Building GetByPos(Vector2I pos)
 	{
-		if (idToItem.TryGetValue(id, out Building? building))
-		{
-			return building;
-		}
+		return posToItem[pos];
+	}
 
-		Building loadedBuilding = GetAll().First(item => item.Id == id);
-		idToItem[id] = loadedBuilding;
-		return loadedBuilding;
+	/// <summary>
+	/// 检查是否存在指定地格坐标的建筑对象。
+	/// </summary>
+	public bool HasKeyByPos(Vector2I pos)
+	{
+		return posToItem.ContainsKey(pos);
 	}
 }

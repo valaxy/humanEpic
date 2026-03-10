@@ -68,7 +68,8 @@ text = "可移动窗口"
 [node name="CloseButton" type="Button" parent="VBoxContainer/TitleBar/HeaderRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "关闭"
+custom_minimum_size = Vector2(26, 26)
+flat = true
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2

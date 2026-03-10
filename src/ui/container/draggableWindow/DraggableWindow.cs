@@ -22,6 +22,8 @@ public partial class DraggableWindow : Control
 	private VBoxContainer contentRoot = null!;
 	// 是否正在拖拽。
 	private bool isDragging;
+	// 拖拽时可活动区域。
+	private Rect2 dragBounds;
 
 	/// <summary>
 	/// 内容插槽根节点。
@@ -37,9 +39,25 @@ public partial class DraggableWindow : Control
 		titleBar = GetNode<Control>("%TitleBar");
 		closeButton = GetNode<Button>("%CloseButton");
 		contentRoot = GetNode<VBoxContainer>("%ContentRoot");
+		dragBounds = getDragBounds();
 
 		titleBar.GuiInput += onTitleBarGuiInput;
 		closeButton.Pressed += () => EmitSignal(SignalName.CloseRequested);
+		closeButton.Text = string.Empty;
+		closeButton.Icon = ThemeDB.GetDefaultTheme().GetIcon("Close", "EditorIcons");
+		closeButton.Flat = true;
+	}
+
+	/// <summary>
+	/// 同步窗口尺寸变化时的拖拽边界。
+	/// </summary>
+	public override void _Notification(int what)
+	{
+		if (what == NotificationResized)
+		{
+			dragBounds = getDragBounds();
+			Position = clampPosition(Position);
+		}
 	}
 
 	/// <summary>
@@ -56,14 +74,36 @@ public partial class DraggableWindow : Control
 		if (inputEvent is InputEventMouseButton mouseButton && mouseButton.ButtonIndex == MouseButton.Left)
 		{
 			isDragging = mouseButton.Pressed;
+			dragBounds = getDragBounds();
 			GetViewport().SetInputAsHandled();
 			return;
 		}
 
 		if (isDragging && inputEvent is InputEventMouseMotion motion)
 		{
-			Position += motion.Relative;
+			Position = clampPosition(Position + motion.Relative);
 			GetViewport().SetInputAsHandled();
 		}
+	}
+
+	// 计算拖拽可活动区域。
+	private Rect2 getDragBounds()
+	{
+		if (GetParent() is Control parentControl)
+		{
+			return new Rect2(Vector2.Zero, parentControl.Size);
+		}
+
+		return new Rect2(Vector2.Zero, GetViewportRect().Size);
+	}
+
+	// 将窗口位置钳制在可活动区域内。
+	private Vector2 clampPosition(Vector2 targetPosition)
+	{
+		float maxX = dragBounds.Position.X + Mathf.Max(0.0f, dragBounds.Size.X - Size.X);
+		float maxY = dragBounds.Position.Y + Mathf.Max(0.0f, dragBounds.Size.Y - Size.Y);
+		float clampedX = Mathf.Clamp(targetPosition.X, dragBounds.Position.X, maxX);
+		float clampedY = Mathf.Clamp(targetPosition.Y, dragBounds.Position.Y, maxY);
+		return new Vector2(clampedX, clampedY);
 	}
 }

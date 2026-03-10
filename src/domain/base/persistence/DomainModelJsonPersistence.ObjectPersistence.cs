@@ -59,13 +59,24 @@ public static partial class DomainModelJsonPersistence
 	// 创建静态成员快照（根节点 sidecar）。
 	private static Dictionary<string, object> serializeStaticMembers(HashSet<Type> types)
 	{
-		return types
+		List<(string key, Type type, Dictionary<string, object> node)> typeEntries = types
 			.Select(type => (type, node: serializeStaticMembersForType(type)))
 			.Where(item => item.node.Count > 0)
-			.ToDictionary(
-				item => item.type.AssemblyQualifiedName
-					?? throw new InvalidOperationException($"类型缺少程序集限定名: {item.type.FullName}"),
-				item => (object)item.node);
+			.Select(item => (key: item.type.Name, item.type, item.node))
+			.ToList();
+
+		if (typeEntries
+			.GroupBy(item => item.key)
+			.Any(group => group.Count() > 1))
+		{
+			string duplicatedName = typeEntries
+				.GroupBy(item => item.key)
+				.First(group => group.Count() > 1)
+				.Key;
+			throw new InvalidOperationException($"静态成员类型名冲突，无法使用简单类名作为键: {duplicatedName}");
+		}
+
+		return typeEntries.ToDictionary(item => item.key, item => (object)item.node);
 	}
 
 	// 将静态成员快照回填到类型上。
@@ -75,8 +86,7 @@ public static partial class DomainModelJsonPersistence
 			.ToList()
 			.ForEach(entry =>
 			{
-				Type modelType = Type.GetType(entry.Key)
-					?? throw new InvalidOperationException($"无法解析静态成员所属类型: {entry.Key}");
+				Type modelType = resolvePersistableTypeBySimpleName(entry.Key);
 
 				if (entry.Value is not Dictionary<string, object> typeNode)
 				{
@@ -85,6 +95,37 @@ public static partial class DomainModelJsonPersistence
 
 				deserializeStaticMembersForType(typeNode, modelType);
 			});
+	}
+
+	private static Type resolvePersistableTypeBySimpleName(string typeName)
+	{
+		List<Type> matchedTypes = AppDomain.CurrentDomain
+			.GetAssemblies()
+			.SelectMany(assembly =>
+			{
+				try
+				{
+					return assembly.GetTypes();
+				}
+				catch (ReflectionTypeLoadException ex)
+				{
+					return ex.Types.Where(type => type != null).Cast<Type>();
+				}
+			})
+			.Where(type => type.Name == typeName && type.GetCustomAttribute<PersistableAttribute>() != null)
+			.ToList();
+
+		if (matchedTypes.Count == 0)
+		{
+			throw new InvalidOperationException($"无法解析静态成员所属类型: {typeName}");
+		}
+
+		if (matchedTypes.Count > 1)
+		{
+			throw new InvalidOperationException($"静态成员类型名不唯一，请避免重名: {typeName}");
+		}
+
+		return matchedTypes[0];
 	}
 
 	private static Dictionary<string, object> serializeStaticMembersForType(Type modelType)

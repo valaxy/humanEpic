@@ -10,30 +10,9 @@ public static partial class DomainModelJsonPersistence
 	// 原子类型持久化处理器集合。
 	private static readonly List<IAtomicTypePersistence> atomicTypePersistences = createAtomicTypePersistences();
 
-	private static bool trySerializeAtomicValue(object value, Type type, out object serialized)
+	private static IAtomicTypePersistence? getAtomicTypePersistenceOrNull(Type type)
 	{
-		IAtomicTypePersistence? persistence = atomicTypePersistences.FirstOrDefault(handler => handler.CanHandle(type));
-		if (persistence == null)
-		{
-			serialized = null!;
-			return false;
-		}
-
-		serialized = persistence.Serialize(value, type);
-		return true;
-	}
-
-	private static bool tryDeserializeAtomicValue(object rawValue, Type type, out object deserialized)
-	{
-		IAtomicTypePersistence? persistence = atomicTypePersistences.FirstOrDefault(handler => handler.CanHandle(type));
-		if (persistence == null)
-		{
-			deserialized = null!;
-			return false;
-		}
-
-		deserialized = persistence.Deserialize(rawValue, type);
-		return true;
+		return atomicTypePersistences.FirstOrDefault(handler => handler.CanHandle(type));
 	}
 
 	private static List<IAtomicTypePersistence> createAtomicTypePersistences()

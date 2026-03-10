@@ -4,14 +4,11 @@ using System.Linq;
 
 internal sealed class ListTypePersistence : IAtomicTypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.tryGetListElementType(type, out _);
+	public bool CanHandle(Type type) => DomainModelJsonPersistence.isListLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		if (!DomainModelJsonPersistence.tryGetListElementType(declaredType, out Type elementType))
-		{
-			throw new InvalidOperationException($"类型不是列表: {declaredType.FullName}");
-		}
+		Type elementType = DomainModelJsonPersistence.getListElementType(declaredType);
 
 		if (value is not IEnumerable enumerable)
 		{
@@ -25,10 +22,7 @@ internal sealed class ListTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		if (!DomainModelJsonPersistence.tryGetListElementType(targetType, out Type elementType))
-		{
-			throw new InvalidOperationException($"类型不是列表: {targetType.FullName}");
-		}
+		Type elementType = DomainModelJsonPersistence.getListElementType(targetType);
 
 		if (rawValue is not IList listRaw)
 		{

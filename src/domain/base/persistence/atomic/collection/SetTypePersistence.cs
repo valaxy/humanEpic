@@ -6,14 +6,11 @@ using System.Reflection;
 
 internal sealed class SetTypePersistence : IAtomicTypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.tryGetSetElementType(type, out _);
+	public bool CanHandle(Type type) => DomainModelJsonPersistence.isSetLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		if (!DomainModelJsonPersistence.tryGetSetElementType(declaredType, out Type elementType))
-		{
-			throw new InvalidOperationException($"类型不是集合: {declaredType.FullName}");
-		}
+		Type elementType = DomainModelJsonPersistence.getSetElementType(declaredType);
 
 		if (value is not IEnumerable enumerable)
 		{
@@ -34,10 +31,7 @@ internal sealed class SetTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		if (!DomainModelJsonPersistence.tryGetSetElementType(targetType, out Type elementType))
-		{
-			throw new InvalidOperationException($"类型不是集合: {targetType.FullName}");
-		}
+		Type elementType = DomainModelJsonPersistence.getSetElementType(targetType);
 
 		if (rawValue is not Dictionary<string, object> setNode)
 		{

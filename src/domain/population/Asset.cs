@@ -33,7 +33,7 @@ public class Asset : IInfo
 	/// </summary>
 	public float GetAmount(ProductType.Enums type)
 	{
-		return amounts[type];
+		return amounts.ContainsKey(type) ? amounts[type] : 0.0f;
 	}
 
 
@@ -42,7 +42,7 @@ public class Asset : IInfo
 	/// </summary>
 	public void SetAmount(ProductType.Enums type, float amount)
 	{
-		Debug.Assert(amount > 0.0f, "资产数量不能为负数");
+		Debug.Assert(amount >= 0.0f, "资产数量不能为负数");
 		amounts[type] = amount;
 	}
 
@@ -52,7 +52,7 @@ public class Asset : IInfo
 	public void AddAmount(ProductType.Enums type, float amount)
 	{
 		Debug.Assert(amount > 0.0f, "增加资产数量不能为负数");
-		SetAmount(type, amounts[type] + amount);
+		SetAmount(type, GetAmount(type) + amount);
 	}
 
 	/// <summary>
@@ -61,8 +61,9 @@ public class Asset : IInfo
 	public void ConsumeAmount(ProductType.Enums type, float amount)
 	{
 		Debug.Assert(amount > 0.0f, "消耗资产数量不能为负数");
-		Debug.Assert(amounts[type] >= amount, "资产数量不足，无法消耗");
-		SetAmount(type, amounts[type] - amount);
+		float currentAmount = GetAmount(type);
+		Debug.Assert(currentAmount >= amount, "资产数量不足，无法消耗");
+		SetAmount(type, currentAmount - amount);
 	}
 
 

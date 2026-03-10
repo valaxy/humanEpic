@@ -23,7 +23,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	public Dictionary<string, object> GetMapSaveData()
 	{
 		Dictionary<string, object> saveData = Ground.GetSaveData();
-		saveData["buildings_node"] = DomainModelJsonPersistence.SaveToObject(Buildings, new object[] { Countries, Populations });
+		saveData["buildings"] = DomainModelJsonPersistence.SaveToObjectWithoutStatic(Buildings, new object[] { Countries, Populations });
 		return saveData;
 	}
 
@@ -35,8 +35,8 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		return new Dictionary<string, object>
 		{
 			{ "time", TimeSystem.TotalSeconds },
-			{ "countries_node", DomainModelJsonPersistence.SaveToObject(Countries) },
-			{ "populations_node", DomainModelJsonPersistence.SaveToObject(Populations) }
+			{ "countries", DomainModelJsonPersistence.SaveToObjectWithoutStatic(Countries) },
+			{ "populations", DomainModelJsonPersistence.SaveToObjectWithoutStatic(Populations) }
 		};
 	}
 
@@ -56,6 +56,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	/// </summary>
 	public static GameWorld LoadSaveData(Dictionary<string, object> data)
 	{
+		applyRootStaticMembers(data);
 		Ground ground = Ground.LoadSaveData(data);
 		CountryCollection countries = loadCountries(data);
 		PopulationCollection populations = loadPopulations(data);
@@ -86,81 +87,60 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 
 	private static CountryCollection loadCountries(Dictionary<string, object> data)
 	{
-		if (data.TryGetValue("countries_node", out object? countriesNodeRaw))
-		{
-			if (countriesNodeRaw is not Dictionary<string, object> countriesNode)
-			{
-				throw new System.InvalidOperationException("countries_node 结构非法");
-			}
-
-			return DomainModelJsonPersistence.LoadFromObject<CountryCollection>(countriesNode);
-		}
-
-		if (!data.ContainsKey("countries"))
+		if (!data.TryGetValue("countries", out object? countriesNodeRaw))
 		{
 			return new CountryCollection();
 		}
 
-		Dictionary<string, object> node = new Dictionary<string, object>
+		if (countriesNodeRaw is not Dictionary<string, object> countriesNode)
 		{
-			{ "items", data["countries"] }
-		};
-		return DomainModelJsonPersistence.LoadFromObject<CountryCollection>(node);
+			throw new System.InvalidOperationException("countries 结构非法");
+		}
+
+		return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<CountryCollection>(countriesNode);
 	}
 
 	private static PopulationCollection loadPopulations(Dictionary<string, object> data)
 	{
-		if (data.TryGetValue("populations_node", out object? populationsNodeRaw))
-		{
-			if (populationsNodeRaw is not Dictionary<string, object> populationsNode)
-			{
-				throw new System.InvalidOperationException("populations_node 结构非法");
-			}
-
-			return DomainModelJsonPersistence.LoadFromObject<PopulationCollection>(populationsNode);
-		}
-
-		if (!data.ContainsKey("populations"))
+		if (!data.TryGetValue("populations", out object? populationsNodeRaw))
 		{
 			return new PopulationCollection();
 		}
 
-		Dictionary<string, object> node = new Dictionary<string, object>
+		if (populationsNodeRaw is not Dictionary<string, object> populationsNode)
 		{
-			{ "items", data["populations"] }
-		};
-		return DomainModelJsonPersistence.LoadFromObject<PopulationCollection>(node);
+			throw new System.InvalidOperationException("populations 结构非法");
+		}
+
+		return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<PopulationCollection>(populationsNode);
 	}
 
 	private static BuildingCollection loadBuildings(Dictionary<string, object> data, CountryCollection countries, PopulationCollection populations)
 	{
 		object[] entityCollections = { countries, populations };
 
-		if (data.TryGetValue("buildings_node", out object? buildingsNodeRaw))
-		{
-			if (buildingsNodeRaw is not Dictionary<string, object> buildingsNode)
-			{
-				throw new System.InvalidOperationException("buildings_node 结构非法");
-			}
-
-			return DomainModelJsonPersistence.LoadFromObject<BuildingCollection>(buildingsNode, entityCollections);
-		}
-
-		if (!data.ContainsKey("buildings"))
+		if (!data.TryGetValue("buildings", out object? buildingsNodeRaw))
 		{
 			return new BuildingCollection();
 		}
 
-		BuildingCollection buildings = new BuildingCollection();
-		((List<object>)data["buildings"])
-			.Select(item => (Dictionary<string, object>)item)
-			.Select(item => DomainModelJsonPersistence.LoadFromObjectAsCollectionItem<Building>(
-				item,
-				typeof(BuildingCollection),
-				entityCollections))
-			.ToList()
-			.ForEach(buildings.Add);
-		return buildings;
+		if (buildingsNodeRaw is not Dictionary<string, object> buildingsNode)
+		{
+			throw new System.InvalidOperationException("buildings 结构非法");
+		}
+
+		return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<BuildingCollection>(buildingsNode, entityCollections);
+	}
+
+	private static void applyRootStaticMembers(Dictionary<string, object> data)
+	{
+		Dictionary<string, object> staticNode = DomainModelJsonPersistence.ExtractStaticMembers(data);
+		if (staticNode.Count == 0)
+		{
+			return;
+		}
+
+		DomainModelJsonPersistence.ApplyStaticMembers(staticNode);
 	}
 }
 

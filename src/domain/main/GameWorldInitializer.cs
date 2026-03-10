@@ -30,6 +30,13 @@ public class GameWorldInitializer
 
         Dictionary<string, object> mapData = gameWorld.GetMapSaveData();
         Dictionary<string, object> worldStateData = gameWorld.GetWorldStateSaveData();
+        Dictionary<string, object> mergedStaticMembers = DomainModelJsonPersistence.MergeStaticMembers(
+            new[]
+            {
+                DomainModelJsonPersistence.ExtractStaticMembers(mapData),
+                DomainModelJsonPersistence.ExtractStaticMembers(worldStateData)
+            });
+        DomainModelJsonPersistence.AttachStaticMembers(worldStateData, mergedStaticMembers);
 
         writeJsonFile(mapSavePath, mapData, false);
         writeJsonFile(worldStateSavePath, worldStateData, true);

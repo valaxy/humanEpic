@@ -15,10 +15,10 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		Type actualType = value.GetType();
-
-		if (trySerializeAtomicValue(value, actualType, out object atomicSerialized))
+		IAtomicTypePersistence? atomicPersistence = getAtomicTypePersistenceOrNull(actualType);
+		if (atomicPersistence != null)
 		{
-			return atomicSerialized;
+			return atomicPersistence.Serialize(value, actualType);
 		}
 
 		ensurePersistableClass(actualType);
@@ -28,9 +28,10 @@ public static partial class DomainModelJsonPersistence
 	// 按目标类型递归反序列化值。
 	internal static object deserializeValue(object rawValue, Type targetType)
 	{
-		if (tryDeserializeAtomicValue(rawValue, targetType, out object atomicDeserialized))
+		IAtomicTypePersistence? atomicPersistence = getAtomicTypePersistenceOrNull(targetType);
+		if (atomicPersistence != null)
 		{
-			return atomicDeserialized;
+			return atomicPersistence.Deserialize(rawValue, targetType);
 		}
 
 		ensurePersistableClass(targetType);

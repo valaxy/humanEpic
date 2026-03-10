@@ -6,14 +6,11 @@ using System.Linq;
 
 internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 {
-	public bool CanHandle(Type type) => DomainModelJsonPersistence.tryGetDictionaryTypes(type, out _, out _);
+	public bool CanHandle(Type type) => DomainModelJsonPersistence.isDictionaryLikeType(type);
 
 	public object Serialize(object value, Type declaredType)
 	{
-		if (!DomainModelJsonPersistence.tryGetDictionaryTypes(declaredType, out Type keyType, out Type valueType))
-		{
-			throw new InvalidOperationException($"类型不是字典: {declaredType.FullName}");
-		}
+		(Type keyType, Type valueType) = DomainModelJsonPersistence.getDictionaryTypes(declaredType);
 
 		if (value is not IDictionary dictionary)
 		{
@@ -47,10 +44,7 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		if (!DomainModelJsonPersistence.tryGetDictionaryTypes(targetType, out Type keyType, out Type valueType))
-		{
-			throw new InvalidOperationException($"类型不是字典: {targetType.FullName}");
-		}
+		(Type keyType, Type valueType) = DomainModelJsonPersistence.getDictionaryTypes(targetType);
 
 		if (rawValue is not Dictionary<string, object> dictNode)
 		{
@@ -85,27 +79,7 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 			return dictionary;
 		}
 
-		if (dictNode.TryGetValue("entries", out object? entriesRaw) && entriesRaw is IList entries)
-		{
-			entries
-				.Cast<object>()
-				.Select(item => item as Dictionary<string, object> ?? throw new InvalidOperationException($"字典条目不是对象: {targetType.FullName}"))
-				.ToList()
-				.ForEach(item =>
-				{
-					if (!item.ContainsKey("k") || !item.ContainsKey("v"))
-					{
-						throw new InvalidOperationException($"字典条目缺少键值: {targetType.FullName}");
-					}
-
-					object key = DomainModelJsonPersistence.deserializeValue(item["k"], keyType);
-					object value = DomainModelJsonPersistence.deserializeValue(item["v"], valueType);
-					dictionary.Add(key, value);
-				});
-			return dictionary;
-		}
-
-		throw new InvalidOperationException($"字典条目结构非法: {targetType.FullName}");
+		throw new InvalidOperationException($"字典 kv 结构缺失: {targetType.FullName}");
 	}
 
 	private static string serializeDictionaryKey(object key, Type keyType)
@@ -128,14 +102,7 @@ internal sealed class DictionaryTypePersistence : IAtomicTypePersistence
 			return Enum.ToObject(keyType, enumId);
 		}
 
-		try
-		{
-			return Convert.ChangeType(keyText, keyType, CultureInfo.InvariantCulture)
-				?? throw new InvalidOperationException($"字典键转换失败: {targetType.FullName}");
-		}
-		catch (Exception ex)
-		{
-			throw new InvalidOperationException($"字典键反序列化失败: {targetType.FullName} -> {keyType.FullName}", ex);
-		}
+		return Convert.ChangeType(keyText, keyType, CultureInfo.InvariantCulture)
+			?? throw new InvalidOperationException($"字典键转换失败: {targetType.FullName}");
 	}
 }

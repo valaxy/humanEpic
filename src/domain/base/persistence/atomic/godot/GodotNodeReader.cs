@@ -24,16 +24,6 @@ public static partial class DomainModelJsonPersistence
 			throw new InvalidOperationException($"Godot 值类型不匹配: 期望 {targetTypeName}");
 		}
 
-		if (node.TryGetValue("data", out object? legacyDataRaw))
-		{
-			if (legacyDataRaw is not Dictionary<string, object> legacyData)
-			{
-				throw new InvalidOperationException($"Godot 值类型 data 结构非法: {targetTypeName}");
-			}
-
-			return legacyData;
-		}
-
 		return node
 			.Where(pair => pair.Key != "__godot" && pair.Key != "type")
 			.ToDictionary(pair => pair.Key, pair => pair.Value);

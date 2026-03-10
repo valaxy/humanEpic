@@ -15,25 +15,20 @@ public static partial class DomainModelJsonPersistence
 			.ToDictionary(collection => collection.GetType(), collection => collection);
 	}
 
-	private static bool tryGetEntityCollectionByType(Type collectionType, out object collection)
+	private static object? getEntityCollectionByTypeOrNull(Type collectionType)
 	{
 		if (activeEntityCollections != null && activeEntityCollections.TryGetValue(collectionType, out object? found))
 		{
-			collection = found;
-			return true;
+			return found;
 		}
-
-		collection = null!;
-		return false;
+		return null;
 	}
 
 	internal static object resolveEntityById(Type entityType, int entityId)
 	{
 		Type collectionType = getEntityCollectionType(entityType);
-		if (!tryGetEntityCollectionByType(collectionType, out object collection))
-		{
-			throw new InvalidOperationException($"实体类型 {entityType.FullName} 反持久化缺少集合上下文: {collectionType.FullName}");
-		}
+		object collection = getEntityCollectionByTypeOrNull(collectionType)
+			?? throw new InvalidOperationException($"实体类型 {entityType.FullName} 反持久化缺少集合上下文: {collectionType.FullName}");
 
 		MethodInfo? getByIdMethod = collectionType.GetMethod("GetById", BindingFlags.Instance | BindingFlags.Public);
 		if (getByIdMethod != null)

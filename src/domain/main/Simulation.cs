@@ -22,7 +22,8 @@ public class Simulation
 	{
 		logics.Add(new HelloWorldLogic());
 		logics.Add(new PopulationDemandDecayLogic(world.Populations));
-		logics.Add(new PopulationDemandResetMockLogic(world.Populations, 3.0f));
+		logics.Add(new PopulationRandomConsumerGoodsMockLogic(world.Populations, 1.0f));
+		logics.Add(new PopulationConsumeConsumerGoodsLogic(world.Populations, 1.0f));
 		// logics.Add(new ConsumptionPurchaseLogic(world.Populations, world.Buildings, world.TimeSystem));
 		// logics.Add(new EconomyLogiV1(world.Buildings, world.TimeSystem));
 		logics.ForEach(logic => logic.Triggered += onLogicTriggered);

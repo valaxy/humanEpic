@@ -1,18 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
 /// 财产，保存人口按产品类型的资产数量。
 /// </summary>
 [Persistable]
-public class Asset : IInfo
+public class Asset : DictCollection<ProductType.Enums, AssetItem>, IInfo
 {
-	// 产品数量映射。
-	[PersistField]
-	private Dictionary<ProductType.Enums, float> amounts = default!;
-
-
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
 	/// </summary>
@@ -25,31 +20,32 @@ public class Asset : IInfo
 	/// </summary>
 	public Asset(Dictionary<ProductType.Enums, float> amounts)
 	{
-		this.amounts = amounts;
+		amounts
+			.Select(item => new AssetItem(item.Key, item.Value))
+			.ToList()
+			.ForEach(Add);
 	}
+
+	/// <summary>
+	/// 获取资产条目的键。
+	/// </summary>
+	protected override ProductType.Enums GetKey(AssetItem item) => item.ProductType;
 
 	/// <summary>
 	/// 读取指定产品资产数量。
 	/// </summary>
 	public float GetAmount(ProductType.Enums type)
 	{
-		return amounts.ContainsKey(type) ? amounts[type] : 0.0f;
+		return HasKey(type) ? Get(type).Amount : 0.0f;
 	}
 
-	/// <summary>
-	/// 判断是否没有任何资产。
-	/// </summary>
-	public bool isEmpty(ProductType.Enums type)
-	{
-		return GetAmount(type) == 0.0f;
-	}
 
 	/// <summary>
 	/// 返回所有的产品键
 	/// </summary>
 	public IEnumerable<ProductType.Enums> GetProductTypes()
 	{
-		return amounts.Keys;
+		return GetAll().Select(item => item.ProductType);
 	}
 
 
@@ -58,8 +54,13 @@ public class Asset : IInfo
 	/// </summary>
 	public void SetAmount(ProductType.Enums type, float amount)
 	{
-		Debug.Assert(amount >= 0.0f, "资产数量不能为负数");
-		amounts[type] = amount;
+		if (HasKey(type))
+		{
+			Get(type).SetAmount(amount);
+			return;
+		}
+
+		Add(new AssetItem(type, amount));
 	}
 
 	/// <summary>
@@ -67,8 +68,13 @@ public class Asset : IInfo
 	/// </summary>
 	public void AddAmount(ProductType.Enums type, float amount)
 	{
-		Debug.Assert(amount > 0.0f, "增加资产数量不能为负数");
-		SetAmount(type, GetAmount(type) + amount);
+		if (HasKey(type))
+		{
+			Get(type).AddAmount(amount);
+			return;
+		}
+
+		Add(new AssetItem(type, amount));
 	}
 
 	/// <summary>
@@ -76,10 +82,7 @@ public class Asset : IInfo
 	/// </summary>
 	public void ConsumeAmount(ProductType.Enums type, float amount)
 	{
-		Debug.Assert(amount > 0.0f, "消耗资产数量不能为负数");
-		float currentAmount = GetAmount(type);
-		Debug.Assert(currentAmount >= amount, "资产数量不足，无法消耗");
-		SetAmount(type, currentAmount - amount);
+		Get(type).ConsumeAmount(amount);
 	}
 
 
@@ -90,9 +93,9 @@ public class Asset : IInfo
 	{
 		InfoData data = new InfoData();
 
-		amounts
-			.OrderBy(item => item.Key)
-			.Select(item => (name: ProductTemplate.GetTemplate(item.Key).Name, amount: item.Value))
+		GetAll()
+			.OrderBy(item => item.ProductType)
+			.Select(item => (name: item.Template.Name, amount: item.Amount))
 			.ToList()
 			.ForEach(item => data.AddNumber(item.name, item.amount));
 

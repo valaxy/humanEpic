@@ -2,12 +2,42 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 public static class JsonUtility
 {
     /// <summary>
-    /// 记载JSON文件为原生C#字典数据。采用godot API，这样支持res://路径
+    /// 将字典对象转换为 JSON 字符串，便于调试查看。
+    /// </summary>
+    public static string ConvertDictionaryToJsonString(Dictionary<string, object> data, bool writeIndented = true)
+    {
+        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = writeIndented,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        return JsonSerializer.Serialize(data, jsonOptions);
+    }
+
+    /// <summary>
+    /// 写入 JSON 文件，兼容 Godot 的 res:// 路径。
+    /// </summary>
+    public static void WriteJsonFile(string filePath, Dictionary<string, object> data, bool writeIndented)
+    {
+        string jsonString = ConvertDictionaryToJsonString(data, writeIndented);
+        using FileAccess file = FileAccess.Open(filePath, FileAccess.ModeFlags.Write);
+        if (file == null)
+        {
+            throw new InvalidOperationException($"Failed to open save file at {filePath}: {FileAccess.GetOpenError()}");
+        }
+
+        file.StoreString(jsonString);
+    }
+
+    /// <summary>
+    /// 记载JSON文件为原生C#字典数据。采用godot API，这样支持 res:// 路径
     /// </summary>
     public static Dictionary<string, object> LoadDataFromJsonFile(string jsonFilePath)
     {

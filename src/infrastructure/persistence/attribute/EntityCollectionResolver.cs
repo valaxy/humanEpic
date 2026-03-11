@@ -26,7 +26,7 @@ public static partial class DomainModelJsonPersistence
 
 	internal static object resolveEntityById(Type entityType, int entityId)
 	{
-		Type collectionType = getEntityCollectionType(entityType);
+		Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
 		object collection = getEntityCollectionByTypeOrNull(collectionType)
 			?? throw new InvalidOperationException($"实体类型 {entityType.FullName} 反持久化缺少集合上下文: {collectionType.FullName}");
 

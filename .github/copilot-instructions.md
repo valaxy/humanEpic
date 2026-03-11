@@ -42,5 +42,7 @@
 # AI助手规范
 - 使用中文回复
 - 不要用bash或cmd执行命令，用pwsh执行命令
-- 若新增了`.cs`文件，先运行Task刷新godot资源
-- 若改动了`.cs`文件，最后运行`dotnet build .\humanepic.sln`来确保代码编译通过
+- 工作流：
+  - 若新增了`.cs`文件，先运行Task刷新godot资源
+  - 若改动了`.cs`文件，最后运行`dotnet build .\humanepic.sln`来确保代码编译通过
+  - 最后运行`.\\bin\\Godot_v4.6.1-stable_mono_win64_console.exe`启动游戏，持续观察几秒日志，修复可能的运行时问题

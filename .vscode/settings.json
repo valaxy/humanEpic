@@ -15,4 +15,10 @@
     },
     "dotnet-test-explorer.runSettingsPath": ".runsettings",
     "chat.agent.maxRequests": 90,
+    "comment-formula.languages": [
+        "csharp"
+    ],
+    "chat.tools.terminal.autoApprove": {
+        ".\\bin\\Godot_v4.6.1-stable_mono_win64_console.exe": true
+    }
 }

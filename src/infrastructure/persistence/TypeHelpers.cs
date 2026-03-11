@@ -47,7 +47,7 @@ public static class TypeHelpers
 
     internal static bool isEntityType(Type type)
     {
-        return type.GetCustomAttribute<PersistEntityAttribute>() != null;
+        return PersistenceReflectionHelper.isEntityType(type);
     }
 
     // 判断类型是否为列表或数组。

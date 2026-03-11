@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 
 /// <summary>
 /// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
@@ -27,57 +26,6 @@ public static partial class DomainModelJsonPersistence
 	// 根节点静态成员键：按类型分组保存静态字段/属性。
 	private const string staticMembers = "__static";
 
-
-	/// <summary>
-	/// 将模型保存为 JSON 字符串。
-	/// </summary>
-	public static string Save<TModel>(TModel model) where TModel : class
-	{
-		Dictionary<string, object> data = SaveToObject(model);
-		return JsonSerializer.Serialize(data);
-	}
-
-	/// <summary>
-	/// 将模型保存为 JSON 字符串，并附带实体集合上下文。
-	/// </summary>
-	public static string Save<TModel>(TModel model, IEnumerable<object> entityCollections) where TModel : class
-	{
-		Dictionary<string, object> data = SaveToObject(model, entityCollections);
-		return JsonSerializer.Serialize(data);
-	}
-
-	/// <summary>
-	/// 将 JSON 字符串加载为模型。
-	/// </summary>
-	public static TModel Load<TModel>(string json) where TModel : class
-	{
-		using JsonDocument document = JsonDocument.Parse(json);
-		object node = JsonUtility.ToNativeObject(document.RootElement)
-			?? throw new InvalidOperationException("根节点不能为空");
-		if (node is not Dictionary<string, object> root)
-		{
-			throw new InvalidOperationException("根节点必须是对象");
-		}
-
-		return LoadFromObject<TModel>(root);
-	}
-
-	/// <summary>
-	/// 将 JSON 字符串加载为模型，并附带实体集合上下文。
-	/// </summary>
-	public static TModel Load<TModel>(string json, IEnumerable<object> entityCollections) where TModel : class
-	{
-		using JsonDocument document = JsonDocument.Parse(json);
-		object node = JsonUtility.ToNativeObject(document.RootElement)
-			?? throw new InvalidOperationException("根节点不能为空");
-		if (node is not Dictionary<string, object> root)
-		{
-			throw new InvalidOperationException("根节点必须是对象");
-		}
-
-		return LoadFromObject<TModel>(root, entityCollections);
-	}
-
 	/// <summary>
 	/// 将模型保存为中间字典对象。
 	/// </summary>
@@ -89,7 +37,7 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		Type modelType = model.GetType();
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return saveRootObject(model, modelType, modelType, Array.Empty<object>(), true);
 	}
 
@@ -104,7 +52,7 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		Type modelType = model.GetType();
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return saveRootObject(model, modelType, modelType, entityCollections.ToList(), true);
 	}
 
@@ -119,7 +67,7 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		Type modelType = model.GetType();
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return saveRootObject(model, modelType, modelType, Array.Empty<object>(), false);
 	}
 
@@ -134,26 +82,8 @@ public static partial class DomainModelJsonPersistence
 		}
 
 		Type modelType = model.GetType();
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return saveRootObject(model, modelType, modelType, entityCollections.ToList(), false);
-	}
-
-	/// <summary>
-	/// 指定宿主类型保存模型。用于“实体在集合上下文中完整持久化”的场景。
-	/// </summary>
-	public static Dictionary<string, object> SaveToObjectAsCollectionItem<TModel>(
-		TModel model,
-		Type ownerCollectionType,
-		IEnumerable<object> entityCollections) where TModel : class
-	{
-		if (model == null)
-		{
-			throw new InvalidOperationException("持久化模型不能为空");
-		}
-
-		Type modelType = model.GetType();
-		ensurePersistableClass(modelType);
-		return saveRootObject(model, modelType, ownerCollectionType, entityCollections.ToList(), false);
 	}
 
 	/// <summary>
@@ -162,7 +92,7 @@ public static partial class DomainModelJsonPersistence
 	public static TModel LoadFromObject<TModel>(Dictionary<string, object> data) where TModel : class
 	{
 		Type modelType = typeof(TModel);
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, Array.Empty<object>(), true);
 	}
 
@@ -172,7 +102,7 @@ public static partial class DomainModelJsonPersistence
 	public static TModel LoadFromObject<TModel>(Dictionary<string, object> data, IEnumerable<object> entityCollections) where TModel : class
 	{
 		Type modelType = typeof(TModel);
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, entityCollections.ToList(), true);
 	}
 
@@ -182,7 +112,7 @@ public static partial class DomainModelJsonPersistence
 	public static TModel LoadFromObjectWithoutStatic<TModel>(Dictionary<string, object> data) where TModel : class
 	{
 		Type modelType = typeof(TModel);
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, Array.Empty<object>(), false);
 	}
 
@@ -192,21 +122,8 @@ public static partial class DomainModelJsonPersistence
 	public static TModel LoadFromObjectWithoutStatic<TModel>(Dictionary<string, object> data, IEnumerable<object> entityCollections) where TModel : class
 	{
 		Type modelType = typeof(TModel);
-		ensurePersistableClass(modelType);
+		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, entityCollections.ToList(), false);
-	}
-
-	/// <summary>
-	/// 指定宿主类型加载模型。用于“实体在集合上下文中完整反持久化”的场景。
-	/// </summary>
-	public static TModel LoadFromObjectAsCollectionItem<TModel>(
-		Dictionary<string, object> data,
-		Type ownerCollectionType,
-		IEnumerable<object> entityCollections) where TModel : class
-	{
-		Type modelType = typeof(TModel);
-		ensurePersistableClass(modelType);
-		return (TModel)loadRootObject(data, modelType, ownerCollectionType, entityCollections.ToList(), false);
 	}
 
 	/// <summary>

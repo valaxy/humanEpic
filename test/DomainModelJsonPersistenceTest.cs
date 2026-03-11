@@ -8,6 +8,25 @@ using Godot;
 [TestSuite]
 public class DomainModelJsonPersistenceTest
 {
+	private static string saveJson<TModel>(TModel model) where TModel : class
+	{
+		Dictionary<string, object> saved = DomainModelJsonPersistence.SaveToObject(model);
+		return JsonSerializer.Serialize(saved);
+	}
+
+	private static TModel loadJson<TModel>(string json) where TModel : class
+	{
+		using JsonDocument document = JsonDocument.Parse(json);
+		object rootNode = JsonUtility.ToNativeObject(document.RootElement)
+			?? throw new InvalidOperationException("根节点不能为空");
+		if (rootNode is not Dictionary<string, object> root)
+		{
+			throw new InvalidOperationException("根节点必须是对象");
+		}
+
+		return DomainModelJsonPersistence.LoadFromObject<TModel>(root);
+	}
+
 	private enum SampleKind
 	{
 		Food = 1,
@@ -223,7 +242,7 @@ public class DomainModelJsonPersistenceTest
 	public void Save_ShouldContainExpectedJsonShape()
 	{
 		SampleModel model = new SampleModel("alpha", 7);
-		string json = DomainModelJsonPersistence.Save(model);
+		string json = saveJson(model);
 		using JsonDocument document = JsonDocument.Parse(json);
 		JsonElement root = document.RootElement;
 
@@ -277,8 +296,8 @@ public class DomainModelJsonPersistenceTest
 	public void SaveAndLoad_ShouldRoundTrip()
 	{
 		SampleModel model = new SampleModel("beta", 11);
-		string json = DomainModelJsonPersistence.Save(model);
-		SampleModel loaded = DomainModelJsonPersistence.Load<SampleModel>(json);
+		string json = saveJson(model);
+		SampleModel loaded = loadJson<SampleModel>(json);
 
 		if (loaded.Name != "beta" || loaded.Level != 11)
 		{
@@ -315,7 +334,7 @@ public class DomainModelJsonPersistenceTest
 
 		try
 		{
-			DomainModelJsonPersistence.Save(model);
+			_ = saveJson(model);
 		}
 		catch (InvalidOperationException)
 		{
@@ -332,8 +351,8 @@ public class DomainModelJsonPersistenceTest
 	public void SaveAndLoad_ValueTuple_ShouldRoundTrip()
 	{
 		TupleModel model = new TupleModel((18, 0.75f));
-		string json = DomainModelJsonPersistence.Save(model);
-		TupleModel loaded = DomainModelJsonPersistence.Load<TupleModel>(json);
+		string json = saveJson(model);
+		TupleModel loaded = loadJson<TupleModel>(json);
 
 		if (loaded.Metrics.age != 18)
 		{
@@ -354,7 +373,7 @@ public class DomainModelJsonPersistenceTest
 
 		try
 		{
-			DomainModelJsonPersistence.Save(model);
+			_ = saveJson(model);
 		}
 		catch (InvalidOperationException)
 		{
@@ -377,8 +396,8 @@ public class DomainModelJsonPersistenceTest
 			new HashSet<int> { 2, 5, 7 }
 		);
 
-		string json = DomainModelJsonPersistence.Save(model);
-		GodotValueAndSetModel loaded = DomainModelJsonPersistence.Load<GodotValueAndSetModel>(json);
+		string json = saveJson(model);
+		GodotValueAndSetModel loaded = loadJson<GodotValueAndSetModel>(json);
 
 		if (!loaded.Color.IsEqualApprox(model.Color))
 		{
@@ -405,8 +424,8 @@ public class DomainModelJsonPersistenceTest
 	public void SaveAndLoad_SortedSet_ShouldRoundTrip()
 	{
 		SortedSetModel model = new SortedSetModel(new[] { 7, 3, 9, 3 });
-		string json = DomainModelJsonPersistence.Save(model);
-		SortedSetModel loaded = DomainModelJsonPersistence.Load<SortedSetModel>(json);
+		string json = saveJson(model);
+		SortedSetModel loaded = loadJson<SortedSetModel>(json);
 
 		if (loaded.Scores.Count != 3)
 		{
@@ -428,8 +447,8 @@ public class DomainModelJsonPersistenceTest
 			{ new Vector2I(-3, 4), 20 }
 		});
 
-		string json = DomainModelJsonPersistence.Save(model);
-		Vector2IDictionaryModel loaded = DomainModelJsonPersistence.Load<Vector2IDictionaryModel>(json);
+		string json = saveJson(model);
+		Vector2IDictionaryModel loaded = loadJson<Vector2IDictionaryModel>(json);
 
 		if (loaded.ValueByCell.Count != 2)
 		{

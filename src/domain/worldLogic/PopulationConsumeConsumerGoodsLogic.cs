@@ -10,17 +10,14 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 {
 	// 人口集合。
 	private readonly PopulationCollection populations;
-	// 消费品模板缓存。
-	private readonly IReadOnlyDictionary<ProductType.Enums, ProductTemplate> consumerGoodTemplates;
 
 	/// <summary>
 	/// 初始化人口消费消耗逻辑。
 	/// </summary>
-	public PopulationConsumeConsumerGoodsLogic(PopulationCollection populations, float intervalDays)
-		: base("PopulationConsumeConsumerGoods", "人口按边际效用效率优先消耗资产中的消费品，持续补充需求直至库存耗尽。", intervalDays)
+	public PopulationConsumeConsumerGoodsLogic(PopulationCollection populations)
+		: base("PopulationConsumeConsumerGoods", "人口按边际效用效率优先消耗资产中的消费品，持续补充需求直至库存耗尽。", 0.1f)
 	{
 		this.populations = populations;
-		consumerGoodTemplates = ProductTemplate.GetConsumerGoodTemplates();
 	}
 
 	/// <summary>
@@ -31,7 +28,7 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 		populations
 			.GetAll()
 			.ToList()
-			.ForEach(population => consumePopulationAssets(population, 1.0f));
+			.ForEach(population => consumePopulationAssets(population, IntervalDays));
 	}
 
 	// 处理单个人口的消费行为，每个人口会有一定的时间来消耗消费品
@@ -41,7 +38,7 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 
 		while (days > 0)
 		{
-			float deltaDays = MathF.Min(0.1f, days); // 每次循环模拟0.1天的消费行为，直到消耗完或者时间用尽
+			float deltaDays = days; // 时间可能用不尽
 			consumePopulationAssetsDelta(population, ref deltaDays, out bool isEnd);
 			if (isEnd)
 			{
@@ -55,7 +52,7 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 	// 处理单个人口的消费行为，单次迭代
 	private void consumePopulationAssetsDelta(Population population, ref float deltaDays, out bool isEnd)
 	{
-		List<(ProductTemplate template, float availableAmount)> candidates = calculateProductsOrderByUtilityEfficiency(population);
+		List<AssetItem> candidates = calculateProductsOrderByUtilityEfficiency(population);
 		if (candidates.Count == 0)
 		{
 			isEnd = true; // 没有可用的消费品了，直接返回
@@ -67,20 +64,20 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 	}
 
 	// 按商品效用效率的顺序排列商品列表，并过滤无效使用
-	private List<(ProductTemplate template, float availableAmount)> calculateProductsOrderByUtilityEfficiency(Population population)
+	private List<AssetItem> calculateProductsOrderByUtilityEfficiency(Population population)
 	{
-		List<(ProductTemplate template, float availableAmount)> candidates =
-			consumerGoodTemplates
-			.Values
-			.Select(template =>
+		List<AssetItem> candidates =
+			population.Asset.GetAll()
+			.Where(assetItem => assetItem.Template.IsConsumerGood && assetItem.Amount > 0.0f) // 只考虑消费品且数量大于0的资产
+			.Select(assetItem =>
 			{
-				float availableAmount = population.Asset.GetAmount(template.Type);
-				float utilityEfficiency = calculateUtilityEfficiency(population, template);
-				return (template, availableAmount, utilityEfficiency);
+				float availableAmount = assetItem.Amount;
+				float utilityEfficiency = calculateUtilityEfficiency(population, assetItem.Template);
+				return (assetItem, utilityEfficiency);
 			})
-			.Where(item => item.availableAmount > 0.0f && item.utilityEfficiency > 0.0f)
+			.Where(item => item.utilityEfficiency > 0.0f)
 			.OrderByDescending(item => item.utilityEfficiency)
-			.Select(item => (item.template, item.availableAmount))
+			.Select(item => item.assetItem)
 			.ToList();
 		return candidates;
 	}
@@ -101,22 +98,22 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 	}
 
 	// 消耗效用效率最高的商品，并将其转化为需求满足度增量。
-	private void consumeProductIncreaseDemand(Population population, List<(ProductTemplate template, float availableAmount)> candidates, ref float deltaDays)
+	private void consumeProductIncreaseDemand(Population population, List<AssetItem> candidates, ref float deltaDays)
 	{
-		(ProductTemplate template, float availableAmount) bestCandidate = candidates[0]; // 效用效率最高的商品
+		AssetItem bestCandidate = candidates[0]; // 效用效率最高的商品
 		float consumeAmount;
-		float consumeMaxAmount = deltaDays * bestCandidate.template.ConsumeProductNumPerDay * population.Count;
-		if (consumeMaxAmount < bestCandidate.availableAmount)
+		float consumeMaxAmount = deltaDays * bestCandidate.Template.ConsumeProductNumPerDay * population.Count;
+		if (consumeMaxAmount < bestCandidate.Amount)
 		{
 			consumeAmount = consumeMaxAmount;
 		}
 		else
 		{
-			consumeAmount = bestCandidate.availableAmount;
-			deltaDays = consumeAmount / (bestCandidate.template.ConsumeProductNumPerDay * population.Count); // 实际消耗完这个商品需要的时间
+			consumeAmount = bestCandidate.Amount;
+			deltaDays = consumeAmount / (bestCandidate.Template.ConsumeProductNumPerDay * population.Count); // 实际消耗完这个商品需要的时间
 		}
-		population.Asset.ConsumeAmount(bestCandidate.template.Type, consumeAmount); // 消费商品
-		increaseDemand(population, bestCandidate.template, consumeAmount); // 提高需求度
+		population.Asset.ConsumeAmount(bestCandidate.Template.Type, consumeAmount); // 消费商品
+		increaseDemand(population, bestCandidate.Template, consumeAmount); // 提高需求度
 	}
 
 

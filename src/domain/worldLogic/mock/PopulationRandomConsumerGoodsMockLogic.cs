@@ -41,7 +41,7 @@ public class PopulationRandomConsumerGoodsMockLogic : WorldLogic
 					.Select(item =>
 					{
 						float randomPerCapitaAmount = nextFloat(0.05f, 0.4f);
-						float addedAmount = randomPerCapitaAmount * population.Count;
+						float addedAmount = randomPerCapitaAmount * population.Count * 10;
 						return (item.productType, addedAmount);
 					})
 					.Where(item => item.addedAmount > 0.0f)

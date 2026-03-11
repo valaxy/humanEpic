@@ -1,7 +1,5 @@
 using Godot;
 using System;
-using System.Text.Json;
-using System.Text.Encodings.Web;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -38,8 +36,8 @@ public class GameWorldInitializer
             });
         DomainModelJsonPersistence.AttachStaticMembers(worldStateData, mergedStaticMembers);
 
-        writeJsonFile(mapSavePath, mapData, false);
-        writeJsonFile(worldStateSavePath, worldStateData, true);
+        JsonUtility.WriteJsonFile(mapSavePath, mapData, false);
+        JsonUtility.WriteJsonFile(worldStateSavePath, worldStateData, true);
         GD.Print($"Game saved successfully to {mapSavePath} and {worldStateSavePath}");
         GD.Print($"[Perf] GameWorldInitializer Save took {Time.GetTicksMsec() - start} ms");
     }
@@ -84,24 +82,6 @@ public class GameWorldInitializer
 
         GD.Print("[Load] Merging map/world-state and constructing GameWorld.");
         return GameWorld.LoadSaveData(mapData, worldStateData);
-    }
-
-    // 使用 Godot File API 写入 JSON，兼容 res:// 路径。
-    private static void writeJsonFile(string filePath, Dictionary<string, object> data, bool writeIndented)
-    {
-        JsonSerializerOptions jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = writeIndented,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-        string jsonString = JsonSerializer.Serialize(data, jsonOptions);
-        using FileAccess file = FileAccess.Open(filePath, FileAccess.ModeFlags.Write);
-        if (file == null)
-        {
-            throw new InvalidOperationException($"Failed to open save file at {filePath}: {FileAccess.GetOpenError()}");
-        }
-
-        file.StoreString(jsonString);
     }
 
 

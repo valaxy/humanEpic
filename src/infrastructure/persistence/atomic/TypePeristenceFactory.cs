@@ -3,19 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// 领域模型特性驱动持久化器，负责 Save/Load 到 JSON。
+/// 类型持久化工厂，负责根据类型提供对应的 ITypePersistence 处理器。
 /// </summary>
-public static partial class DomainModelJsonPersistence
+internal static class TypePeristenceFactory
 {
-	// 原子类型持久化处理器集合。
-	private static readonly List<ITypePersistence> atomicTypePersistences = createAtomicTypePersistences();
+	// 类型持久化处理器集合（先原子/集合/实体，再一般 Persistable 对象）。
+	private static readonly List<ITypePersistence> typePersistences = createTypePersistences();
 
-	private static ITypePersistence? getAtomicTypePersistenceOrNull(Type type)
-	{
-		return atomicTypePersistences.FirstOrDefault(handler => handler.CanHandle(type));
-	}
-
-	private static List<ITypePersistence> createAtomicTypePersistences()
+	private static List<ITypePersistence> createTypePersistences()
 	{
 		return new List<ITypePersistence>
 		{
@@ -40,7 +35,14 @@ public static partial class DomainModelJsonPersistence
 			new EntityReferenceTypePersistence(),
 			new ColorTypePersistence(),
 			new Vector2TypePersistence(),
-			new Vector2ITypePersistence()
+			new Vector2ITypePersistence(),
+			new PersistableTypePersistence() // 最后是一般的自定义对象
 		};
+	}
+
+	public static ITypePersistence GetTypePersistence(Type type)
+	{
+		ITypePersistence? typePersistence = typePersistences.FirstOrDefault(handler => handler.CanHandle(type));
+		return typePersistence ?? throw new InvalidOperationException($"类型 {type.FullName} 缺少可用的 ITypePersistence 处理器");
 	}
 }

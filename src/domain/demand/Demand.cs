@@ -47,6 +47,8 @@ public class Demand
 	}
 
 
+
+
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
 	/// </summary>
@@ -63,6 +65,8 @@ public class Demand
 		SatisfiedAmount = satisfiedAmount;
 	}
 
+
+
 	/// <summary>
 	/// 获取人均满足度。
 	/// </summary>
@@ -72,12 +76,24 @@ public class Demand
 	}
 
 	/// <summary>
-	/// 计算需求总效用
+	/// 获取人均效用
 	/// </summary>
-	public float GetTotalUtility(float demandDegree)
+	public float GetUtility(int populationCount)
 	{
-		return template.DemandUtility.GetTotalUtility(demandDegree);
+		float satisfiedAmountPerPerson = GetSatisfiedAmountPerPerson(populationCount);
+		return template.DemandUtility.GetUtility(satisfiedAmountPerPerson);
 	}
+
+	/// <summary>
+	/// 获取人均效用导数
+	/// </summary>
+	public float GetUtilityDerivative(int populationCount)
+	{
+		float satisfiedAmountPerPerson = GetSatisfiedAmountPerPerson(populationCount);
+		return template.DemandUtility.GetUtilityDerivative(satisfiedAmountPerPerson);
+	}
+
+
 
 	/// <summary>
 	/// 按人口数量执行每日需求度耗损。

@@ -36,6 +36,22 @@ public class Asset : IInfo
 		return amounts.ContainsKey(type) ? amounts[type] : 0.0f;
 	}
 
+	/// <summary>
+	/// 判断是否没有任何资产。
+	/// </summary>
+	public bool isEmpty(ProductType.Enums type)
+	{
+		return GetAmount(type) == 0.0f;
+	}
+
+	/// <summary>
+	/// 返回所有的产品键
+	/// </summary>
+	public IEnumerable<ProductType.Enums> GetProductTypes()
+	{
+		return amounts.Keys;
+	}
+
 
 	/// <summary>
 	/// 设置指定产品数量。

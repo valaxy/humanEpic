@@ -82,14 +82,8 @@ public class DemandTemplate : ITemplate<DemandType.Enums, DemandTemplate>
 		Dictionary<string, float> parameters = parseUtilityParameters(row.Get<string>("utility_params"));
 		return utilityType switch
 		{
-			"SATURATION_SURVIVAL" =>
-				new SaturationSurvivalUtility(
-					getUtilityParam(parameters, "target_degree", 1.0f),
-					getUtilityParam(parameters, "target_utility_ratio", 0.95f),
-					getUtilityParam(parameters, "max_utility", 1.0f)),
-			"LOGARITHMIC_DECAY" =>
-				new LogarithmicDecayUtility(
-					getUtilityParam(parameters, "decay_factor", 1.0f),
+			"QUADRATIC" =>
+				new QuadraticUtility(
 					getUtilityParam(parameters, "max_utility", 1.0f)),
 			_ => throw new InvalidOperationException($"Unsupported demand utility type: {utilityType}")
 		};

@@ -8,7 +8,7 @@ using System.Linq;
 public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTemplate>
 {
 	// 消费品对需求的满足倍率映射（可写内部存储）。
-	private readonly Dictionary<DemandType.Enums, float> needSatisfactionRatios;
+	private readonly Dictionary<DemandType.Enums, float> demandsSatisfactionPerProductNum;
 
 	private const string productTemplateCsvPath = "res://src/data/product_templates.csv";
 	private static readonly CsvSchema productTemplateSchema = new CsvSchema(
@@ -17,8 +17,8 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 		{
 			CsvColumnDefinition.Enum<ProductType.Enums>("product_type_id"),
 			CsvColumnDefinition.Boolean("is_consumer_good"),
-			CsvColumnDefinition.Float("daily_consumption_speed", 0.0f),
-			CsvColumnDefinition.EnumFloatDictionary<DemandType.Enums>("demand_satisfaction_ratios", allowEmpty: true, minValue: 0),
+			CsvColumnDefinition.Float("consume_product_num_per_day", 0.0f),
+			CsvColumnDefinition.EnumFloatDictionary<DemandType.Enums>("demands_satisfaction_per_product_num", allowEmpty: true, minValue: 0),
 			CsvColumnDefinition.String("name"),
 			CsvColumnDefinition.String("description"),
 		});
@@ -54,12 +54,12 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 	/// <summary>
 	/// 每日消耗速度
 	/// </summary>
-	public float DailyConsumptionSpeed { get; }
+	public float ConsumeProductNumPerDay { get; }
 
 	/// <summary>
 	/// 消费品对需求的满足倍率映射
 	/// </summary>
-	public IReadOnlyDictionary<DemandType.Enums, float> NeedSatisfactionRatios => needSatisfactionRatios;
+	public IReadOnlyDictionary<DemandType.Enums, float> DemandsSatisfactionPerProductNum => demandsSatisfactionPerProductNum;
 
 
 	/// <summary>
@@ -69,16 +69,16 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 	/// <param name="name">显示名称</param>
 	/// <param name="description">产品描述</param>
 	/// <param name="isConsumerGood">是否消费品</param>
-	/// <param name="dailyConsumptionSpeed">每日消耗速度</param>
-	/// <param name="needSatisfactionRatios">需求满足倍率映射</param>
-	public ProductTemplate(ProductType.Enums type, string name, string description, bool isConsumerGood, float dailyConsumptionSpeed, Dictionary<DemandType.Enums, float> needSatisfactionRatios)
+	/// <param name="consumeProductNumPerDay">每日消耗商品数量</param>
+	/// <param name="demandsSatisfactionPerProductNum">每单位商品提供的需求满足度映射</param>
+	public ProductTemplate(ProductType.Enums type, string name, string description, bool isConsumerGood, float consumeProductNumPerDay, Dictionary<DemandType.Enums, float> demandsSatisfactionPerProductNum)
 	{
 		Type = type;
 		Name = name;
 		Description = description;
 		IsConsumerGood = isConsumerGood;
-		DailyConsumptionSpeed = dailyConsumptionSpeed;
-		this.needSatisfactionRatios = needSatisfactionRatios.ToDictionary(item => item.Key, item => item.Value);
+		ConsumeProductNumPerDay = consumeProductNumPerDay;
+		this.demandsSatisfactionPerProductNum = demandsSatisfactionPerProductNum.ToDictionary(item => item.Key, item => item.Value);
 	}
 
 
@@ -124,15 +124,15 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 			{
 				ProductType.Enums type = row.Get<ProductType.Enums>("product_type_id");
 				bool isConsumerGood = row.Get<bool>("is_consumer_good");
-				float dailyConsumptionSpeed = row.Get<float>("daily_consumption_speed");
-				Dictionary<DemandType.Enums, float> demandSatisfactionRatios = row.Get<Dictionary<DemandType.Enums, float>>("demand_satisfaction_ratios");
-				if (!isConsumerGood && demandSatisfactionRatios.Count > 0)
+				float consumeProductNumPerDay = row.Get<float>("consume_product_num_per_day");
+				Dictionary<DemandType.Enums, float> demandsSatisfactionPerProductNum = row.Get<Dictionary<DemandType.Enums, float>>("demands_satisfaction_per_product_num");
+				if (!isConsumerGood && demandsSatisfactionPerProductNum.Count > 0)
 				{
-					throw new InvalidOperationException($"Product template data error: product_type_id '{type}' is not a consumer good, but has demand_satisfaction_ratios in {productTemplateCsvPath}.");
+					throw new InvalidOperationException($"Product template data error: product_type_id '{type}' is not a consumer good, but has demands_satisfaction_per_product_num in {productTemplateCsvPath}.");
 				}
-				if (!isConsumerGood && dailyConsumptionSpeed > 0.0f)
+				if (!isConsumerGood && consumeProductNumPerDay > 0.0f)
 				{
-					throw new InvalidOperationException($"Product template data error: product_type_id '{type}' is not a consumer good, but has daily_consumption_speed > 0 in {productTemplateCsvPath}.");
+					throw new InvalidOperationException($"Product template data error: product_type_id '{type}' is not a consumer good, but has consume_product_num_per_day > 0 in {productTemplateCsvPath}.");
 				}
 
 				ProductTemplate template = new ProductTemplate(
@@ -140,8 +140,8 @@ public partial class ProductTemplate : ITemplate<ProductType.Enums, ProductTempl
 					row.Get<string>("name"),
 					row.Get<string>("description"),
 					isConsumerGood,
-					dailyConsumptionSpeed,
-					demandSatisfactionRatios);
+					consumeProductNumPerDay,
+					demandsSatisfactionPerProductNum);
 				return (type, template);
 			})
 			.ToList();

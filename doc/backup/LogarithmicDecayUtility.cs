@@ -27,7 +27,7 @@ public class LogarithmicDecayUtility : IDemandUtility
 	/// <summary>
 	/// 根据需求度计算总效用。
 	/// </summary>
-	public float GetTotalUtility(float demandDegree)
+	public float GetUtility(float demandDegree)
 	{
 		float x = MathF.Max(0.0001f, demandDegree);
 		return -k * MathF.Log(x) * maxUtility;

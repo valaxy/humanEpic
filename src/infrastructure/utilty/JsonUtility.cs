@@ -6,39 +6,43 @@ using System.Text.Json;
 
 public static class JsonUtility
 {
-    // 从默认存档路径加载原生 C# 字典数据。
-    public static Dictionary<string, object> LoadDataFromJsonFile(string savePath)
+    /// <summary>
+    /// 记载JSON文件为原生C#字典数据。采用godot API，这样支持res://路径
+    /// </summary>
+    public static Dictionary<string, object> LoadDataFromJsonFile(string jsonFilePath)
     {
-        if (!FileAccess.FileExists(savePath))
+        if (!FileAccess.FileExists(jsonFilePath))
         {
-            throw new InvalidOperationException($"Save file not found at {savePath}");
+            throw new InvalidOperationException($"Save file not found at {jsonFilePath}");
         }
 
-        using FileAccess file = FileAccess.Open(savePath, FileAccess.ModeFlags.Read);
+        using FileAccess file = FileAccess.Open(jsonFilePath, FileAccess.ModeFlags.Read);
         if (file == null)
         {
-            throw new InvalidOperationException($"Failed to open save file at {savePath}: {FileAccess.GetOpenError()}");
+            throw new InvalidOperationException($"Failed to open save file at {jsonFilePath}: {FileAccess.GetOpenError()}");
         }
 
         string jsonText = file.GetAsText();
         using JsonDocument doc = JsonDocument.Parse(jsonText);
-        return (Dictionary<string, object>)toNativeCsharp(doc.RootElement)!;
+        object? nativeObject = ToNativeObject(doc.RootElement);
+        return nativeObject as Dictionary<string, object>
+            ?? throw new InvalidOperationException("JSON 根节点必须为对象");
     }
 
 
     // JsonElement 转换为原生 C# 对象。
-    private static object? toNativeCsharp(JsonElement element)
+    public static object? ToNativeObject(JsonElement element)
     {
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
                 return element
                     .EnumerateObject()
-                    .ToDictionary(prop => prop.Name, prop => toNativeCsharp(prop.Value)!);
+                    .ToDictionary(prop => prop.Name, prop => ToNativeObject(prop.Value)!);
             case JsonValueKind.Array:
                 return element
                     .EnumerateArray()
-                    .Select(item => toNativeCsharp(item)!)
+                    .Select(item => ToNativeObject(item)!)
                     .ToList();
             case JsonValueKind.String:
                 return element.GetString();
@@ -56,7 +60,7 @@ public static class JsonUtility
             case JsonValueKind.Null:
                 return null;
             default:
-                return null;
+                throw new InvalidOperationException($"不支持的 JSON 节点类型: {element.ValueKind}");
         }
     }
 }

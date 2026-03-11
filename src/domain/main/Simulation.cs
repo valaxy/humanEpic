@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System;
-using System.Linq;
+
 
 /// <summary>
 /// 领域层统一模拟入口，管理并更新所有的世界逻辑（IWorldLogic）
@@ -20,7 +20,6 @@ public class Simulation
 	/// </summary>
 	public Simulation(GameWorld world)
 	{
-		logics.Add(new HelloWorldLogic());
 		logics.Add(new PopulationDemandDecayLogic(world.Populations));
 		logics.Add(new PopulationRandomConsumerGoodsMockLogic(world.Populations, 1.0f));
 		logics.Add(new PopulationConsumeConsumerGoodsLogic(world.Populations, 1.0f));

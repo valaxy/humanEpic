@@ -52,7 +52,8 @@ public static partial class DomainModelJsonPersistence
 	public static TModel Load<TModel>(string json) where TModel : class
 	{
 		using JsonDocument document = JsonDocument.Parse(json);
-		object node = toNativeObject(document.RootElement);
+		object node = JsonUtility.ToNativeObject(document.RootElement)
+			?? throw new InvalidOperationException("根节点不能为空");
 		if (node is not Dictionary<string, object> root)
 		{
 			throw new InvalidOperationException("根节点必须是对象");
@@ -67,7 +68,8 @@ public static partial class DomainModelJsonPersistence
 	public static TModel Load<TModel>(string json, IEnumerable<object> entityCollections) where TModel : class
 	{
 		using JsonDocument document = JsonDocument.Parse(json);
-		object node = toNativeObject(document.RootElement);
+		object node = JsonUtility.ToNativeObject(document.RootElement)
+			?? throw new InvalidOperationException("根节点不能为空");
 		if (node is not Dictionary<string, object> root)
 		{
 			throw new InvalidOperationException("根节点必须是对象");

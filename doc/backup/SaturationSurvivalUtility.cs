@@ -27,7 +27,7 @@ public sealed class SaturationSurvivalUtility : IDemandUtility
 	/// <summary>
 	/// 根据需求度计算总效用
 	/// </summary>
-	public float GetTotalUtility(float demandDegree)
+	public float GetUtility(float demandDegree)
 	{
 		float x = Mathf.Max(0.0f, demandDegree);
 		// y(x) = 1 - e^(-kx)

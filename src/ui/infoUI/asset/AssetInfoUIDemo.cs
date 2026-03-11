@@ -51,8 +51,8 @@ public partial class AssetInfoUIDemo : Control
 	{
 		asset = new Asset(new Dictionary<ProductType.Enums, float>
 		{
-			{ ProductType.Enums.FOOD, 120.0f },
-			{ ProductType.Enums.WATER, 200.0f },
+			{ ProductType.Enums.BREAD, 120.0f },
+			{ ProductType.Enums.BLUEBERRY, 200.0f },
 			{ ProductType.Enums.CURRENCY, 320.0f },
 		});
 
@@ -64,8 +64,11 @@ public partial class AssetInfoUIDemo : Control
 	{
 		asset = new Asset(new Dictionary<ProductType.Enums, float>
 		{
-			{ ProductType.Enums.FOOD, 860.0f },
-			{ ProductType.Enums.WATER, 910.0f },
+			{ ProductType.Enums.BREAD, 860.0f },
+			{ ProductType.Enums.BLUEBERRY, 910.0f },
+			{ ProductType.Enums.TOY, 120.0f },
+			{ ProductType.Enums.BARBECUE, 64.0f },
+			{ ProductType.Enums.BOOK, 48.0f },
 			{ ProductType.Enums.WOOD, 240.0f },
 			{ ProductType.Enums.STONE, 430.0f },
 			{ ProductType.Enums.ORE, 130.0f },

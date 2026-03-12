@@ -1,6 +1,6 @@
 {
   "timeSystem": {
-    "elapsedDays": 0.47047788
+    "elapsedDays": 1.8164032
   },
   "countries": {
     "items": {
@@ -47,7 +47,7 @@
               "__dict": true,
               "kv": {
                 "0": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 24,
                   "TypeId": 0
                 },
                 "1": {
@@ -59,7 +59,7 @@
                   "TypeId": 2
                 },
                 "3": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 4.8,
                   "TypeId": 3
                 }
               }
@@ -68,7 +68,34 @@
           "asset": {
             "items": {
               "__dict": true,
-              "kv": {}
+              "kv": {
+                "1": {
+                  "amount": 222.17847,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {
+                      "1": 96
+                    }
+                  },
+                  "ProductType": 1
+                },
+                "2": {
+                  "amount": 446.07056,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {}
+                  },
+                  "ProductType": 2
+                },
+                "8": {
+                  "amount": 92.27594,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {}
+                  },
+                  "ProductType": 8
+                }
+              }
             }
           },
           "populationResidential": {
@@ -90,7 +117,7 @@
               "__dict": true,
               "kv": {
                 "0": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 69.07671,
                   "TypeId": 0
                 },
                 "1": {
@@ -102,7 +129,7 @@
                   "TypeId": 2
                 },
                 "3": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 15.705441,
                   "TypeId": 3
                 }
               }
@@ -111,7 +138,36 @@
           "asset": {
             "items": {
               "__dict": true,
-              "kv": {}
+              "kv": {
+                "0": {
+                  "amount": 0,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {
+                      "1": 94.5049
+                    }
+                  },
+                  "ProductType": 0
+                },
+                "1": {
+                  "amount": 438.5985,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {
+                      "1": 125.09902
+                    }
+                  },
+                  "ProductType": 1
+                },
+                "4": {
+                  "amount": 462.7243,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {}
+                  },
+                  "ProductType": 4
+                }
+              }
             }
           },
           "populationResidential": {
@@ -133,11 +189,11 @@
               "__dict": true,
               "kv": {
                 "0": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 23.76,
                   "TypeId": 0
                 },
                 "1": {
-                  "satisfiedAmount": 0,
+                  "satisfiedAmount": 4.32,
                   "TypeId": 1
                 },
                 "2": {
@@ -154,7 +210,34 @@
           "asset": {
             "items": {
               "__dict": true,
-              "kv": {}
+              "kv": {
+                "1": {
+                  "amount": 319.85388,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {}
+                  },
+                  "ProductType": 1
+                },
+                "3": {
+                  "amount": 80.63224,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {
+                      "1": 43.2
+                    }
+                  },
+                  "ProductType": 3
+                },
+                "4": {
+                  "amount": 235.19788,
+                  "consumedAmountByDay": {
+                    "__dict": true,
+                    "kv": {}
+                  },
+                  "ProductType": 4
+                }
+              }
             }
           },
           "populationResidential": {

@@ -3,7 +3,7 @@ using System.Globalization;
 
 internal sealed class SingleTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => type == typeof(float);
-	public object Serialize(object value, Type declaredType) => value;
-	public object Deserialize(object rawValue, Type targetType) => Convert.ToSingle(rawValue, CultureInfo.InvariantCulture);
+    public bool CanHandle(Type type) => type == typeof(float);
+    public object Serialize(object value, Type declaredType) => value;
+    public object Deserialize(object rawValue, Type targetType) => Convert.ToSingle(rawValue, CultureInfo.InvariantCulture);
 }

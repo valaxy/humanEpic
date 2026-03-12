@@ -30,21 +30,6 @@ public partial class LineChartView : Control
     // 标题区域高度。
     private const float TitleHeight = 24f;
 
-    // 图例区域宽度。
-    private const float LegendWidth = 180f;
-
-    // 图例区域与绘图区间距。
-    private const float LegendGap = 12f;
-
-    // 图例行高。
-    private const float LegendItemHeight = 22f;
-
-    // 图例内边距。
-    private const float LegendPadding = 8f;
-
-    // 图例勾选框尺寸。
-    private const float LegendToggleSize = 12f;
-
     // 悬浮点半径。
     private const float PointRadius = 3.5f;
 
@@ -55,13 +40,16 @@ public partial class LineChartView : Control
     private Chart chart = Chart.Create(
         Axis.Create("X"),
         Axis.Create("Y"),
-        DataSource.CreateLineChart(string.Empty, Array.Empty<string>(), Array.Empty<DataSeries>()));
+        LineChartDataSourceFactory.Create(string.Empty, Array.Empty<string>(), Array.Empty<DataSeries>()));
+
+    // 图例渲染与交互处理器。
+    private LineChartLegendRenderer legendRenderer = new();
 
     // 当前可交互点集合。
     private List<InteractivePoint> interactivePoints = [];
 
     // 当前可交互图例集合。
-    private List<InteractiveLegendItem> interactiveLegendItems = [];
+    private List<LineChartLegendInteractiveItem> interactiveLegendItems = [];
 
     // 图例可见性状态（Key -> 是否可见）。
     private Dictionary<string, bool> legendVisibility = new();
@@ -79,8 +67,6 @@ public partial class LineChartView : Control
     private Label tooltipLabel = null!;
 
     private sealed record InteractivePoint(string SeriesKey, Vector2 Position, string XText, string YText, Color Color);
-
-    private sealed record InteractiveLegendItem(string Key, Rect2 ToggleRect, Rect2 HoverRect);
 
     /// <summary>
     /// 初始化交互节点。
@@ -108,7 +94,7 @@ public partial class LineChartView : Control
     public void Render(DataSource dataSource)
     {
         chart = chart.Update(dataSource: dataSource);
-        syncLegendState(dataSource);
+        legendRenderer.SyncLegendState(dataSource, ref legendVisibility, ref hoveredLegendKey);
         QueueRedraw();
     }
 
@@ -119,7 +105,7 @@ public partial class LineChartView : Control
     public void UpdateChart(Chart chart)
     {
         this.chart = chart;
-        syncLegendState(chart.DataSource);
+        legendRenderer.SyncLegendState(chart.DataSource, ref legendVisibility, ref hoveredLegendKey);
         QueueRedraw();
     }
 
@@ -135,15 +121,15 @@ public partial class LineChartView : Control
         Font? font = GetThemeDefaultFont();
         int fontSize = GetThemeDefaultFontSize();
         DataSource dataSource = chart.DataSource;
-        syncLegendState(dataSource);
+        legendRenderer.SyncLegendState(dataSource, ref legendVisibility, ref hoveredLegendKey);
 
         if (!string.IsNullOrEmpty(dataSource.Title) && font is not null)
         {
             DrawString(font, new Vector2(0, TitleHeight - 6f), dataSource.Title, HorizontalAlignment.Left, -1, fontSize, labelColor);
         }
 
-        bool hasLegend = getLegendEntries(dataSource).Count > 0;
-        float legendAreaWidth = hasLegend ? LegendWidth + LegendGap : 0f;
+        bool hasLegend = legendRenderer.HasLegend(dataSource);
+        float legendAreaWidth = hasLegend ? legendRenderer.LegendAreaWidth : 0f;
 
         Rect2 plotRect = new Rect2(
             PlotPaddingLeft,
@@ -171,7 +157,7 @@ public partial class LineChartView : Control
             drawXLabels(plotRect, bounds.Value, font, fontSize, labelColor);
             if (hasLegend)
             {
-                drawLegend(plotRect, font, fontSize, labelColor);
+                interactiveLegendItems = legendRenderer.DrawLegend(this, plotRect, font, fontSize, labelColor, dataSource, legendVisibility, hoveredLegendKey);
             }
         }
 
@@ -220,7 +206,7 @@ public partial class LineChartView : Control
             .ForEach(series =>
             {
                 Color seriesColor = toGodotColor(series.ColorHex);
-                string seriesKey = getSeriesKey(series);
+                string seriesKey = LineChartDataSourceFactory.ResolveSeriesKey(series);
                 bool highlightedByLegend = string.IsNullOrWhiteSpace(hoveredLegendKey) || hoveredLegendKey == seriesKey;
                 Color renderColor = highlightedByLegend ? seriesColor : seriesColor.Darkened(0.45f);
                 float lineWidth = highlightedByLegend ? 2.6f : 1.5f;
@@ -348,64 +334,10 @@ public partial class LineChartView : Control
         QueueRedraw();
     }
 
-    // 绘制图例区域。
-    private void drawLegend(Rect2 plotRect, Font font, int fontSize, Color color)
-    {
-        DataSource dataSource = chart.DataSource;
-        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
-        if (legendEntries.Count == 0)
-        {
-            return;
-        }
-
-        float legendX = plotRect.End.X + LegendGap;
-        float legendY = plotRect.Position.Y;
-        float legendHeight = LegendPadding * 2f + legendEntries.Count * LegendItemHeight;
-        Rect2 legendRect = new Rect2(legendX, legendY, LegendWidth, legendHeight);
-        DrawRect(legendRect, color.Darkened(0.7f), false, 1f);
-
-        legendEntries
-            .Select((entry, index) => (entry, index))
-            .ToList()
-            .ForEach(item =>
-            {
-                float rowY = legendRect.Position.Y + LegendPadding + item.index * LegendItemHeight;
-                Rect2 rowRect = new Rect2(legendRect.Position.X + 2f, rowY, legendRect.Size.X - 4f, LegendItemHeight);
-                Rect2 toggleRect = new Rect2(rowRect.Position.X + 4f, rowRect.Position.Y + (LegendItemHeight - LegendToggleSize) / 2f, LegendToggleSize, LegendToggleSize);
-
-                bool isVisible = legendVisibility.TryGetValue(item.entry.Key, out bool visible) && visible;
-                bool isHovered = hoveredLegendKey == item.entry.Key;
-
-                if (isHovered)
-                {
-                    DrawRect(rowRect, color.Darkened(0.65f), true);
-                }
-
-                DrawRect(toggleRect, color, false, 1f);
-                if (isVisible)
-                {
-                    Rect2 innerToggleRect = new Rect2(toggleRect.Position + new Vector2(2f, 2f), toggleRect.Size - new Vector2(4f, 4f));
-                    DrawRect(innerToggleRect, toGodotColor(item.entry.ColorHex), true);
-                }
-
-                Vector2 colorDotPosition = new Vector2(toggleRect.End.X + 10f, rowRect.Position.Y + LegendItemHeight / 2f);
-                DrawCircle(colorDotPosition, 4f, toGodotColor(item.entry.ColorHex));
-
-                float textStartX = colorDotPosition.X + 10f;
-                DrawString(font, new Vector2(textStartX, rowRect.Position.Y + LegendItemHeight * 0.72f), item.entry.Name, HorizontalAlignment.Left, legendRect.Size.X - (textStartX - legendRect.Position.X) - 4f, fontSize - 1, color);
-
-                interactiveLegendItems.Add(new InteractiveLegendItem(item.entry.Key, toggleRect, rowRect));
-            });
-    }
-
     // 更新图例悬浮项。
     private void updateHoveredLegend(Vector2 mousePosition)
     {
-        InteractiveLegendItem? legendItem = interactiveLegendItems
-            .Select(item => (InteractiveLegendItem?)item)
-            .FirstOrDefault(item => item != null && item.HoverRect.HasPoint(mousePosition));
-
-        string? nextHoveredLegendKey = legendItem?.Key;
+        string? nextHoveredLegendKey = legendRenderer.ResolveHoveredLegendKey(interactiveLegendItems, mousePosition);
         if (nextHoveredLegendKey == hoveredLegendKey)
         {
             return;
@@ -418,18 +350,16 @@ public partial class LineChartView : Control
     // 处理图例勾选切换。
     private void handleLegendToggle(Vector2 mousePosition)
     {
-        InteractiveLegendItem? legendItem = interactiveLegendItems
-            .Select(item => (InteractiveLegendItem?)item)
-            .FirstOrDefault(item => item != null && item.ToggleRect.HasPoint(mousePosition));
-        if (legendItem == null)
+        string? legendKey = legendRenderer.ResolveToggleLegendKey(interactiveLegendItems, mousePosition);
+        if (string.IsNullOrWhiteSpace(legendKey))
         {
             return;
         }
 
-        bool currentVisible = legendVisibility.TryGetValue(legendItem.Key, out bool value) && value;
-        legendVisibility[legendItem.Key] = !currentVisible;
+        bool currentVisible = legendVisibility.TryGetValue(legendKey, out bool value) && value;
+        legendVisibility[legendKey] = !currentVisible;
 
-        if (hoveredPoint != null && hoveredPoint.SeriesKey == legendItem.Key && !legendVisibility[legendItem.Key])
+        if (hoveredPoint != null && hoveredPoint.SeriesKey == legendKey && !legendVisibility[legendKey])
         {
             hideTooltip();
         }
@@ -552,66 +482,10 @@ public partial class LineChartView : Control
         return chart.XAxis.Format(index);
     }
 
-    // 同步图例状态，保留已有勾选结果。
-    private void syncLegendState(DataSource dataSource)
-    {
-        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
-        if (legendEntries.Count == 0)
-        {
-            legendVisibility.Clear();
-            hoveredLegendKey = null;
-            return;
-        }
-
-        Dictionary<string, bool> nextVisibility = legendEntries
-            .ToDictionary(
-                entry => entry.Key,
-                entry => legendVisibility.TryGetValue(entry.Key, out bool visible) ? visible : true);
-        legendVisibility = nextVisibility;
-
-        if (!string.IsNullOrWhiteSpace(hoveredLegendKey) && !legendVisibility.ContainsKey(hoveredLegendKey))
-        {
-            hoveredLegendKey = null;
-        }
-    }
-
-    // 获取有效图例项（优先使用数据源显式图例定义）。
-    private static List<LineLegendItem> getLegendEntries(DataSource dataSource)
-    {
-        if (dataSource.LegendItems.Count > 0)
-        {
-            return dataSource.LegendItems.ToList();
-        }
-
-        return dataSource.SeriesList
-            .Select(series => new LineLegendItem(getSeriesKey(series), series.Name, series.ColorHex))
-            .ToList();
-    }
-
     // 获取当前可见序列。
     private List<DataSeries> getVisibleSeries(DataSource dataSource)
     {
-        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
-        HashSet<string> enabledKeys = legendEntries
-            .Where(entry => legendVisibility.TryGetValue(entry.Key, out bool visible) && visible)
-            .Select(entry => entry.Key)
-            .ToHashSet();
-
-        if (legendEntries.Count == 0)
-        {
-            return dataSource.SeriesList.ToList();
-        }
-
-        return dataSource.SeriesList
-            .Where(series => enabledKeys.Contains(getSeriesKey(series)))
-            .ToList();
-    }
-
-    private static string getSeriesKey(DataSeries series)
-    {
-        return string.IsNullOrWhiteSpace(series.Key)
-            ? series.Name
-            : series.Key;
+        return legendRenderer.GetVisibleSeries(dataSource, legendVisibility);
     }
 
     // 将 X 值映射到图表坐标。

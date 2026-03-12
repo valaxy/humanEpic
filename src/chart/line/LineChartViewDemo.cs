@@ -64,6 +64,6 @@ public partial class LineChartViewDemo : Control
             DataSeries.Create("水稻", Colors.OrangeRed.ToHtml(), riceValues)
         ];
 
-        return DataSource.CreateLineChart("年度产量趋势", xLabels, seriesList, xValues);
+        return LineChartDataSourceFactory.Create("年度产量趋势", xLabels, seriesList, xValues);
     }
 }

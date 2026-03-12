@@ -51,6 +51,14 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "打开Godot编辑器",
+            "type": "shell",
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "command": ".\\bin\\Godot_v4.6.1-stable_mono_win64.exe --editor"
         }
     ]
 }

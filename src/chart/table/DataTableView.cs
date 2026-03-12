@@ -16,7 +16,7 @@ public partial class DataTableView : VBoxContainer
     private GridContainer dataGrid = null!;
 
     // 当前数据源。
-    private DataSource currentDataSource = DataSource.CreateTable(string.Empty, [], []);
+    private DataSource currentDataSource = DataTableDataSourceFactory.Create(string.Empty, [], []);
 
     // 当前表格配置。
     private DataTable currentDataTable = DataTable.Create(string.Empty);

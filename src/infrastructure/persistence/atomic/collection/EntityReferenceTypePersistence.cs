@@ -3,43 +3,43 @@ using System.Globalization;
 
 internal sealed class EntityReferenceTypePersistence : ITypePersistence
 {
-	public bool CanHandle(Type type) => TypeHelpers.isEntityType(type);
+    public bool CanHandle(Type type) => TypeHelpers.isEntityType(type);
 
-	public object Serialize(object value, Type declaredType)
-	{
-		if (!shouldSerializeEntityAsFullObject(declaredType))
-		{
-			if (value is not IIdModel idModel)
-			{
-				throw new InvalidOperationException($"实体类型必须实现 IIdModel: {declaredType.FullName}");
-			}
+    public object Serialize(object value, Type declaredType)
+    {
+        if (!shouldSerializeEntityAsFullObject(declaredType))
+        {
+            if (value is not IIdModel idModel)
+            {
+                throw new InvalidOperationException($"实体类型必须实现 IIdModel: {declaredType.FullName}");
+            }
 
-			return idModel.Id;
-		}
+            return idModel.Id;
+        }
 
-		return DomainModelJsonPersistence.serializePersistableObject(value, declaredType);
-	}
+        return DomainModelJsonPersistence.serializePersistableObject(value, declaredType);
+    }
 
-	public object Deserialize(object rawValue, Type targetType)
-	{
-		if (!shouldSerializeEntityAsFullObject(targetType))
-		{
-			int entityId = Convert.ToInt32(rawValue, CultureInfo.InvariantCulture);
-			return DomainModelJsonPersistence.resolveEntityById(targetType, entityId);
-		}
+    public object Deserialize(object rawValue, Type targetType)
+    {
+        if (!shouldSerializeEntityAsFullObject(targetType))
+        {
+            int entityId = Convert.ToInt32(rawValue, CultureInfo.InvariantCulture);
+            return DomainModelJsonPersistence.resolveEntityById(targetType, entityId);
+        }
 
-		if (rawValue is not System.Collections.Generic.Dictionary<string, object> node)
-		{
-			throw new InvalidOperationException($"实体完整节点结构非法: {targetType.FullName}");
-		}
+        if (rawValue is not System.Collections.Generic.Dictionary<string, object> node)
+        {
+            throw new InvalidOperationException($"实体完整节点结构非法: {targetType.FullName}");
+        }
 
-		return DomainModelJsonPersistence.deserializePersistableObject(node, targetType);
-	}
+        return DomainModelJsonPersistence.deserializePersistableObject(node, targetType);
+    }
 
-	private bool shouldSerializeEntityAsFullObject(Type entityType)
-	{
-		Type ownerType = DomainModelJsonPersistence.getCurrentOwnerType();
-		Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
-		return collectionType.IsAssignableFrom(ownerType);
-	}
+    private bool shouldSerializeEntityAsFullObject(Type entityType)
+    {
+        Type ownerType = DomainModelJsonPersistence.getCurrentOwnerType();
+        Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
+        return collectionType.IsAssignableFrom(ownerType);
+    }
 }

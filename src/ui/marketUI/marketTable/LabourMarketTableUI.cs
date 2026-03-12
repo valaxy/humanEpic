@@ -40,7 +40,7 @@ public partial class LabourMarketTableUI : DataTableView
 			DataTextAlignment.Right
 		];
 
-		DataSource source = DataSource.CreateTable("劳动力市场", headers, rows);
+		DataSource source = DataTableDataSourceFactory.Create("劳动力市场", headers, rows);
 		DataTable table = DataTable.Create("劳动力市场", alignments, alignments, sortableColumns: [0, 1, 2, 3]);
 		Render(source, table);
 	}

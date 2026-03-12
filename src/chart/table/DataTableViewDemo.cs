@@ -41,7 +41,7 @@ public partial class DataTableViewDemo : Control
             })
             .ToList();
 
-        return DataSource.CreateTable("资源统计表", headers, rows);
+        return DataTableDataSourceFactory.Create("资源统计表", headers, rows);
     }
 
     // 构建表格演示配置。

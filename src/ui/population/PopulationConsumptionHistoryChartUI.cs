@@ -49,7 +49,7 @@ public partial class PopulationConsumptionHistoryChartUI : LineChartView
 				}))
 			.ToList();
 
-		DataSource source = DataSource.CreateLineChartByDimensions(
+		DataSource source = LineChartDataSourceFactory.CreateByDimensions(
 			"人口过去30天商品消费",
 			headers,
 			rows,
@@ -88,6 +88,6 @@ public partial class PopulationConsumptionHistoryChartUI : LineChartView
 	/// </summary>
 	public void ClearChart()
 	{
-		Render(DataSource.CreateLineChart("人口过去30天商品消费", Array.Empty<string>(), Array.Empty<DataSeries>()));
+		Render(LineChartDataSourceFactory.Create("人口过去30天商品消费", Array.Empty<string>(), Array.Empty<DataSeries>()));
 	}
 }

@@ -18,7 +18,7 @@ public sealed class Chart
     /// <summary>
     /// 折线图数据。
     /// </summary>
-    public DataSource DataSource { get; init; } = DataSource.CreateLineChart(string.Empty, Array.Empty<string>(), Array.Empty<DataSeries>());
+    public DataSource DataSource { get; init; } = LineChartDataSourceFactory.Create(string.Empty, Array.Empty<string>(), Array.Empty<DataSeries>());
 
     /// <summary>
     /// 创建图表配置。

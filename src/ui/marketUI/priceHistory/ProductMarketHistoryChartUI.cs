@@ -36,7 +36,7 @@ public partial class ProductMarketHistoryChartUI : LineChartView
 				snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList()))
 			.ToList();
 
-		DataSource source = DataSource.CreateLineChart("产品价格历史（dt）", xLabels, seriesList);
+		DataSource source = LineChartDataSourceFactory.Create("产品价格历史（dt）", xLabels, seriesList);
 		Render(source);
 	}
 
@@ -52,7 +52,7 @@ public partial class ProductMarketHistoryChartUI : LineChartView
 			chartColors[((int)productType) % chartColors.Count].ToHtml(),
 			snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList());
 
-		DataSource source = DataSource.CreateLineChart($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
+		DataSource source = LineChartDataSourceFactory.Create($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
 		Render(source);
 	}
 

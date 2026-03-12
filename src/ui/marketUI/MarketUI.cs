@@ -143,7 +143,7 @@ public partial class MarketUI : Control
 			})
 			.ToList();
 
-		DataSource source = DataSource.CreateTable(title, ["价格", "数量"], rows);
+		DataSource source = DataTableDataSourceFactory.Create(title, ["价格", "数量"], rows);
 		DataTable config = DataTable.Create(title, [DataTextAlignment.Right, DataTextAlignment.Right], [DataTextAlignment.Right, DataTextAlignment.Right], sortableColumns: [0, 1]);
 		table.Render(source, config);
 	}
@@ -154,7 +154,7 @@ public partial class MarketUI : Control
 		if (!selectedProduct.HasValue)
 		{
 			historyTitleLabel.Text = "点击左侧商品查看价格历史";
-			productHistoryChart.Render(DataSource.CreateLineChart("商品价格历史", [], []));
+			productHistoryChart.Render(LineChartDataSourceFactory.Create("商品价格历史", [], []));
 			return;
 		}
 

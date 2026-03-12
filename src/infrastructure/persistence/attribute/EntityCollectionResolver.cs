@@ -8,52 +8,52 @@ using System.Reflection;
 /// </summary>
 public static partial class DomainModelJsonPersistence
 {
-	private static Dictionary<Type, object> createEntityCollectionMap(IEnumerable<object> entityCollections)
-	{
-		return entityCollections
-			.Where(collection => collection != null)
-			.ToDictionary(collection => collection.GetType(), collection => collection);
-	}
+    private static Dictionary<Type, object> createEntityCollectionMap(IEnumerable<object> entityCollections)
+    {
+        return entityCollections
+            .Where(collection => collection != null)
+            .ToDictionary(collection => collection.GetType(), collection => collection);
+    }
 
-	private static object? getEntityCollectionByTypeOrNull(Type collectionType)
-	{
-		if (activeEntityCollections != null && activeEntityCollections.TryGetValue(collectionType, out object? found))
-		{
-			return found;
-		}
-		return null;
-	}
+    private static object? getEntityCollectionByTypeOrNull(Type collectionType)
+    {
+        if (activeEntityCollections != null && activeEntityCollections.TryGetValue(collectionType, out object? found))
+        {
+            return found;
+        }
+        return null;
+    }
 
-	internal static object resolveEntityById(Type entityType, int entityId)
-	{
-		Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
-		object collection = getEntityCollectionByTypeOrNull(collectionType)
-			?? throw new InvalidOperationException($"实体类型 {entityType.FullName} 反持久化缺少集合上下文: {collectionType.FullName}");
+    internal static object resolveEntityById(Type entityType, int entityId)
+    {
+        Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
+        object collection = getEntityCollectionByTypeOrNull(collectionType)
+            ?? throw new InvalidOperationException($"实体类型 {entityType.FullName} 反持久化缺少集合上下文: {collectionType.FullName}");
 
-		MethodInfo? getByIdMethod = collectionType.GetMethod("GetById", BindingFlags.Instance | BindingFlags.Public);
-		if (getByIdMethod != null)
-		{
-			object? entity = getByIdMethod.Invoke(collection, new object[] { entityId });
-			return entity ?? throw new InvalidOperationException($"实体查询结果为空: {entityType.FullName}#{entityId}");
-		}
+        MethodInfo? getByIdMethod = collectionType.GetMethod("GetById", BindingFlags.Instance | BindingFlags.Public);
+        if (getByIdMethod != null)
+        {
+            object? entity = getByIdMethod.Invoke(collection, new object[] { entityId });
+            return entity ?? throw new InvalidOperationException($"实体查询结果为空: {entityType.FullName}#{entityId}");
+        }
 
-		MethodInfo? getMethod = collectionType.GetMethod("Get", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(int) }, null);
-		if (getMethod == null)
-		{
-			throw new InvalidOperationException($"集合类型缺少 Get(int)/GetById(int): {collectionType.FullName}");
-		}
+        MethodInfo? getMethod = collectionType.GetMethod("Get", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(int) }, null);
+        if (getMethod == null)
+        {
+            throw new InvalidOperationException($"集合类型缺少 Get(int)/GetById(int): {collectionType.FullName}");
+        }
 
-		object? resolved = getMethod.Invoke(collection, new object[] { entityId });
-		return resolved ?? throw new InvalidOperationException($"实体查询结果为空: {entityType.FullName}#{entityId}");
-	}
+        object? resolved = getMethod.Invoke(collection, new object[] { entityId });
+        return resolved ?? throw new InvalidOperationException($"实体查询结果为空: {entityType.FullName}#{entityId}");
+    }
 
-	internal static Type getCurrentOwnerType()
-	{
-		if (activeOwnerTypeStack == null || activeOwnerTypeStack.Count == 0)
-		{
-			throw new InvalidOperationException("当前无持久化宿主类型上下文");
-		}
+    internal static Type getCurrentOwnerType()
+    {
+        if (activeOwnerTypeStack == null || activeOwnerTypeStack.Count == 0)
+        {
+            throw new InvalidOperationException("当前无持久化宿主类型上下文");
+        }
 
-		return activeOwnerTypeStack.Peek();
-	}
+        return activeOwnerTypeStack.Peek();
+    }
 }

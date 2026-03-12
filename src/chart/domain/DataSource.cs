@@ -1,11 +1,48 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
-/// 图表通用数据源，统一承载表格与折线图所需的数据。
+/// 图表通用数据源，统一承载表格与折线图所需的数据
+/// 只管理数据本身，不负责数据的可视化和呈现细节
 /// </summary>
 public sealed class DataSource
 {
+	/// <summary>
+	/// 创建空数据源。
+	/// </summary>
+	public DataSource()
+	{
+	}
+
+	/// <summary>
+	/// 通过表格结构创建数据源。
+	/// </summary>
+	/// <param name="title">标题。</param>
+	/// <param name="headers">头部列。</param>
+	/// <param name="rows">行数据，内部每行按顺序对应列。</param>
+	/// <param name="dimensionColumnIndexes">维度列索引，未传入时默认全部列均为维度列。</param>
+	public DataSource(
+		string title,
+		IEnumerable<string> headers,
+		IEnumerable<IEnumerable<string>> rows,
+		IEnumerable<int>? dimensionColumnIndexes = null)
+	{
+		List<string> headerList = headers.ToList();
+		HashSet<int> dimensionIndexSet = dimensionColumnIndexes == null
+			? Enumerable.Range(0, headerList.Count).ToHashSet()
+			: dimensionColumnIndexes
+				.Where(index => index >= 0 && index < headerList.Count)
+				.ToHashSet();
+
+		Title = title;
+		Headers = headerList;
+		Rows = rows.Select(row => (IReadOnlyList<string>)row.ToList()).ToList();
+		DimensionColumnFlags = Enumerable.Range(0, headerList.Count)
+			.Select(index => dimensionIndexSet.Contains(index))
+			.ToList();
+	}
+
 	/// <summary>
 	/// 数据标题。
 	/// </summary>
@@ -26,34 +63,4 @@ public sealed class DataSource
 	/// 未显式传入时，默认所有列都是维度列。
 	/// </summary>
 	public IReadOnlyList<bool> DimensionColumnFlags { get; init; } = Array.Empty<bool>();
-
-	/// <summary>
-	/// 表格数据标题。
-	/// </summary>
-	public string TableTitle { get; init; } = string.Empty;
-
-	/// <summary>
-	/// 折线图 X 轴点位（数值与显示文本）。
-	/// </summary>
-	public IReadOnlyList<LineAxisPoint> AxisPoints { get; init; } = Array.Empty<LineAxisPoint>();
-
-	/// <summary>
-	/// 折线图图例项。
-	/// </summary>
-	public IReadOnlyList<LineLegendItem> LegendItems { get; init; } = Array.Empty<LineLegendItem>();
-
-	/// <summary>
-	/// 折线图序列集合。
-	/// </summary>
-	public IReadOnlyList<DataSeries> SeriesList { get; init; } = Array.Empty<DataSeries>();
 }
-
-/// <summary>
-/// 折线图 X 轴点（数值 + 显示文本）。
-/// </summary>
-public sealed record LineAxisPoint(float Value, string Label);
-
-/// <summary>
-/// 折线图图例项。
-/// </summary>
-public sealed record LineLegendItem(string Key, string Name, string ColorHex);

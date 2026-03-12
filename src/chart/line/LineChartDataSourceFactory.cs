@@ -22,13 +22,13 @@ public static class LineChartDataSourceFactory
 	];
 
 	/// <summary>
-	/// 创建折线图数据源。
+	/// 创建折线图配置。
 	/// </summary>
 	/// <param name="title">标题。</param>
 	/// <param name="xLabels">X 轴标签。</param>
 	/// <param name="seriesList">序列集合。</param>
 	/// <param name="xValues">X 轴数值，可选；未提供时按索引（0..n-1）处理。</param>
-	public static DataSource Create(
+	public static Chart Create(
 		string title,
 		IEnumerable<string> xLabels,
 		IEnumerable<DataSeries> seriesList,
@@ -59,20 +59,21 @@ public static class LineChartDataSourceFactory
 			.Select(series => new LineLegendItem(normalizeSeriesKey(series), series.Name, series.ColorHex))
 			.ToList();
 
-		return new DataSource
-		{
-			Title = title,
-			SeriesList = normalizedSeriesList,
-			AxisPoints = axisPoints,
-			LegendItems = legendItems
-		};
+		DataSource dataSource = new(title, Array.Empty<string>(), Array.Empty<IReadOnlyList<string>>());
+        return Chart.Create(
+            Axis.Create("X"),
+            Axis.Create("Y"),
+            dataSource,
+            axisPoints,
+            legendItems,
+            normalizedSeriesList);
 	}
 
 	/// <summary>
-	/// 从多维表格数据创建折线图数据源。
+	/// 从多维表格数据创建折线图配置。
 	/// 维度列将用于拆分图例与折线，非维度列作为数值指标。
 	/// </summary>
-	public static DataSource CreateByDimensions(
+	public static Chart CreateByDimensions(
 		string title,
 		IEnumerable<string> headers,
 		IEnumerable<IEnumerable<string>> rows,
@@ -151,18 +152,10 @@ public static class LineChartDataSourceFactory
 			.Select(item => new LineLegendItem(item.Key, item.Name, item.ColorHex))
 			.ToList();
 
-		DataSource lineSource = Create(title, xAxisLabels, seriesList, xAxisValues);
-		return new DataSource
-		{
-			Title = lineSource.Title,
-			Headers = tableSource.Headers,
-			Rows = tableSource.Rows,
-			TableTitle = tableSource.TableTitle,
-			DimensionColumnFlags = tableSource.DimensionColumnFlags,
-			AxisPoints = lineSource.AxisPoints,
-			LegendItems = legendItems,
-			SeriesList = lineSource.SeriesList
-		};
+		Chart lineChart = Create(title, xAxisLabels, seriesList, xAxisValues);
+		return lineChart.Update(
+			dataSource: tableSource,
+			legendItems: legendItems);
 	}
 
 	/// <summary>

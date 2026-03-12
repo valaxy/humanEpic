@@ -20,21 +20,6 @@ public static class DataTableDataSourceFactory
 		IEnumerable<IEnumerable<string>> rows,
 		IEnumerable<int>? dimensionColumnIndexes = null)
 	{
-		List<string> headerList = headers.ToList();
-		HashSet<int> dimensionIndexSet = dimensionColumnIndexes == null
-			? Enumerable.Range(0, headerList.Count).ToHashSet()
-			: dimensionColumnIndexes
-				.Where(index => index >= 0 && index < headerList.Count)
-				.ToHashSet();
-
-		return new DataSource
-		{
-			TableTitle = title,
-			Headers = headerList,
-			Rows = rows.Select(row => (IReadOnlyList<string>)row.ToList()).ToList(),
-			DimensionColumnFlags = Enumerable.Range(0, headerList.Count)
-				.Select(index => dimensionIndexSet.Contains(index))
-				.ToList()
-		};
+		return new DataSource(title, headers, rows, dimensionColumnIndexes);
 	}
 }

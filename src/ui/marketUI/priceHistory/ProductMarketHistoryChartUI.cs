@@ -36,8 +36,8 @@ public partial class ProductMarketHistoryChartUI : LineChartView
 				snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList()))
 			.ToList();
 
-		DataSource source = LineChartDataSourceFactory.Create("产品价格历史（dt）", xLabels, seriesList);
-		Render(source);
+		Chart chart = LineChartDataSourceFactory.Create("产品价格历史（dt）", xLabels, seriesList);
+		Render(chart);
 	}
 
 	/// <summary>
@@ -52,8 +52,8 @@ public partial class ProductMarketHistoryChartUI : LineChartView
 			chartColors[((int)productType) % chartColors.Count].ToHtml(),
 			snapshots.Select(snapshot => getSnapshotPrice(snapshot, productType)).ToList());
 
-		DataSource source = LineChartDataSourceFactory.Create($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
-		Render(source);
+		Chart chart = LineChartDataSourceFactory.Create($"{ProductTemplate.GetTemplate(productType).Name}价格历史（dt）", xLabels, [series]);
+		Render(chart);
 	}
 
 	// 获取快照中某商品的价格。

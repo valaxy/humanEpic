@@ -49,7 +49,7 @@ public partial class PopulationConsumptionHistoryChartUI : LineChartView
 				}))
 			.ToList();
 
-		DataSource source = LineChartDataSourceFactory.CreateByDimensions(
+		Chart sourceChart = LineChartDataSourceFactory.CreateByDimensions(
 			"人口过去30天商品消费",
 			headers,
 			rows,
@@ -58,7 +58,7 @@ public partial class PopulationConsumptionHistoryChartUI : LineChartView
 			xLabelColumnIndex: 1,
 			dimensionColumnIndexes: [2]);
 
-		List<DataSeries> recoloredSeries = source.SeriesList
+		List<DataSeries> recoloredSeries = sourceChart.SeriesList
 			.Select((series, index) => DataSeries.Create(
 				series.Name,
 				chartColors[index % chartColors.Count].ToHtml(),
@@ -66,21 +66,13 @@ public partial class PopulationConsumptionHistoryChartUI : LineChartView
 				series.Key))
 			.ToList();
 
-		List<LineLegendItem> recoloredLegendItems = source.LegendItems
+		List<LineLegendItem> recoloredLegendItems = sourceChart.LegendItems
 			.Select((legend, index) => new LineLegendItem(legend.Key, legend.Name, chartColors[index % chartColors.Count].ToHtml()))
 			.ToList();
 
-		Render(new DataSource
-		{
-			Title = source.Title,
-			Headers = source.Headers,
-			Rows = source.Rows,
-			TableTitle = source.TableTitle,
-			DimensionColumnFlags = source.DimensionColumnFlags,
-			AxisPoints = source.AxisPoints,
-			LegendItems = recoloredLegendItems,
-			SeriesList = recoloredSeries
-		});
+		Render(sourceChart.Update(
+			legendItems: recoloredLegendItems,
+			seriesList: recoloredSeries));
 	}
 
 	/// <summary>

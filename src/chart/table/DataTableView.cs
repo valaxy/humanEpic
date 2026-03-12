@@ -54,7 +54,7 @@ public partial class DataTableView : VBoxContainer
     private void renderCurrent()
     {
         string title = string.IsNullOrWhiteSpace(currentDataTable.Title)
-            ? currentDataSource.TableTitle
+            ? currentDataSource.Title
             : currentDataTable.Title;
         titleLabel.Text = title;
         dataGrid.Columns = currentDataSource.Headers.Count;
@@ -255,7 +255,7 @@ public partial class DataTableView : VBoxContainer
     private static DataTable createDefaultTableConfig(DataSource dataSource)
     {
         return DataTable.Create(
-            dataSource.TableTitle,
+            dataSource.Title,
             sortableColumns: Enumerable.Range(0, dataSource.Headers.Count));
     }
 

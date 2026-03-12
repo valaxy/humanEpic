@@ -30,17 +30,17 @@ public sealed class LineChartLegendRenderer
 	/// <summary>
 	/// 判断数据源是否包含图例。
 	/// </summary>
-	public bool HasLegend(DataSource dataSource)
+	public bool HasLegend(Chart chart)
 	{
-		return GetLegendEntries(dataSource).Count > 0;
+		return GetLegendEntries(chart).Count > 0;
 	}
 
 	/// <summary>
 	/// 同步图例可见性状态，保留已存在的勾选结果。
 	/// </summary>
-	public void SyncLegendState(DataSource dataSource, ref Dictionary<string, bool> legendVisibility, ref string? hoveredLegendKey)
+	public void SyncLegendState(Chart chart, ref Dictionary<string, bool> legendVisibility, ref string? hoveredLegendKey)
 	{
-		List<LineLegendItem> legendEntries = GetLegendEntries(dataSource);
+		List<LineLegendItem> legendEntries = GetLegendEntries(chart);
 		if (legendEntries.Count == 0)
 		{
 			legendVisibility.Clear();
@@ -48,10 +48,12 @@ public sealed class LineChartLegendRenderer
 			return;
 		}
 
+		Dictionary<string, bool> previousVisibility = legendVisibility;
+
 		legendVisibility = legendEntries
 			.ToDictionary(
 				entry => entry.Key,
-				entry => legendVisibility.TryGetValue(entry.Key, out bool visible) ? visible : true);
+				entry => previousVisibility.TryGetValue(entry.Key, out bool visible) ? visible : true);
 
 		if (!string.IsNullOrWhiteSpace(hoveredLegendKey) && !legendVisibility.ContainsKey(hoveredLegendKey))
 		{
@@ -68,11 +70,11 @@ public sealed class LineChartLegendRenderer
 		Font font,
 		int fontSize,
 		Color color,
-		DataSource dataSource,
+		Chart chart,
 		IReadOnlyDictionary<string, bool> legendVisibility,
 		string? hoveredLegendKey)
 	{
-		List<LineLegendItem> legendEntries = GetLegendEntries(dataSource);
+		List<LineLegendItem> legendEntries = GetLegendEntries(chart);
 		if (legendEntries.Count == 0)
 		{
 			return [];
@@ -150,12 +152,12 @@ public sealed class LineChartLegendRenderer
 	/// <summary>
 	/// 计算当前可见序列。
 	/// </summary>
-	public List<DataSeries> GetVisibleSeries(DataSource dataSource, IReadOnlyDictionary<string, bool> legendVisibility)
+	public List<DataSeries> GetVisibleSeries(Chart chart, IReadOnlyDictionary<string, bool> legendVisibility)
 	{
-		List<LineLegendItem> legendEntries = GetLegendEntries(dataSource);
+		List<LineLegendItem> legendEntries = GetLegendEntries(chart);
 		if (legendEntries.Count == 0)
 		{
-			return dataSource.SeriesList.ToList();
+			return chart.SeriesList.ToList();
 		}
 
 		HashSet<string> enabledKeys = legendEntries
@@ -163,20 +165,20 @@ public sealed class LineChartLegendRenderer
 			.Select(entry => entry.Key)
 			.ToHashSet();
 
-		return dataSource.SeriesList
+		return chart.SeriesList
 			.Where(series => enabledKeys.Contains(LineChartDataSourceFactory.ResolveSeriesKey(series)))
 			.ToList();
 	}
 
 	// 获取有效图例项（优先使用数据源显式图例定义）。
-	private static List<LineLegendItem> GetLegendEntries(DataSource dataSource)
+	private static List<LineLegendItem> GetLegendEntries(Chart chart)
 	{
-		if (dataSource.LegendItems.Count > 0)
+		if (chart.LegendItems.Count > 0)
 		{
-			return dataSource.LegendItems.ToList();
+			return chart.LegendItems.ToList();
 		}
 
-		return dataSource.SeriesList
+		return chart.SeriesList
 			.Select(series => new LineLegendItem(LineChartDataSourceFactory.ResolveSeriesKey(series), series.Name, series.ColorHex))
 			.ToList();
 	}

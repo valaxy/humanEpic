@@ -36,8 +36,8 @@ public partial class LabourMarketHistoryChartUI : LineChartView
 				snapshots.Select(snapshot => getSnapshotPrice(snapshot, jobType)).ToList()))
 			.ToList();
 
-		DataSource source = LineChartDataSourceFactory.Create("劳动力价格历史（dt）", xLabels, seriesList);
-		Render(source);
+		Chart chart = LineChartDataSourceFactory.Create("劳动力价格历史（dt）", xLabels, seriesList);
+		Render(chart);
 	}
 
 	// 获取快照中某职业的价格。

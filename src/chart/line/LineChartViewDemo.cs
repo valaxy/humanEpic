@@ -27,25 +27,27 @@ public partial class LineChartViewDemo : Control
     // 首次渲染。
     private void renderInitial()
     {
-        DataSource dataSource = createDataSource(0.0f);
-        chart = Chart.Create(
-            Axis.Create("月份", 2.0f, 10.0f, TickFormatter.Custom(value => $"M{value:0}")),
-            Axis.Create("产量", 40.0f, 92.0f, TickFormatter.Number(1), Tick.PowerOfTen()),
-            dataSource);
+        chart = createChart(0.0f).Update(
+            xAxis: Axis.Create("月份", 2.0f, 10.0f, TickFormatter.Custom(value => $"M{value:0}")),
+            yAxis: Axis.Create("产量", 40.0f, 92.0f, TickFormatter.Number(1), Tick.PowerOfTen()));
         lineChart.UpdateChart(chart);
     }
 
     // 演示通过 Update 仅刷新数据。
     private void refreshWithNewData()
     {
-        DataSource nextDataSource = createDataSource(1.0f);
-        Chart updatedChart = chart.Update(dataSource: nextDataSource);
+        Chart nextChart = createChart(1.0f);
+        Chart updatedChart = chart.Update(
+            dataSource: nextChart.DataSource,
+            axisPoints: nextChart.AxisPoints,
+            legendItems: nextChart.LegendItems,
+            seriesList: nextChart.SeriesList);
         lineChart.UpdateChart(updatedChart);
         chart = updatedChart;
     }
 
     // 构建折线图数据。
-    private static DataSource createDataSource(float phaseShift)
+    private static Chart createChart(float phaseShift)
     {
         List<float> xValues = Enumerable.Range(1, 12).Select(index => (float)index).ToList();
         List<string> xLabels = xValues.Select(value => $"{value:0}月").ToList();

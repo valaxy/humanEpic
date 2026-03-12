@@ -78,11 +78,11 @@ public class Asset : DictCollection<ProductType.Enums, AssetItem>, IInfo
 	}
 
 	/// <summary>
-	/// 减少指定产品数量。
+	/// 减少指定产品数量并记录消费天数。
 	/// </summary>
-	public void ConsumeAmount(ProductType.Enums type, float amount)
+	public void ConsumeAmount(ProductType.Enums type, float amount, int day)
 	{
-		Get(type).ConsumeAmount(amount);
+		Get(type).ConsumeAmount(amount, day);
 	}
 
 

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bbqdrfak0xti2" path="res://src/ui/population/PopulationWindowUI.cs" id="1_script"]
 [ext_resource type="PackedScene" path="res://src/ui/container/draggableWindow/draggable_window.tscn" id="2_window"]
 [ext_resource type="PackedScene" path="res://src/ui/container/infoPanel/info_content_block.tscn" id="3_content_block"]
+[ext_resource type="PackedScene" path="res://src/ui/population/population_consumption_history_chart_ui.tscn" id="4_chart_scene"]
 
 [node name="PopulationWindowUI" type="CanvasLayer" unique_id=1247000377]
 script = ExtResource("1_script")
@@ -55,8 +56,22 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin" unique_id=239856291 instance=ExtResource("3_content_block")]
+[node name="DetailVBox" type="VBoxContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin/DetailVBox" unique_id=239856291 instance=ExtResource("3_content_block")]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PopulationConsumptionHistoryChart" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin/DetailVBox" unique_id=110025497 instance=ExtResource("4_chart_scene")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [editable path="PopulationWindow"]

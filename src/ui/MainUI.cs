@@ -24,6 +24,8 @@ public partial class MainUI : Node
 	private FeatureButtons featureButtons = null!;
 	// 游戏编辑器按钮区域。
 	private GameEditorButtons gameEditorButtons = null!;
+	// 气泡消息容器。
+	private BubbleMessageContainerUI bubbleMessageContainerUi = null!;
 
 	public override void _Ready()
 	{
@@ -36,6 +38,7 @@ public partial class MainUI : Node
 		buildingInfoPanelUi = GetNode<BuildingInfoPanelUI>("BuildingInfoPanelUI");
 		featureButtons = GetNode<FeatureButtons>("FeatureButtons");
 		gameEditorButtons = GetNode<GameEditorButtons>("GameEditorButtons");
+		bubbleMessageContainerUi = GetNode<BubbleMessageContainerUI>("BubbleMessageContainerUI");
 	}
 
 	/// <summary>
@@ -47,6 +50,7 @@ public partial class MainUI : Node
 		timeDisplayUi.Setup(world.TimeSystem);
 		featureButtons.Setup(world, view.GridRender, simulation);
 		gameEditorButtons.Setup(world, view, simulation);
+		bubbleMessageContainerUi.Setup(simulation);
 
 		infoUiLeft.SetPositionOffset(0.0f);
 		infoUiRight.SetPositionOffset(310.0f);
@@ -67,7 +71,6 @@ public partial class MainUI : Node
 		// var game_editor_buttons_scene: PackedScene = preload("res://src/ui/editor/game_editor_buttons.tscn")
 		// var info_ui_scene: PackedScene = preload("res://src/ui/info_ui/info_ui.tscn")
 		// var product_ui_scene: PackedScene = preload("res://src/ui/product_ui/product_ui.tscn")
-		// var bubble_container_scene: PackedScene = preload("res://src/ui/bubble_message/bubble_message_container_ui.tscn")
 		// TODO: 对应 C# 类型与场景迁移后，再逐步恢复这些功能。
 	}
 }

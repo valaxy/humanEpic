@@ -10,14 +10,17 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 {
 	// 人口集合。
 	private readonly PopulationCollection populations;
+	// 时间系统。
+	private readonly TimeSystem timeSystem;
 
 	/// <summary>
 	/// 初始化人口消费消耗逻辑。
 	/// </summary>
-	public PopulationConsumeConsumerGoodsLogic(PopulationCollection populations)
+	public PopulationConsumeConsumerGoodsLogic(PopulationCollection populations, TimeSystem timeSystem)
 		: base("PopulationConsumeConsumerGoods", "人口按边际效用效率优先消耗资产中的消费品，持续补充需求直至库存耗尽。", 0.1f)
 	{
 		this.populations = populations;
+		this.timeSystem = timeSystem;
 	}
 
 	/// <summary>
@@ -112,7 +115,7 @@ public class PopulationConsumeConsumerGoodsLogic : WorldLogic
 			consumeAmount = bestCandidate.Amount;
 			deltaDays = consumeAmount / (bestCandidate.Template.ConsumeProductNumPerDay * population.Count); // 实际消耗完这个商品需要的时间
 		}
-		population.Asset.ConsumeAmount(bestCandidate.Template.Type, consumeAmount); // 消费商品
+		population.Asset.ConsumeAmount(bestCandidate.Template.Type, consumeAmount, timeSystem.GetDay()); // 消费商品
 		increaseDemand(population, bestCandidate.Template, consumeAmount); // 提高需求度
 	}
 

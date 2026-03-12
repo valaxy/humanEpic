@@ -26,8 +26,12 @@ public partial class PopulationWindowUI : CanvasLayer
 	private ItemList populationList = null!;
 	// 人口详情内容块。
 	private InfoContentBlock detailContentBlock = null!;
+	// 消费历史折线图。
+	private PopulationConsumptionHistoryChartUI consumptionHistoryChart = null!;
 	// 人口集合。
 	private PopulationCollection populations = null!;
+	// 时间系统。
+	private TimeSystem timeSystem = null!;
 	// 列表缓存。
 	private List<Population> listCache = new List<Population>();
 	// 定时刷新计时器。
@@ -41,6 +45,7 @@ public partial class PopulationWindowUI : CanvasLayer
 		draggableWindow = GetNode<DraggableWindow>("%PopulationWindow");
 		populationList = GetNode<ItemList>("%PopulationList");
 		detailContentBlock = GetNode<InfoContentBlock>("%PopulationDetailContent");
+		consumptionHistoryChart = GetNode<PopulationConsumptionHistoryChartUI>("%PopulationConsumptionHistoryChart");
 
 		draggableWindow.SetTitle("人口列表");
 		draggableWindow.Visible = false;
@@ -52,9 +57,10 @@ public partial class PopulationWindowUI : CanvasLayer
 	/// <summary>
 	/// 直接绑定人口集合
 	/// </summary>
-	public void Setup(PopulationCollection populationCollection)
+	public void Setup(PopulationCollection populationCollection, TimeSystem timeSystem)
 	{
 		populations = populationCollection;
+		this.timeSystem = timeSystem;
 		refreshPopulationList();
 	}
 
@@ -116,6 +122,7 @@ public partial class PopulationWindowUI : CanvasLayer
 
 		Population population = listCache[(int)index];
 		detailContentBlock.Render(population.GetInfoData());
+		consumptionHistoryChart.RenderPopulation(population, timeSystem.GetDay());
 	}
 
 	// 刷新人口列表。
@@ -143,6 +150,7 @@ public partial class PopulationWindowUI : CanvasLayer
 		if (listCache.Count == 0)
 		{
 			detailContentBlock.Clear();
+			consumptionHistoryChart.ClearChart();
 			return;
 		}
 

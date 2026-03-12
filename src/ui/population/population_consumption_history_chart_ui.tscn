@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/population/PopulationConsumptionHistoryChartUI.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://src/chart/line/line_chart.tscn" id="2_chart_scene"]
+
+[node name="PopulationConsumptionHistoryChartUI" instance=ExtResource("2_chart_scene")]
+script = ExtResource("1_script")

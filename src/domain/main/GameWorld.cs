@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -32,12 +33,16 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	/// </summary>
 	public Dictionary<string, object> GetWorldStateSaveData()
 	{
-		return new Dictionary<string, object>
+		Dictionary<string, object> saveData = new Dictionary<string, object>
 		{
-			{ "time", TimeSystem.TotalSeconds },
+			{ "timeSystem", DomainModelJsonPersistence.SaveToObjectWithoutStatic(TimeSystem) },
 			{ "countries", DomainModelJsonPersistence.SaveToObjectWithoutStatic(Countries) },
 			{ "populations", DomainModelJsonPersistence.SaveToObjectWithoutStatic(Populations) }
 		};
+
+		Dictionary<string, object> staticNode = DomainModelJsonPersistence.ExtractStaticMembers(DomainModelJsonPersistence.SaveToObject(Countries));
+		DomainModelJsonPersistence.AttachStaticMembers(saveData, staticNode);
+		return saveData;
 	}
 
 	/// <summary>
@@ -66,7 +71,7 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		GameWorld world = new GameWorld
 		{
 			Ground = ground,
-			TimeSystem = TimeSystem.LoadSaveData(data),
+			TimeSystem = loadTimeSystem(data),
 			Countries = countries,
 			Populations = populations,
 			Buildings = buildings,
@@ -140,6 +145,21 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 		}
 
 		return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<BuildingCollection>(buildingsNode, entityCollections);
+	}
+
+	private static TimeSystem loadTimeSystem(Dictionary<string, object> data)
+	{
+		if (data.TryGetValue("timeSystem", out object? timeNodeRaw) && timeNodeRaw is Dictionary<string, object> timeNode)
+		{
+			return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<TimeSystem>(timeNode);
+		}
+
+		if (data.TryGetValue("time", out object? legacyTimeRaw))
+		{
+			return new TimeSystem(Convert.ToSingle(legacyTimeRaw));
+		}
+
+		return new TimeSystem(0.0f);
 	}
 
 	private static void applyRootStaticMembers(Dictionary<string, object> data)

@@ -1,8 +1,3 @@
-0 点击保存地图时数据没有保存到文件，是不是哪里把错误又吞掉了，我再次强调不要吞掉错误
-1 序列化结构中，将__static全部放到一起，不要分开放；另外__static的key不要写成Country, humanepic, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null这种名称，直接就是类名即可，简单一点
-2 序列化结构中的countries_node,populations_node,buildings_node改为countries,populations,buildings，不用考虑历史兼容问题
-3 新增世界逻辑：随机的给各种人口添加一些随机的物品，用于mock测试
-4 新增世界逻辑：消费消耗品，主要逻辑就是人口将按照一定顺序消耗已有的资产，补充需求度，资产是增量的消耗，优先消耗效用效率高的消费品，直到消费品彻底没了；这个逻辑的系统动力学解释可以参考截图
 
 
 ---

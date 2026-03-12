@@ -1,11 +1,12 @@
-using System;
-using System.Collections.Generic;
-
 /// <summary>
 /// 游戏内的时间系统
 /// </summary>
-public class TimeSystem : IPersistence<TimeSystem>
+[Persistable]
+public class TimeSystem
 {
+	[PersistField]
+	private float totalSeconds = default!;
+
 	/// <summary>
 	/// 游戏内一天的秒数
 	/// </summary>
@@ -14,7 +15,14 @@ public class TimeSystem : IPersistence<TimeSystem>
 	/// <summary>
 	/// 当前游戏总时间（秒）
 	/// </summary>
-	public float TotalSeconds { get; private set; } = 0.0f;
+	public float TotalSeconds => totalSeconds;
+
+	/// <summary>
+	/// 无参构造函数，供反持久化调用。
+	/// </summary>
+	private TimeSystem()
+	{
+	}
 
 
 	/// <summary>
@@ -22,7 +30,7 @@ public class TimeSystem : IPersistence<TimeSystem>
 	/// </summary>
 	public TimeSystem(float totalSeconds)
 	{
-		TotalSeconds = totalSeconds;
+		this.totalSeconds = totalSeconds;
 	}
 
 
@@ -54,32 +62,6 @@ public class TimeSystem : IPersistence<TimeSystem>
 	/// <param name="delta">与上一帧的时间差</param>
 	public void Update(double delta)
 	{
-		TotalSeconds += (float)delta;
-	}
-
-
-	/// <summary>
-	/// 静态工厂方法：通过持久化数据字典创建一个新的对象实例。
-	/// </summary>
-	public static TimeSystem LoadSaveData(Dictionary<string, object> data)
-	{
-		float totalSeconds = 0.0f;
-		if (data.ContainsKey("time"))
-		{
-			totalSeconds = Convert.ToSingle(data["time"]);
-		}
-		TimeSystem timeSystem = new TimeSystem(totalSeconds);
-		return timeSystem;
-	}
-
-	/// <summary>
-	/// 获取对象的持久化数据。
-	/// </summary>
-	public Dictionary<string, object> GetSaveData()
-	{
-		return new Dictionary<string, object>
-		{
-			{ "time", TotalSeconds }
-		};
+		totalSeconds += (float)delta;
 	}
 }

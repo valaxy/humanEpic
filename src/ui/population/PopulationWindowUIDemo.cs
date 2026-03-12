@@ -14,12 +14,13 @@ public partial class PopulationWindowUIDemo : Control
 		populationWindowUi = GetNode<PopulationWindowUI>("%PopulationWindowUI");
 
 		PopulationCollection demoPopulations = new PopulationCollection();
+		TimeSystem demoTimeSystem = new TimeSystem(0.0f);
 		demoPopulations.Add(new Population("港区工人", 160));
 		demoPopulations.Add(new Population("山地农户", 230));
 		demoPopulations.Add(new Population("学院学徒", 95));
 		demoPopulations.Add(new Population("河运商贩", 72));
 
-		populationWindowUi.Setup(demoPopulations);
+		populationWindowUi.Setup(demoPopulations, demoTimeSystem);
 		populationWindowUi.SetWindowVisible(true);
 	}
 }

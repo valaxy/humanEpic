@@ -1,6 +1,5 @@
 using Godot;
 using System.Collections.Generic;
-using System.Linq;
 
 
 /// <summary>
@@ -9,7 +8,8 @@ using System.Linq;
 [Persistable]
 public class BuildingCollection : DictCollection<int, Building>
 {
-	private readonly Dictionary<Vector2I, Building> posToItem = new();
+	// [PersistField] TODO 为什么没有持久化？
+	private Dictionary<Vector2I, Building> posToItem = new();
 
 	/// <summary>
 	/// 获取建筑键值（地格坐标）。

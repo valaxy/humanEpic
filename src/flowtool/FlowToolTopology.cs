@@ -27,7 +27,8 @@ public sealed record FlowToolProcessNode(
 /// </summary>
 public sealed record FlowToolMetricNode(
 	string NodeId,
-	string DisplayName
+	string DisplayName,
+	string TypeDisplayName
 );
 
 /// <summary>
@@ -49,8 +50,12 @@ public sealed class FlowToolTopologyExtractor
 	public FlowToolTopology ExtractFromCurrentAssembly()
 	{
 		Assembly assembly = Assembly.GetExecutingAssembly();
-		IReadOnlyList<MethodInfo> processMethods = assembly
+		IReadOnlyList<Type> flowTypes = assembly
 			.GetTypes()
+			.Where(static type => type.GetCustomAttributes(typeof(SystemDynamicsFlowAttribute), false).Length > 0)
+			.ToList();
+
+		IReadOnlyList<MethodInfo> processMethods = flowTypes
 			.SelectMany(static type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
 			.Where(static method => method.GetCustomAttributes(typeof(SystemDynamicsProcessAttribute), false).Length > 0)
 			.Where(static method => method.IsSpecialName == false)
@@ -100,7 +105,28 @@ public sealed class FlowToolTopologyExtractor
 		string displayName = segments.Length >= 3
 			? segments[2]
 			: metricNodeId.Replace("metric:", string.Empty, StringComparison.Ordinal);
-		return new FlowToolMetricNode(metricNodeId, displayName);
+		string typeDisplayName = segments.Length >= 2
+			? formatMetricTypeDisplayName(segments[1])
+			: "Unknown";
+		return new FlowToolMetricNode(metricNodeId, displayName, typeDisplayName);
+	}
+
+	// 将指标类型名格式化为更易读的显示文本。
+	private static string formatMetricTypeDisplayName(string typeName)
+	{
+		return typeName switch
+		{
+			"System.Boolean" => "bool",
+			"System.Byte" => "byte",
+			"System.Decimal" => "decimal",
+			"System.Double" => "double",
+			"System.Int16" => "short",
+			"System.Int32" => "int",
+			"System.Int64" => "long",
+			"System.Single" => "float",
+			"System.String" => "string",
+			_ => typeName.Split('.').Last()
+		};
 	}
 
 	// 根据过程节点构建输入/输出边。

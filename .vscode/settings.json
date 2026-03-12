@@ -22,6 +22,7 @@
         "csharp"
     ],
     "chat.tools.terminal.autoApprove": {
+        "goon.ps1": false,
         ".\\bin\\Godot_v4.6.1-stable_mono_win64_console.exe": true
     }
 }

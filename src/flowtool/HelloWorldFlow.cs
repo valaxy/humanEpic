@@ -1,4 +1,4 @@
-
+[SystemDynamicsFlow]
 public class HelloWorldFlow
 {
     /// <summary>

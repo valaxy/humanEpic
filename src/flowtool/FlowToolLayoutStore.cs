@@ -11,17 +11,28 @@ using System.Text.Json.Serialization;
 /// </summary>
 public sealed class FlowToolLayoutStore
 {
+	// 默认布局存档路径。
+	private const string defaultLayoutFilePath = "res://config/flowtool_layout.json";
+	// 全部布局作用域键。
+	private const string allLayoutScopeKey = "all";
+
 	// 布局存档路径。
 	private readonly string layoutFilePath;
+	// 当前布局作用域键。
+	private readonly string layoutScopeKey;
+	// 旧版单作用域布局文件路径。
+	private readonly string legacyLayoutFilePath;
 	// JSON 序列化选项。
 	private readonly JsonSerializerOptions jsonSerializerOptions;
 
 	/// <summary>
 	/// 构造布局存储器。
 	/// </summary>
-	public FlowToolLayoutStore(string userPath = "user://flowtool_layout.json")
+	public FlowToolLayoutStore(string layoutScopeKey, string userPath = defaultLayoutFilePath)
 	{
 		layoutFilePath = ProjectSettings.GlobalizePath(userPath);
+		this.layoutScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey) ? allLayoutScopeKey : layoutScopeKey;
+		legacyLayoutFilePath = ProjectSettings.GlobalizePath(createLegacyLayoutFilePath(this.layoutScopeKey));
 		jsonSerializerOptions = new JsonSerializerOptions
 		{
 			WriteIndented = true,
@@ -35,19 +46,20 @@ public sealed class FlowToolLayoutStore
 	/// </summary>
 	public IReadOnlyDictionary<string, Vector2> Load()
 	{
-		if (File.Exists(layoutFilePath) == false)
+		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
+		if (layoutCollectionFile.Scopes.TryGetValue(layoutScopeKey, out FlowToolLayoutFile? scopedLayoutFile))
 		{
-			return new Dictionary<string, Vector2>();
+			return toNodePositions(scopedLayoutFile);
 		}
 
-		string jsonText = File.ReadAllText(layoutFilePath);
-		FlowToolLayoutFile layoutFile = JsonSerializer.Deserialize<FlowToolLayoutFile>(jsonText, jsonSerializerOptions) ?? new FlowToolLayoutFile();
-		return layoutFile.Nodes
-			.ToDictionary(
-				static pair => pair.Key,
-				static pair => new Vector2(pair.Value.X, pair.Value.Y),
-				StringComparer.Ordinal
-			);
+		if (File.Exists(legacyLayoutFilePath))
+		{
+			string legacyJsonText = File.ReadAllText(legacyLayoutFilePath);
+			FlowToolLayoutFile legacyLayoutFile = JsonSerializer.Deserialize<FlowToolLayoutFile>(legacyJsonText, jsonSerializerOptions) ?? new FlowToolLayoutFile();
+			return toNodePositions(legacyLayoutFile);
+		}
+
+		return new Dictionary<string, Vector2>(StringComparer.Ordinal);
 	}
 
 	/// <summary>
@@ -55,7 +67,8 @@ public sealed class FlowToolLayoutStore
 	/// </summary>
 	public void Save(IReadOnlyDictionary<string, Vector2> nodePositions)
 	{
-		FlowToolLayoutFile layoutFile = new()
+		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
+		layoutCollectionFile.Scopes[layoutScopeKey] = new FlowToolLayoutFile
 		{
 			Nodes = nodePositions.ToDictionary(
 				static pair => pair.Key,
@@ -70,7 +83,7 @@ public sealed class FlowToolLayoutStore
 			Directory.CreateDirectory(outputDirectoryPath);
 		}
 
-		string jsonText = JsonSerializer.Serialize(layoutFile, jsonSerializerOptions);
+		string jsonText = JsonSerializer.Serialize(layoutCollectionFile, jsonSerializerOptions);
 		File.WriteAllText(layoutFilePath, jsonText);
 	}
 
@@ -83,6 +96,75 @@ public sealed class FlowToolLayoutStore
 		return nodePositions
 			.Where(pair => validNodeIdSet.Contains(pair.Key))
 			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
+	}
+
+	// 读取聚合布局文件，并兼容旧版单布局 JSON 结构。
+	private FlowToolLayoutCollectionFile loadLayoutCollectionFile()
+	{
+		if (File.Exists(layoutFilePath) == false)
+		{
+			return new FlowToolLayoutCollectionFile();
+		}
+
+		string jsonText = File.ReadAllText(layoutFilePath);
+		FlowToolLayoutCollectionFile? collectionFile = JsonSerializer.Deserialize<FlowToolLayoutCollectionFile>(jsonText, jsonSerializerOptions);
+		if (collectionFile is not null && collectionFile.Scopes.Count > 0)
+		{
+			return normalizeCollectionFile(collectionFile);
+		}
+
+		FlowToolLayoutFile? legacyRootLayoutFile = JsonSerializer.Deserialize<FlowToolLayoutFile>(jsonText, jsonSerializerOptions);
+		if (legacyRootLayoutFile is null)
+		{
+			return new FlowToolLayoutCollectionFile();
+		}
+
+		return new FlowToolLayoutCollectionFile
+		{
+			Scopes = new Dictionary<string, FlowToolLayoutFile>(StringComparer.Ordinal)
+			{
+				[allLayoutScopeKey] = legacyRootLayoutFile
+			}
+		};
+	}
+
+	// 统一布局集合实例中的字典比较器与空值状态。
+	private static FlowToolLayoutCollectionFile normalizeCollectionFile(FlowToolLayoutCollectionFile collectionFile)
+	{
+		return new FlowToolLayoutCollectionFile
+		{
+			Scopes = collectionFile.Scopes
+				.ToDictionary(
+					static pair => pair.Key,
+					static pair => pair.Value ?? new FlowToolLayoutFile(),
+					StringComparer.Ordinal
+				)
+		};
+	}
+
+	// 将布局 DTO 转为运行时坐标字典。
+	private static IReadOnlyDictionary<string, Vector2> toNodePositions(FlowToolLayoutFile layoutFile)
+	{
+		return layoutFile.Nodes
+			.ToDictionary(
+				static pair => pair.Key,
+				static pair => new Vector2(pair.Value.X, pair.Value.Y),
+				StringComparer.Ordinal
+			);
+	}
+
+	// 生成旧版布局文件路径，供迁移兼容读取。
+	private static string createLegacyLayoutFilePath(string layoutScopeKey)
+	{
+		string safeScopeToken = string.Concat(layoutScopeKey.Select(static ch => char.IsLetterOrDigit(ch) ? ch : '_'));
+		return $"res://config/flowtool_layout_{safeScopeToken}.json";
+	}
+
+	// 多作用域布局 JSON 文件实体。
+	private sealed class FlowToolLayoutCollectionFile
+	{
+		// 作用域布局映射。
+		public Dictionary<string, FlowToolLayoutFile> Scopes { get; set; } = new(StringComparer.Ordinal);
 	}
 
 	// 布局 JSON 文件实体。

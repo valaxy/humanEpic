@@ -36,7 +36,8 @@ public partial class FlowToolPoolItemButton : Button
 		Dictionary dragPayload = new()
 		{
 			["nodeId"] = nodeId,
-			["nodeKind"] = nodeKind
+			["nodeKind"] = nodeKind,
+			["displayText"] = Text
 		};
 		return Variant.From(dragPayload);
 	}

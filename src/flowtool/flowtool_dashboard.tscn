@@ -1,9 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bq1ow0tmjqg6h"]
 
-[ext_resource type="Script" path="res://src/flowtool/FlowToolDashboard.cs" id="1_script"]
-[ext_resource type="Script" path="res://src/flowtool/FlowToolCanvasGraphEdit.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://cy76qwtvql56q" path="res://src/flowtool/FlowToolDashboard.cs" id="1_script"]
+[ext_resource type="Script" uid="uid://d06d263t23hyh" path="res://src/flowtool/FlowToolCanvasGraphEdit.cs" id="2_script"]
 
-[node name="FlowToolDashboard" type="Control"]
+[node name="FlowToolDashboard" type="Control" unique_id=2058591925]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
 
-[node name="SplitContainer" type="HSplitContainer" parent="."]
+[node name="SplitContainer" type="HSplitContainer" parent="." unique_id=1664315101]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,37 +20,74 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Canvas" type="GraphEdit" parent="SplitContainer"]
-custom_minimum_size = Vector2(520, 0)
+[node name="ClassPanel" type="VBoxContainer" parent="SplitContainer" unique_id=22840708]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="LayoutScopeTitle" type="Label" parent="SplitContainer/ClassPanel" unique_id=1559159027]
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+text = "类列表"
+
+[node name="LayoutScopeList" type="ItemList" parent="SplitContainer/ClassPanel" unique_id=205491711]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+allow_reselect = true
+same_column_width = true
+
+[node name="ContentSplitContainer" type="HSplitContainer" parent="SplitContainer" unique_id=2137249802]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 8.0
+
+[node name="EditorPanel" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer" unique_id=1858856966]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 7.0
+
+[node name="EditorTitle" type="Label" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=8325463]
+layout_mode = 2
+theme_type_variation = &"HeaderSmall"
+text = "编辑界面"
+
+[node name="Canvas" type="GraphEdit" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=1520373558]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+scroll_offset = Vector2(-193, 0)
 script = ExtResource("2_script")
 
-[node name="UnassignedPanel" type="VBoxContainer" parent="SplitContainer"]
+[node name="UnassignedPanel" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer" unique_id=421242835]
 custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
 
-[node name="PanelTitle" type="Label" parent="SplitContainer/UnassignedPanel"]
+[node name="PanelTitle" type="Label" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=1538446448]
 layout_mode = 2
+theme_type_variation = &"HeaderSmall"
 text = "未分配池"
 horizontal_alignment = 1
-theme_type_variation = &"HeaderSmall"
 
-[node name="RefreshButton" type="Button" parent="SplitContainer/UnassignedPanel"]
-layout_mode = 2
-text = "重新提取关系"
-
-[node name="PoolScrollContainer" type="ScrollContainer" parent="SplitContainer/UnassignedPanel"]
+[node name="PoolScrollContainer" type="ScrollContainer" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=707593014]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="UnassignedPoolList" type="VBoxContainer" parent="SplitContainer/UnassignedPanel/PoolScrollContainer"]
+[node name="UnassignedPoolList" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer" unique_id=1069791387]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="StatusLabel" type="Label" parent="SplitContainer/UnassignedPanel"]
+[node name="StatusLabel" type="Label" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=600328482]
 layout_mode = 2
 text = "等待提取..."
 autowrap_mode = 3

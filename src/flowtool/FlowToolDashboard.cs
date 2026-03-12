@@ -13,8 +13,6 @@ public partial class FlowToolDashboard : Control
 {
 	// 过程节点类型标识。
 	private const string processNodeKind = "process";
-	// 指标节点类型标识。
-	private const string metricNodeKind = "metric";
 	// 全部类布局作用域键。
 	private const string allLayoutScopeKey = "all";
 	// 自动保存节流秒数。
@@ -35,31 +33,21 @@ public partial class FlowToolDashboard : Control
 	private string selectedLayoutScopeKey = allLayoutScopeKey;
 	// 当前布局作用域显示名。
 	private string selectedLayoutScopeDisplayName = string.Empty;
-	// 布局作用域列表更新锁。
-	private bool isUpdatingLayoutScopeList;
 	// 当前布局作用域列表。
-	private IReadOnlyList<FlowToolLayoutScope> layoutScopes = Array.Empty<FlowToolLayoutScope>();
+	private IReadOnlyList<FlowToolLayoutScopeItem> layoutScopes = Array.Empty<FlowToolLayoutScopeItem>();
 	// 当前已激活节点集合。
 	private HashSet<string> activeNodeIds = new(StringComparer.Ordinal);
-	// 当前画布节点映射。
-	private Dictionary<string, GraphNode> activeGraphNodes = new(StringComparer.Ordinal);
-	// 当前画布节点名映射。
-	private Dictionary<string, string> graphNodeNameByNodeId = new(StringComparer.Ordinal);
-	// 当前节点删除按钮映射。
-	private Dictionary<string, Button> deleteButtonByNodeId = new(StringComparer.Ordinal);
 
-	// 左侧画布。
-	private FlowToolCanvasGraphEdit canvas = null!;
-	// 左侧类布局列表。
-	private ItemList layoutScopeList = null!;
 	// 左侧类列表与右侧内容分栏容器。
 	private HSplitContainer splitContainer = null!;
 	// 中央编辑区与右侧未分配池分栏容器。
 	private HSplitContainer contentSplitContainer = null!;
-	// 右侧未分配池列表。
-	private VBoxContainer unassignedPoolList = null!;
-	// 状态栏文本。
-	private Label statusLabel = null!;
+	// 左侧类列表组件。
+	private FlowToolLayoutScopePanelController layoutScopePanel = null!;
+	// 中央编辑画布组件。
+	private FlowToolCanvasPanelController canvasPanel = null!;
+	// 右侧未分配池组件。
+	private FlowToolUnassignedPoolPanelController unassignedPoolPanel = null!;
 
 	// 自动保存计时器。
 	private double saveClockSeconds;
@@ -83,7 +71,7 @@ public partial class FlowToolDashboard : Control
 
 		saveClockSeconds = 0d;
 		autoSaveLayoutIfChanged();
-		updateDeleteButtonVisibility();
+		canvasPanel.UpdateDeleteButtonVisibility();
 	}
 
 	public override void _ExitTree()
@@ -96,21 +84,20 @@ public partial class FlowToolDashboard : Control
 	{
 		splitContainer = GetNode<HSplitContainer>("SplitContainer");
 		contentSplitContainer = GetNode<HSplitContainer>("SplitContainer/ContentSplitContainer");
-		canvas = GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
-		layoutScopeList = GetNode<ItemList>("SplitContainer/ClassPanel/LayoutScopeList");
-		unassignedPoolList = GetNode<VBoxContainer>("SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer/UnassignedPoolList");
-		statusLabel = GetNode<Label>("SplitContainer/ContentSplitContainer/UnassignedPanel/StatusLabel");
+		layoutScopePanel = new FlowToolLayoutScopePanelController(GetNode<ItemList>("SplitContainer/ClassPanel/LayoutScopeList"));
+		canvasPanel = new FlowToolCanvasPanelController(
+			GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas"),
+			onDeleteButtonPressed);
+		unassignedPoolPanel = new FlowToolUnassignedPoolPanelController(
+			GetNode<VBoxContainer>("SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer/UnassignedPoolList"),
+			GetNode<Label>("SplitContainer/ContentSplitContainer/UnassignedPanel/StatusLabel"));
 	}
 
 	// 初始化画布行为与分栏自适应。
 	private void configureUiBehavior()
 	{
-		canvas.NodePayloadDropped += onNodePayloadDropped;
-		layoutScopeList.ItemSelected += onLayoutScopeSelected;
-		canvas.RightDisconnects = false;
-		canvas.ShowZoomLabel = true;
-		canvas.Zoom = 1f;
-		canvas.MinimapEnabled = true;
+		canvasPanel.Configure(onNodePayloadDropped);
+		layoutScopePanel.BindSelection(onLayoutScopeSelected);
 
 		applyAdaptiveSplitOffset();
 		Resized += onDashboardResized;
@@ -148,17 +135,18 @@ public partial class FlowToolDashboard : Control
 		activeNodeIds = deriveActiveNodeIds(layoutPositions.Keys);
 		seedInitialActiveNodesWhenEmpty();
 
-		renderCanvasAndConnections();
-		renderUnassignedPool();
+		layoutScopePanel.RenderScopes(layoutScopes, selectedLayoutScopeKey);
+		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
 		persistLayoutCleanup();
 
-		statusLabel.Text = $"{statusText}\n布局: {selectedLayoutScopeDisplayName} | 过程节点: {topology.Processes.Count} | 指标节点: {topology.Metrics.Count} | 激活节点: {activeNodeIds.Count}";
+		unassignedPoolPanel.SetStatus($"{statusText}\n布局: {selectedLayoutScopeDisplayName} | 过程节点: {topology.Processes.Count} | 指标节点: {topology.Metrics.Count} | 激活节点: {activeNodeIds.Count}");
 	}
 
 	// 切换布局作用域。
 	private void onLayoutScopeSelected(long selectedIndex)
 	{
-		if (isUpdatingLayoutScopeList)
+		if (layoutScopePanel.IsUpdatingSelection)
 		{
 			return;
 		}
@@ -168,7 +156,7 @@ public partial class FlowToolDashboard : Control
 			return;
 		}
 
-		FlowToolLayoutScope selectedScope = layoutScopes[(int)selectedIndex];
+		FlowToolLayoutScopeItem selectedScope = layoutScopes[(int)selectedIndex];
 		if (selectedScope.ScopeKey == selectedLayoutScopeKey)
 		{
 			return;
@@ -189,32 +177,16 @@ public partial class FlowToolDashboard : Control
 			.Where(static ownerTypeName => string.IsNullOrWhiteSpace(ownerTypeName) == false)
 			.Distinct(StringComparer.Ordinal)
 			.OrderBy(static ownerTypeName => ownerTypeName, StringComparer.Ordinal)
-			.Select(static ownerTypeName => new FlowToolLayoutScope(ownerTypeName!, ownerTypeName!.Split('.').Last()))
+			.Select(static ownerTypeName => new FlowToolLayoutScopeItem(ownerTypeName!, ownerTypeName!.Split('.').Last()))
 			.ToList();
 
 		if (layoutScopes.Any(scope => scope.ScopeKey == selectedLayoutScopeKey) == false)
 		{
-			FlowToolLayoutScope? fallbackScope = layoutScopes.FirstOrDefault();
+			FlowToolLayoutScopeItem? fallbackScope = layoutScopes.FirstOrDefault();
 			selectedLayoutScopeKey = fallbackScope?.ScopeKey ?? allLayoutScopeKey;
 			selectedLayoutScopeDisplayName = fallbackScope?.DisplayName ?? string.Empty;
 			layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
 		}
-
-		isUpdatingLayoutScopeList = true;
-		layoutScopeList.Clear();
-		layoutScopes
-			.Select(static scope => scope.DisplayName)
-			.ToList()
-			.ForEach(displayName => layoutScopeList.AddItem(displayName));
-
-		int selectedScopeIndex = layoutScopes
-			.Select((scope, index) => new { scope, index })
-			.Where(item => item.scope.ScopeKey == selectedLayoutScopeKey)
-			.Select(static item => item.index)
-			.DefaultIfEmpty(0)
-			.First();
-		layoutScopeList.Select(selectedScopeIndex);
-		isUpdatingLayoutScopeList = false;
 	}
 
 	// 按布局作用域过滤拓扑。
@@ -286,57 +258,6 @@ public partial class FlowToolDashboard : Control
 		return activeIds;
 	}
 
-	// 渲染左侧画布节点与自动连线。
-	private void renderCanvasAndConnections()
-	{
-		activeGraphNodes.Values.ToList().ForEach(static node => node.QueueFree());
-		activeGraphNodes = new Dictionary<string, GraphNode>(StringComparer.Ordinal);
-		graphNodeNameByNodeId = new Dictionary<string, string>(StringComparer.Ordinal);
-		deleteButtonByNodeId = new Dictionary<string, Button>(StringComparer.Ordinal);
-
-		IReadOnlyDictionary<string, FlowToolProcessNode> processById = topology.Processes.ToDictionary(static process => process.NodeId, StringComparer.Ordinal);
-		IReadOnlyDictionary<string, FlowToolMetricNode> metricById = topology.Metrics.ToDictionary(static metric => metric.NodeId, StringComparer.Ordinal);
-
-		IReadOnlyList<FlowToolVisualNodeDescriptor> descriptors = activeNodeIds
-			.Select(nodeId => createVisualDescriptor(nodeId, processById, metricById))
-			.Where(static descriptor => descriptor is not null)
-			.Select(static descriptor => descriptor!)
-			.OrderBy(static descriptor => descriptor.Kind, StringComparer.Ordinal)
-			.ThenBy(static descriptor => descriptor.DisplayName, StringComparer.Ordinal)
-			.ToList();
-
-		descriptors
-			.Select(createGraphNode)
-			.ToList()
-			.ForEach(node => canvas.AddChild(node));
-
-		canvas.ClearConnections();
-		topology.Edges
-			.Where(edge => activeNodeIds.Contains(edge.FromNodeId) && activeNodeIds.Contains(edge.ToNodeId))
-			.ToList()
-			.ForEach(connectEdgeIfPossible);
-	}
-
-	// 渲染右侧未分配池。
-	private void renderUnassignedPool()
-	{
-		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
-
-		IReadOnlyList<FlowToolPoolItemButton> processItems = topology.Processes
-			.Where(process => activeNodeIds.Contains(process.NodeId) == false)
-			.OrderBy(static process => process.DisplayName, StringComparer.Ordinal)
-			.Select(createProcessPoolItem)
-			.ToList();
-
-		IReadOnlyList<FlowToolPoolItemButton> metricItems = topology.Metrics
-			.Where(metric => activeNodeIds.Contains(metric.NodeId) == false)
-			.OrderBy(static metric => metric.DisplayName, StringComparer.Ordinal)
-			.Select(createMetricPoolItem)
-			.ToList();
-
-		processItems.Concat(metricItems).ToList().ForEach(item => unassignedPoolList.AddChild(item));
-	}
-
 	// 将拖拽节点加入画布并触发自动连线。
 	private void onNodePayloadDropped(string nodeId, string nodeKind, Vector2 graphPosition)
 	{
@@ -367,8 +288,8 @@ public partial class FlowToolDashboard : Control
 		applyDefaultMetricPositionsForProcessDrop(nextLayout, nodeId, relatedMetricIds, graphPosition);
 		layoutPositions = nextLayout;
 
-		renderCanvasAndConnections();
-		renderUnassignedPool();
+		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
 		autoSaveLayoutIfChanged(forceSave: true);
 	}
 
@@ -458,160 +379,6 @@ public partial class FlowToolDashboard : Control
 			.ForEach(item => nextLayout[item.metricId] = processPosition + new Vector2(260f, -40f + (item.index * 90f)));
 	}
 
-	// 创建过程池项。
-	private static FlowToolPoolItemButton createProcessPoolItem(FlowToolProcessNode processNode)
-	{
-		FlowToolPoolItemButton button = new();
-		button.Setup($"[过程] {processNode.DisplayName}", processNode.NodeId, processNodeKind);
-		return button;
-	}
-
-	// 创建指标池项。
-	private static FlowToolPoolItemButton createMetricPoolItem(FlowToolMetricNode metricNode)
-	{
-		FlowToolPoolItemButton button = new();
-		button.Setup($"[指标] {metricNode.DisplayName}", metricNode.NodeId, metricNodeKind);
-		return button;
-	}
-
-	// 构建可视节点描述。
-	private static FlowToolVisualNodeDescriptor? createVisualDescriptor(
-		string nodeId,
-		IReadOnlyDictionary<string, FlowToolProcessNode> processById,
-		IReadOnlyDictionary<string, FlowToolMetricNode> metricById)
-	{
-		if (processById.TryGetValue(nodeId, out FlowToolProcessNode? processNode))
-		{
-			return new FlowToolVisualNodeDescriptor(processNode.NodeId, processNode.DisplayName, processNodeKind, "过程节点");
-		}
-
-		if (metricById.TryGetValue(nodeId, out FlowToolMetricNode? metricNode))
-		{
-			return new FlowToolVisualNodeDescriptor(metricNode.NodeId, metricNode.DisplayName, metricNodeKind, $"参数类型: {metricNode.TypeDisplayName}");
-		}
-
-		return null;
-	}
-
-	// 创建 GraphNode。
-	private GraphNode createGraphNode(FlowToolVisualNodeDescriptor descriptor)
-	{
-		string nodeName = $"Node_{activeGraphNodes.Count.ToString(CultureInfo.InvariantCulture)}";
-		graphNodeNameByNodeId[descriptor.NodeId] = nodeName;
-
-		GraphNode graphNode = new()
-		{
-			Name = nodeName,
-			Title = string.Empty,
-			PositionOffset = layoutPositions.TryGetValue(descriptor.NodeId, out Vector2 position) ? position : new Vector2(80f, 80f),
-			Resizable = false,
-			Draggable = true,
-			CustomMinimumSize = new Vector2(descriptor.Kind == processNodeKind ? 240f : 220f, 0f)
-		};
-		graphNode.GetTitlebarHBox().Visible = false;
-
-		VBoxContainer body = new()
-		{
-			SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			SizeFlagsVertical = SizeFlags.ExpandFill
-		};
-		HBoxContainer header = new()
-		{
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		Label titleLabel = new()
-		{
-			Text = descriptor.DisplayName,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			SizeFlagsVertical = SizeFlags.ExpandFill
-		};
-		Button deleteButton = createDeleteButton(descriptor.NodeId);
-		Label kindLabel = new()
-		{
-			Text = descriptor.DetailText,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		titleLabel.SizeFlagsStretchRatio = 1f;
-		header.AddChild(titleLabel);
-		header.AddChild(deleteButton);
-		body.AddChild(header);
-		body.AddChild(kindLabel);
-		graphNode.AddChild(body);
-
-		Color portColor = descriptor.Kind == processNodeKind ? new Color(0.92f, 0.69f, 0.39f) : new Color(0.39f, 0.69f, 0.92f);
-		graphNode.SetSlot(0, true, 0, portColor, true, 0, portColor);
-		applyNodeStyle(graphNode, descriptor.Kind);
-		graphNode.ResetSize();
-
-		activeGraphNodes[descriptor.NodeId] = graphNode;
-		return graphNode;
-	}
-
-	// 创建仅在选中时显示的删除按钮。
-	private Button createDeleteButton(string nodeId)
-	{
-		Button deleteButton = new()
-		{
-			Text = "删除",
-			Visible = false,
-			FocusMode = Control.FocusModeEnum.None,
-			MouseDefaultCursorShape = Control.CursorShape.PointingHand
-		};
-		deleteButton.Pressed += () => onDeleteButtonPressed(nodeId);
-		deleteButtonByNodeId[nodeId] = deleteButton;
-		return deleteButton;
-	}
-
-	// 根据节点类型设置外观。
-	private static void applyNodeStyle(GraphNode graphNode, string nodeKind)
-	{
-		StyleBoxFlat panelStyle = new()
-		{
-			BgColor = nodeKind == processNodeKind ? new Color(0.18f, 0.14f, 0.1f) : new Color(0.12f, 0.16f, 0.2f),
-			BorderColor = nodeKind == processNodeKind ? new Color(0.92f, 0.69f, 0.39f) : new Color(0.39f, 0.69f, 0.92f),
-			BorderWidthBottom = 2,
-			BorderWidthTop = 2,
-			BorderWidthLeft = 2,
-			BorderWidthRight = 2,
-			CornerRadiusTopLeft = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusTopRight = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusBottomLeft = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusBottomRight = nodeKind == processNodeKind ? 12 : 0
-		};
-		graphNode.AddThemeStyleboxOverride("panel", panelStyle);
-	}
-
-	// 建立自动连线。
-	private void connectEdgeIfPossible(FlowToolEdge edge)
-	{
-		bool hasFromNode = graphNodeNameByNodeId.TryGetValue(edge.FromNodeId, out string? fromNodeName);
-		bool hasToNode = graphNodeNameByNodeId.TryGetValue(edge.ToNodeId, out string? toNodeName);
-		if (hasFromNode == false || hasToNode == false)
-		{
-			return;
-		}
-
-		if (canvas.IsNodeConnected(fromNodeName!, 0, toNodeName!, 0))
-		{
-			return;
-		}
-
-		canvas.ConnectNode(fromNodeName!, 0, toNodeName!, 0);
-	}
-
-	// 根据当前选中状态切换删除按钮可见性。
-	private void updateDeleteButtonVisibility()
-	{
-		deleteButtonByNodeId
-			.ToList()
-			.ForEach(pair => pair.Value.Visible = activeGraphNodes.TryGetValue(pair.Key, out GraphNode? graphNode) && graphNode.Selected);
-	}
-
 	// 删除节点并将其回收到未分配池，同时清理失去依附的指标节点。
 	private void onDeleteButtonPressed(string nodeId)
 	{
@@ -634,10 +401,10 @@ public partial class FlowToolDashboard : Control
 			.Where(pair => activeNodeIds.Contains(pair.Key))
 			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
 
-		renderCanvasAndConnections();
-		renderUnassignedPool();
+		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
 		autoSaveLayoutIfChanged(forceSave: true);
-		statusLabel.Text = $"已移回未分配池: {getNodeDisplayName(nodeId)}";
+		unassignedPoolPanel.SetStatus($"已移回未分配池: {getNodeDisplayName(nodeId)}");
 	}
 
 	// 根据节点 ID 返回当前显示名。
@@ -656,8 +423,7 @@ public partial class FlowToolDashboard : Control
 	// 自动保存布局变更。
 	private void autoSaveLayoutIfChanged(bool forceSave = false)
 	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = activeGraphNodes
-			.ToDictionary(static pair => pair.Key, static pair => pair.Value.PositionOffset, StringComparer.Ordinal);
+		IReadOnlyDictionary<string, Vector2> currentLayout = canvasPanel.CollectCurrentLayout();
 		string currentFingerprint = createLayoutFingerprint(currentLayout);
 		if (forceSave == false && currentFingerprint == lastLayoutFingerprint)
 		{
@@ -667,13 +433,13 @@ public partial class FlowToolDashboard : Control
 		layoutPositions = currentLayout;
 		layoutStore.Save(layoutPositions);
 		lastLayoutFingerprint = currentFingerprint;
-		statusLabel.Text = $"布局已自动保存: {DateTime.Now:HH:mm:ss}";
+		unassignedPoolPanel.SetStatus($"布局已自动保存: {DateTime.Now:HH:mm:ss}");
 	}
 
 	// 在重载布局作用域或拓扑前立即保存当前画布，避免被后续重绘覆盖。
 	private void persistCurrentLayoutSnapshot()
 	{
-		if (activeGraphNodes.Count == 0)
+		if (canvasPanel.HasRenderedNodes == false)
 		{
 			return;
 		}
@@ -697,10 +463,4 @@ public partial class FlowToolDashboard : Control
 			.ToList();
 		return string.Join("|", tokens);
 	}
-
-	// 画布可视节点描述。
-	private sealed record FlowToolVisualNodeDescriptor(string NodeId, string DisplayName, string Kind, string DetailText);
-
-	// 布局作用域定义。
-	private sealed record FlowToolLayoutScope(string ScopeKey, string DisplayName);
 }

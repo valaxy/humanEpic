@@ -54,16 +54,6 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 		return true;
 	}
 
-	public override bool _IsInInputHotzone(GodotObject inNode, int inPort, Vector2 mousePosition)
-	{
-		return false;
-	}
-
-	public override bool _IsInOutputHotzone(GodotObject inNode, int inPort, Vector2 mousePosition)
-	{
-		return false;
-	}
-
 	public override void _DropData(Vector2 atPosition, Variant data)
 	{
 		Dictionary payload = data.AsGodotDictionary();

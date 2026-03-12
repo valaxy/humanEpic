@@ -6,17 +6,17 @@ using Godot;
 /// 表格独立 Demo 入口。
 /// </summary>
 [GlobalClass]
-public partial class TableDemo : Control
+public partial class DataTableViewDemo : Control
 {
     // 表格组件。
-    private ReusableDataTable dataTable = null!;
+    private DataTableView dataTable = null!;
 
     /// <summary>
     /// 初始化并渲染表格 Demo。
     /// </summary>
     public override void _Ready()
     {
-        dataTable = GetNode<ReusableDataTable>("%DataTable");
+        dataTable = GetNode<DataTableView>("%DataTable");
         dataTable.Render(createTableData(), createTableConfig());
     }
 

@@ -62,16 +62,14 @@ public static class TypeHelpers
     internal static Type getListElementType(Type type)
     {
         Type? elementType = getListElementTypeOrNull(type);
-        return elementType
-            ?? throw new InvalidOperationException($"类型不是列表: {type.FullName}");
+        return elementType ?? throw new InvalidOperationException($"类型不是列表: {type.FullName}");
     }
 
     private static Type? getListElementTypeOrNull(Type type)
     {
         if (type.IsArray)
         {
-            return type.GetElementType()
-                ?? throw new InvalidOperationException($"数组元素类型不可用: {type.FullName}");
+            return type.GetElementType() ?? throw new InvalidOperationException($"数组元素类型不可用: {type.FullName}");
         }
 
         Type? listInterface = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)

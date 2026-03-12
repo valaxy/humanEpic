@@ -14,9 +14,9 @@ public partial class MarketUI : Control
 	// 劳动力市场表。
 	private LabourMarketTableUI labourTable = null!;
 	// 买单表。
-	private ReusableDataTable buyOrderTable = null!;
+	private DataTableView buyOrderTable = null!;
 	// 卖单表。
-	private ReusableDataTable sellOrderTable = null!;
+	private DataTableView sellOrderTable = null!;
 	// 商品历史折线图。
 	private ProductMarketHistoryChartUI productHistoryChart = null!;
 	// 商品历史标题。
@@ -37,8 +37,8 @@ public partial class MarketUI : Control
 	{
 		productTable = GetNode<ProductMarketTableUI>("%ProductTable");
 		labourTable = GetNode<LabourMarketTableUI>("%LabourTable");
-		buyOrderTable = GetNode<ReusableDataTable>("%BuyOrderTable");
-		sellOrderTable = GetNode<ReusableDataTable>("%SellOrderTable");
+		buyOrderTable = GetNode<DataTableView>("%BuyOrderTable");
+		sellOrderTable = GetNode<DataTableView>("%SellOrderTable");
 		productHistoryChart = GetNode<ProductMarketHistoryChartUI>("%ProductHistoryChart");
 		historyTitleLabel = GetNode<Label>("%HistoryTitleLabel");
 
@@ -133,7 +133,7 @@ public partial class MarketUI : Control
 	}
 
 	// 渲染单边订单簿表格。
-	private static void renderOrderTable(ReusableDataTable table, string title, IReadOnlyList<(float price, int quantity)> orders)
+	private static void renderOrderTable(DataTableView table, string title, IReadOnlyList<(float price, int quantity)> orders)
 	{
 		List<List<string>> rows = orders
 			.Select(order => new List<string>

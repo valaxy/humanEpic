@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/chart/table/ReusableDataTable.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/chart/table/DataTableView.cs" id="1_script"]
 
 [node name="ReusableDataTable" type="VBoxContainer"]
 custom_minimum_size = Vector2(320, 180)

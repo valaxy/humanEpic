@@ -7,7 +7,7 @@ using Godot;
 /// 劳动力市场表组件。
 /// </summary>
 [GlobalClass]
-public partial class LabourMarketTableUI : ReusableDataTable
+public partial class LabourMarketTableUI : DataTableView
 {
 	/// <summary>
 	/// 根据劳动力市场数据刷新表格。

@@ -47,7 +47,7 @@ public static partial class DomainModelJsonPersistence
 		return resolved ?? throw new InvalidOperationException($"实体查询结果为空: {entityType.FullName}#{entityId}");
 	}
 
-	private static Type getCurrentOwnerType()
+	internal static Type getCurrentOwnerType()
 	{
 		if (activeOwnerTypeStack == null || activeOwnerTypeStack.Count == 0)
 		{

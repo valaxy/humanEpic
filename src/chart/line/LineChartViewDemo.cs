@@ -6,10 +6,10 @@ using System.Linq;
 /// 折线图独立 Demo 入口。
 /// </summary>
 [GlobalClass]
-public partial class LineChartDemo : Control
+public partial class LineChartViewDemo : Control
 {
     // 折线图组件。
-    private LineChart lineChart = null!;
+    private LineChartView lineChart = null!;
 
     // 当前图表配置。
     private Chart chart = null!;
@@ -19,7 +19,7 @@ public partial class LineChartDemo : Control
     /// </summary>
     public override void _Ready()
     {
-        lineChart = GetNode<LineChart>("%LineChart");
+        lineChart = GetNode<LineChartView>("%LineChart");
         renderInitial();
         CallDeferred(MethodName.refreshWithNewData);
     }

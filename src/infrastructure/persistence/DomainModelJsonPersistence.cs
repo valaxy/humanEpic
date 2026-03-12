@@ -42,21 +42,6 @@ public static partial class DomainModelJsonPersistence
 	}
 
 	/// <summary>
-	/// 将模型保存为中间字典对象，并附带实体集合上下文。
-	/// </summary>
-	public static Dictionary<string, object> SaveToObject<TModel>(TModel model, IEnumerable<object> entityCollections) where TModel : class
-	{
-		if (model == null)
-		{
-			throw new InvalidOperationException("持久化模型不能为空");
-		}
-
-		Type modelType = model.GetType();
-		PersistenceReflectionHelper.assertPersistableType(modelType);
-		return saveRootObject(model, modelType, modelType, entityCollections.ToList(), true);
-	}
-
-	/// <summary>
 	/// 将模型保存为中间字典对象，不附带根节点 __static。
 	/// </summary>
 	public static Dictionary<string, object> SaveToObjectWithoutStatic<TModel>(TModel model) where TModel : class
@@ -86,6 +71,9 @@ public static partial class DomainModelJsonPersistence
 		return saveRootObject(model, modelType, modelType, entityCollections.ToList(), false);
 	}
 
+
+
+
 	/// <summary>
 	/// 从中间字典对象加载模型。
 	/// </summary>
@@ -94,16 +82,6 @@ public static partial class DomainModelJsonPersistence
 		Type modelType = typeof(TModel);
 		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, Array.Empty<object>(), true);
-	}
-
-	/// <summary>
-	/// 从中间字典对象加载模型，并附带实体集合上下文。
-	/// </summary>
-	public static TModel LoadFromObject<TModel>(Dictionary<string, object> data, IEnumerable<object> entityCollections) where TModel : class
-	{
-		Type modelType = typeof(TModel);
-		PersistenceReflectionHelper.assertPersistableType(modelType);
-		return (TModel)loadRootObject(data, modelType, modelType, entityCollections.ToList(), true);
 	}
 
 	/// <summary>
@@ -125,6 +103,10 @@ public static partial class DomainModelJsonPersistence
 		PersistenceReflectionHelper.assertPersistableType(modelType);
 		return (TModel)loadRootObject(data, modelType, modelType, entityCollections.ToList(), false);
 	}
+
+
+
+
 
 	/// <summary>
 	/// 从根节点中提取 __static 并删除该键。

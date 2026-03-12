@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 internal sealed class ListTypePersistence : ITypePersistence
@@ -29,12 +30,35 @@ internal sealed class ListTypePersistence : ITypePersistence
 			throw new InvalidOperationException($"类型 {targetType.FullName} 的数据不是数组");
 		}
 
-		IList list = DomainModelJsonPersistence.createList(targetType, elementType);
+		IList list = createList(targetType, elementType);
 		listRaw
 			.Cast<object>()
 			.Select(item => DomainModelJsonPersistence.deserializeValue(item, elementType))
 			.ToList()
 			.ForEach(item => list.Add(item));
 		return list;
+	}
+
+
+	// 创建列表实例。
+	private IList createList(Type declaredListType, Type elementType)
+	{
+		if (declaredListType.IsArray)
+		{
+			object? arrayList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+			return arrayList as IList
+				?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
+		}
+
+		if (declaredListType.IsInterface || declaredListType.IsAbstract)
+		{
+			object? interfaceList = Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+			return interfaceList as IList
+				?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
+		}
+
+		object? list = Activator.CreateInstance(declaredListType);
+		return list as IList
+			?? throw new InvalidOperationException($"无法创建列表实例: {declaredListType.FullName}");
 	}
 }

@@ -21,7 +21,7 @@ internal sealed class Vector2TypePersistence : ITypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		Dictionary<string, object> data = DomainModelJsonPersistence.readGodotNode(rawValue, nameof(Vector2));
+		Dictionary<string, object> data = ColorTypePersistence.readGodotNode(rawValue, nameof(Vector2));
 		float x = Convert.ToSingle(data["x"], CultureInfo.InvariantCulture);
 		float y = Convert.ToSingle(data["y"], CultureInfo.InvariantCulture);
 		return new Vector2(x, y);

@@ -7,7 +7,7 @@ internal sealed class EntityReferenceTypePersistence : ITypePersistence
 
 	public object Serialize(object value, Type declaredType)
 	{
-		if (!DomainModelJsonPersistence.shouldSerializeEntityAsFullObject(declaredType))
+		if (!shouldSerializeEntityAsFullObject(declaredType))
 		{
 			if (value is not IIdModel idModel)
 			{
@@ -22,7 +22,7 @@ internal sealed class EntityReferenceTypePersistence : ITypePersistence
 
 	public object Deserialize(object rawValue, Type targetType)
 	{
-		if (!DomainModelJsonPersistence.shouldSerializeEntityAsFullObject(targetType))
+		if (!shouldSerializeEntityAsFullObject(targetType))
 		{
 			int entityId = Convert.ToInt32(rawValue, CultureInfo.InvariantCulture);
 			return DomainModelJsonPersistence.resolveEntityById(targetType, entityId);
@@ -34,5 +34,12 @@ internal sealed class EntityReferenceTypePersistence : ITypePersistence
 		}
 
 		return DomainModelJsonPersistence.deserializePersistableObject(node, targetType);
+	}
+
+	private bool shouldSerializeEntityAsFullObject(Type entityType)
+	{
+		Type ownerType = DomainModelJsonPersistence.getCurrentOwnerType();
+		Type collectionType = PersistenceReflectionHelper.getEntityCollectionType(entityType);
+		return collectionType.IsAssignableFrom(ownerType);
 	}
 }

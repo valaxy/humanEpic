@@ -7,7 +7,7 @@ using Godot;
 /// 人口过去 30 天商品消费折线图组件。
 /// </summary>
 [GlobalClass]
-public partial class PopulationConsumptionHistoryChartUI : LineChart
+public partial class PopulationConsumptionHistoryChartUI : LineChartView
 {
 	// 折线配色。
 	private static readonly List<Color> chartColors =

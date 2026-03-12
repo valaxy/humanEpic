@@ -7,7 +7,7 @@ using Godot;
 /// 产品市场表组件。
 /// </summary>
 [GlobalClass]
-public partial class ProductMarketTableUI : ReusableDataTable
+public partial class ProductMarketTableUI : DataTableView
 {
 	// 标题标签。
 	private Label titleLabel = null!;

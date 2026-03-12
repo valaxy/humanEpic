@@ -7,7 +7,7 @@ using Godot;
 /// 劳动力市场价格历史折线图组件。
 /// </summary>
 [GlobalClass]
-public partial class LabourMarketHistoryChartUI : LineChart
+public partial class LabourMarketHistoryChartUI : LineChartView
 {
 	// 折线配色。
 	private static readonly List<Color> chartColors =

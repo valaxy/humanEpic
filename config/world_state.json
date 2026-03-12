@@ -1,5 +1,7 @@
 {
-  "time": 9.423102,
+  "timeSystem": {
+    "elapsedDays": 0.47047788
+  },
   "countries": {
     "items": {
       "__dict": true,
@@ -45,11 +47,11 @@
               "__dict": true,
               "kv": {
                 "0": {
-                  "satisfiedAmount": 16.238987,
+                  "satisfiedAmount": 0,
                   "TypeId": 0
                 },
                 "1": {
-                  "satisfiedAmount": 3.272456,
+                  "satisfiedAmount": 0,
                   "TypeId": 1
                 },
                 "2": {
@@ -57,19 +59,16 @@
                   "TypeId": 2
                 },
                 "3": {
-                  "satisfiedAmount": 5.695975,
+                  "satisfiedAmount": 0,
                   "TypeId": 3
                 }
               }
             }
           },
           "asset": {
-            "amounts": {
+            "items": {
               "__dict": true,
-              "kv": {
-                "1": 0,
-                "5": 0
-              }
+              "kv": {}
             }
           },
           "populationResidential": {
@@ -91,7 +90,7 @@
               "__dict": true,
               "kv": {
                 "0": {
-                  "satisfiedAmount": 4.183798,
+                  "satisfiedAmount": 0,
                   "TypeId": 0
                 },
                 "1": {
@@ -103,19 +102,16 @@
                   "TypeId": 2
                 },
                 "3": {
-                  "satisfiedAmount": 1.0459495,
+                  "satisfiedAmount": 0,
                   "TypeId": 3
                 }
               }
             }
           },
           "asset": {
-            "amounts": {
+            "items": {
               "__dict": true,
-              "kv": {
-                "0": 55.357555,
-                "1": 0
-              }
+              "kv": {}
             }
           },
           "populationResidential": {
@@ -141,7 +137,7 @@
                   "TypeId": 0
                 },
                 "1": {
-                  "satisfiedAmount": 4.5128417,
+                  "satisfiedAmount": 0,
                   "TypeId": 1
                 },
                 "2": {
@@ -149,19 +145,16 @@
                   "TypeId": 2
                 },
                 "3": {
-                  "satisfiedAmount": 2.2564209,
+                  "satisfiedAmount": 0,
                   "TypeId": 3
                 }
               }
             }
           },
           "asset": {
-            "amounts": {
+            "items": {
               "__dict": true,
-              "kv": {
-                "0": 27.725496,
-                "5": 0
-              }
+              "kv": {}
             }
           },
           "populationResidential": {
@@ -174,6 +167,23 @@
           }
         }
       }
+    }
+  },
+  "__static": {
+    "Building": {
+      "nextId": 1
+    },
+    "Country": {
+      "nextId": 3
+    },
+    "Order": {
+      "nextTimestamp": 1
+    },
+    "Population": {
+      "nextId": 4
+    },
+    "StaticFieldModel": {
+      "staticCounter": 0
     }
   }
 }

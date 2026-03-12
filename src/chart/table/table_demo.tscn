@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://src/chart/table/reusable_data_table.tscn" id="1_table"]
-[ext_resource type="Script" uid="uid://b1xq3estg6vs8" path="res://src/chart/table/TableDemo.cs" id="2_script"]
+[ext_resource type="Script" uid="uid://b1xq3estg6vs8" path="res://src/chart/table/DataTableViewDemo.cs" id="2_script"]
 
 
 [node name="TableDemo" type="Control"]

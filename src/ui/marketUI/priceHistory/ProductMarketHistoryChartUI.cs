@@ -7,7 +7,7 @@ using Godot;
 /// 产品市场价格历史折线图组件。
 /// </summary>
 [GlobalClass]
-public partial class ProductMarketHistoryChartUI : LineChart
+public partial class ProductMarketHistoryChartUI : LineChartView
 {
 	// 折线配色。
 	private static readonly List<Color> chartColors =

@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/chart/line/LineChart.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/chart/line/LineChartView.cs" id="1_script"]
 
 [node name="LineChart" type="Control"]
 custom_minimum_size = Vector2(320, 220)

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 internal sealed class ValueTupleTypePersistence : ITypePersistence
 {
@@ -9,7 +10,7 @@ internal sealed class ValueTupleTypePersistence : ITypePersistence
 
 	public object Serialize(object value, Type declaredType)
 	{
-		Type[] tupleElementTypes = DomainModelJsonPersistence.getValueTupleElementTypes(declaredType);
+		Type[] tupleElementTypes = getValueTupleElementTypes(declaredType);
 		List<object> tupleValues = tupleElementTypes
 			.Select((elementType, index) =>
 			{
@@ -44,7 +45,7 @@ internal sealed class ValueTupleTypePersistence : ITypePersistence
 			throw new InvalidOperationException($"值元组项结构非法: {targetType.FullName}");
 		}
 
-		Type[] tupleElementTypes = DomainModelJsonPersistence.getValueTupleElementTypes(targetType);
+		Type[] tupleElementTypes = getValueTupleElementTypes(targetType);
 		if (tupleItemsRaw.Count != tupleElementTypes.Length)
 		{
 			throw new InvalidOperationException($"值元组元素数量不匹配: {targetType.FullName}");
@@ -61,5 +62,13 @@ internal sealed class ValueTupleTypePersistence : ITypePersistence
 
 		object? tupleValue = Activator.CreateInstance(targetType, tupleValues);
 		return tupleValue ?? throw new InvalidOperationException($"值元组实例化失败: {targetType.FullName}");
+	}
+
+
+	// 获取值元组元素类型。
+	private static Type[] getValueTupleElementTypes(Type tupleType)
+	{
+		Debug.Assert(TypeHelpers.isValueTupleType(tupleType), $"类型不是值元组: {tupleType.FullName}");
+		return tupleType.GetGenericArguments();
 	}
 }

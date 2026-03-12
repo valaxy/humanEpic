@@ -4,10 +4,10 @@ using System.Globalization;
 using System.Linq;
 
 /// <summary>
-/// 可复用数据表格组件，负责将 DataSource 渲染为二维表格。
+/// 数据表格组件，负责将 DataSource 渲染为二维表格。
 /// </summary>
 [GlobalClass]
-public partial class ReusableDataTable : VBoxContainer
+public partial class DataTableView : VBoxContainer
 {
     // 表格标题标签。
     private Label titleLabel = null!;

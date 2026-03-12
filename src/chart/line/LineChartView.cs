@@ -7,7 +7,7 @@ using System.Linq;
 /// 折线图组件，使用 DataSource 中的序列数据进行绘制。
 /// </summary>
 [GlobalClass]
-public partial class LineChart : Control
+public partial class LineChartView : Control
 {
     // 图表左侧内边距（为 Y 轴刻度留白）。
     private const float PlotPaddingLeft = 72f;

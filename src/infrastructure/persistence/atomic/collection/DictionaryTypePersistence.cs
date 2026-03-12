@@ -62,7 +62,7 @@ internal sealed class DictionaryTypePersistence : ITypePersistence
 			throw new InvalidOperationException($"字典键类型不支持持久化: {keyType.FullName}");
 		}
 
-		IDictionary dictionary = DomainModelJsonPersistence.createDictionary(targetType, keyType, valueType);
+		IDictionary dictionary = createDictionary(targetType, keyType, valueType);
 
 		if (dictNode.TryGetValue("kv", out object? kvRaw))
 		{
@@ -124,5 +124,21 @@ internal sealed class DictionaryTypePersistence : ITypePersistence
 
 		return Convert.ChangeType(keyText, keyType, CultureInfo.InvariantCulture)
 			?? throw new InvalidOperationException($"字典键转换失败: {targetType.FullName}");
+	}
+
+
+	// 创建字典实例。
+	private static IDictionary createDictionary(Type declaredDictType, Type keyType, Type valueType)
+	{
+		if (declaredDictType.IsInterface || declaredDictType.IsAbstract)
+		{
+			object? interfaceDict = Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(keyType, valueType));
+			return interfaceDict as IDictionary
+				?? throw new InvalidOperationException($"无法创建字典实例: {declaredDictType.FullName}");
+		}
+
+		object? dictionary = Activator.CreateInstance(declaredDictType);
+		return dictionary as IDictionary
+			?? throw new InvalidOperationException($"无法创建字典实例: {declaredDictType.FullName}");
 	}
 }

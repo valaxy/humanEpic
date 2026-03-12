@@ -14,7 +14,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_left = 180.0
 offset_top = 90.0
-offset_right = 780.0
+offset_right = 1109.0
 offset_bottom = 560.0
 
 [node name="MainSplit" type="HSplitContainer" parent="PopulationWindow/VBoxContainer/ContentRoot" index="0" unique_id=1244816493]
@@ -56,7 +56,7 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="DetailVBox" type="VBoxContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin"]
+[node name="DetailVBox" type="VBoxContainer" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin" unique_id=777032375]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -65,13 +65,8 @@ theme_override_constants/separation = 10
 [node name="PopulationDetailContent" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin/DetailVBox" unique_id=239856291 instance=ExtResource("3_content_block")]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
 [node name="PopulationConsumptionHistoryChart" parent="PopulationWindow/VBoxContainer/ContentRoot/MainSplit/DetailPanel/DetailMargin/DetailVBox" unique_id=110025497 instance=ExtResource("4_chart_scene")]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
 
 [editable path="PopulationWindow"]

@@ -18,39 +18,33 @@ public static partial class DomainModelJsonPersistence
 	[ThreadStatic]
 	private static bool activeIncludeStaticSidecar;
 
-	/// <summary>
-	/// 一次 Save/Load 根流程的线程局部上下文作用域。
-	/// 作用：
-	/// 1) 维护当前“宿主类型”栈，支持实体引用在“集合内全量序列化 / 集合外按 ID 引用”之间切换；
-	/// 2) 维护实体集合映射，用于反序列化时按 ID 回查实体；
-	/// 3) 控制本次流程是否处理根节点 __static sidecar。
-	/// </summary>
-	private sealed class PersistenceScope : IDisposable
+	private readonly record struct PersistenceContextSnapshot(
+		Stack<Type>? OwnerTypeStack,
+		Dictionary<Type, object>? EntityCollections,
+		bool IncludeStaticSidecar);
+
+	private static PersistenceContextSnapshot capturePersistenceContext()
 	{
-		private readonly Stack<Type>? previousOwnerTypeStack;
-		private readonly Dictionary<Type, object>? previousEntityCollections;
-		private readonly bool previousIncludeStaticSidecar;
-
-		public PersistenceScope(Type ownerType, IEnumerable<object> entityCollections, bool includeStaticSidecar)
-		{
-			previousOwnerTypeStack = activeOwnerTypeStack;
-			previousEntityCollections = activeEntityCollections;
-			previousIncludeStaticSidecar = activeIncludeStaticSidecar;
-
-			activeOwnerTypeStack = new Stack<Type>();
-			activeOwnerTypeStack.Push(ownerType);
-			activeEntityCollections = createEntityCollectionMap(entityCollections);
-			activeIncludeStaticSidecar = includeStaticSidecar;
-		}
-
-		public void Dispose()
-		{
-			activeOwnerTypeStack = previousOwnerTypeStack;
-			activeEntityCollections = previousEntityCollections;
-			activeIncludeStaticSidecar = previousIncludeStaticSidecar;
-		}
+		return new PersistenceContextSnapshot(
+			activeOwnerTypeStack,
+			activeEntityCollections,
+			activeIncludeStaticSidecar);
 	}
 
+	private static void initializePersistenceContext(Type ownerType, IEnumerable<object> entityCollections, bool includeStaticSidecar)
+	{
+		activeOwnerTypeStack = new Stack<Type>();
+		activeOwnerTypeStack.Push(ownerType);
+		activeEntityCollections = createEntityCollectionMap(entityCollections);
+		activeIncludeStaticSidecar = includeStaticSidecar;
+	}
+
+	private static void restorePersistenceContext(PersistenceContextSnapshot snapshot)
+	{
+		activeOwnerTypeStack = snapshot.OwnerTypeStack;
+		activeEntityCollections = snapshot.EntityCollections;
+		activeIncludeStaticSidecar = snapshot.IncludeStaticSidecar;
+	}
 
 
 	// 对外 SaveToObject 需要携带根节点静态 sidecar。
@@ -61,15 +55,24 @@ public static partial class DomainModelJsonPersistence
 		IEnumerable<object> entityCollections,
 		bool includeStaticSidecar)
 	{
-		using PersistenceScope _ = new(ownerType, entityCollections, includeStaticSidecar);
-		Dictionary<string, object> instanceNode = serializePersistableObject(model, modelType);
-		if (activeIncludeStaticSidecar)
-		{
-			Dictionary<string, object> staticNode = serializeStaticMembers(PersistenceReflectionHelper.getAllPersistableTypesInCurrentAssembly());
-			instanceNode[staticMembers] = staticNode;
-		}
+		PersistenceContextSnapshot contextSnapshot = capturePersistenceContext();
+		initializePersistenceContext(ownerType, entityCollections, includeStaticSidecar);
 
-		return instanceNode;
+		try
+		{
+			Dictionary<string, object> instanceNode = serializePersistableObject(model, modelType);
+			if (activeIncludeStaticSidecar)
+			{
+				Dictionary<string, object> staticNode = serializeStaticMembers(PersistenceReflectionHelper.getAllPersistableTypesInCurrentAssembly());
+				instanceNode[staticMembers] = staticNode;
+			}
+
+			return instanceNode;
+		}
+		finally
+		{
+			restorePersistenceContext(contextSnapshot);
+		}
 	}
 
 

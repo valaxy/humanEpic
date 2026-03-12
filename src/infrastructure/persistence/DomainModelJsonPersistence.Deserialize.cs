@@ -144,18 +144,27 @@ public static partial class DomainModelJsonPersistence
 		IEnumerable<object> entityCollections,
 		bool includeStaticSidecar)
 	{
-		using PersistenceScope _ = new(ownerType, entityCollections, includeStaticSidecar);
-		if (data.TryGetValue(staticMembers, out object? staticRaw) && activeIncludeStaticSidecar)
+		PersistenceContextSnapshot contextSnapshot = capturePersistenceContext();
+		initializePersistenceContext(ownerType, entityCollections, includeStaticSidecar);
+
+		try
 		{
-			if (staticRaw is not Dictionary<string, object> staticNode)
+			if (data.TryGetValue(staticMembers, out object? staticRaw) && activeIncludeStaticSidecar)
 			{
-				throw new InvalidOperationException($"根节点静态数据结构非法: {modelType.FullName}");
+				if (staticRaw is not Dictionary<string, object> staticNode)
+				{
+					throw new InvalidOperationException($"根节点静态数据结构非法: {modelType.FullName}");
+				}
+
+				deserializeStaticMembers(staticNode);
 			}
 
-			deserializeStaticMembers(staticNode);
+			return deserializePersistableObject(data, modelType);
 		}
-
-		return deserializePersistableObject(data, modelType);
+		finally
+		{
+			restorePersistenceContext(contextSnapshot);
+		}
 	}
 
 	private static Type resolvePersistableTypeBySimpleName(string typeName)

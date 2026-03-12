@@ -30,23 +30,57 @@ public partial class PopulationConsumptionHistoryChartUI : LineChart
 		List<int> dayIndexes = Enumerable.Range(currentDay - 29, 30)
 			.Select(day => Math.Max(day, 0))
 			.ToList();
-		List<string> xLabels = dayIndexes
-			.Select(day => $"D{day}")
-			.ToList();
 
 		List<AssetItem> consumerGoods = population.Asset.GetAll()
 			.Where(item => item.Template.IsConsumerGood)
 			.OrderBy(item => item.ProductType)
 			.ToList();
 
-		List<DataSeries> seriesList = consumerGoods
-			.Select((item, index) => DataSeries.Create(
-				item.Template.Name,
-				chartColors[index % chartColors.Count].ToHtml(),
-				item.GetLast30DaysConsumption(currentDay)))
+		List<string> headers = ["day", "dayLabel", "product", "consumption"];
+		List<IReadOnlyList<string>> rows = consumerGoods
+			.SelectMany(item => dayIndexes
+				.Select((day, index) => (day, index))
+				.Select(pair => (IReadOnlyList<string>)new List<string>
+				{
+					pair.day.ToString(),
+					$"D{pair.day}",
+					item.Template.Name,
+					item.GetLast30DaysConsumption(currentDay).ElementAtOrDefault(pair.index).ToString("0.####")
+				}))
 			.ToList();
 
-		Render(DataSource.CreateLineChart("人口过去30天商品消费", xLabels, seriesList, dayIndexes.Select(day => (float)day)));
+		DataSource source = DataSource.CreateLineChartByDimensions(
+			"人口过去30天商品消费",
+			headers,
+			rows,
+			xValueColumnIndex: 0,
+			yValueColumnIndex: 3,
+			xLabelColumnIndex: 1,
+			dimensionColumnIndexes: [2]);
+
+		List<DataSeries> recoloredSeries = source.SeriesList
+			.Select((series, index) => DataSeries.Create(
+				series.Name,
+				chartColors[index % chartColors.Count].ToHtml(),
+				series.Values,
+				series.Key))
+			.ToList();
+
+		List<LineLegendItem> recoloredLegendItems = source.LegendItems
+			.Select((legend, index) => new LineLegendItem(legend.Key, legend.Name, chartColors[index % chartColors.Count].ToHtml()))
+			.ToList();
+
+		Render(new DataSource
+		{
+			Title = source.Title,
+			Headers = source.Headers,
+			Rows = source.Rows,
+			TableTitle = source.TableTitle,
+			DimensionColumnFlags = source.DimensionColumnFlags,
+			AxisPoints = source.AxisPoints,
+			LegendItems = recoloredLegendItems,
+			SeriesList = recoloredSeries
+		});
 	}
 
 	/// <summary>

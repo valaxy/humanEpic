@@ -151,12 +151,19 @@ public partial class GameWorld : RefCounted, IPersistence<GameWorld>
 	{
 		if (data.TryGetValue("timeSystem", out object? timeNodeRaw) && timeNodeRaw is Dictionary<string, object> timeNode)
 		{
+			if (timeNode.TryGetValue("totalSeconds", out object? legacySecondsRaw))
+			{
+				float legacySeconds = Convert.ToSingle(legacySecondsRaw);
+				return new TimeSystem(legacySeconds / TimeSystem.SecondsPerDay);
+			}
+
 			return DomainModelJsonPersistence.LoadFromObjectWithoutStatic<TimeSystem>(timeNode);
 		}
 
 		if (data.TryGetValue("time", out object? legacyTimeRaw))
 		{
-			return new TimeSystem(Convert.ToSingle(legacyTimeRaw));
+			float legacySeconds = Convert.ToSingle(legacyTimeRaw);
+			return new TimeSystem(legacySeconds / TimeSystem.SecondsPerDay);
 		}
 
 		return new TimeSystem(0.0f);

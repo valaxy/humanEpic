@@ -8,6 +8,11 @@ using System.Linq;
 public sealed class DataSeries
 {
 	/// <summary>
+	/// 序列键，用于图例交互与状态同步。
+	/// </summary>
+	public string Key { get; init; } = string.Empty;
+
+	/// <summary>
 	/// 序列名称。
 	/// </summary>
 	public string Name { get; init; } = string.Empty;
@@ -25,14 +30,16 @@ public sealed class DataSeries
 	/// <summary>
 	/// 创建一个图表序列数据对象。
 	/// </summary>
+	/// <param name="key">序列键（为空时将回落到 <paramref name="name"/>）。</param>
 	/// <param name="name">序列名称。</param>
 	/// <param name="colorHex">序列颜色（HTML 颜色值）。</param>
 	/// <param name="values">序列值集合。</param>
 	/// <returns>初始化后的 <see cref="DataSeries" /> 实例。</returns>
-	public static DataSeries Create(string name, string colorHex, IEnumerable<float> values)
+	public static DataSeries Create(string name, string colorHex, IEnumerable<float> values, string key = "")
 	{
 		return new DataSeries
 		{
+			Key = string.IsNullOrWhiteSpace(key) ? name : key,
 			Name = name,
 			ColorHex = colorHex,
 			Values = values.ToList()

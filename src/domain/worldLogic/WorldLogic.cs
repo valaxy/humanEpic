@@ -16,6 +16,12 @@ public abstract class WorldLogic : IWorldLogic
     // 执行间隔（天）。
     private float intervalDays;
 
+    // 是否在首次更新时立即触发。
+    private readonly bool triggerOnStart;
+
+    // 是否已完成首次更新。
+    private bool hasStarted;
+
     /// <summary>
     /// 世界逻辑名称（短文本）。
     /// </summary>
@@ -32,17 +38,25 @@ public abstract class WorldLogic : IWorldLogic
     public float IntervalDays => intervalDays;
 
     /// <summary>
+    /// 是否在首次更新时立即触发。
+    /// </summary>
+    public bool TriggerOnStart => triggerOnStart;
+
+    /// <summary>
     /// 初始化世界逻辑。
     /// </summary>
     /// <param name="name">逻辑名称。</param>
     /// <param name="description">逻辑描述。</param>
     /// <param name="intervalDays">触发间隔天数。</param>
-    protected WorldLogic(string name, string description, float intervalDays)
+    /// <param name="triggerOnStart">是否在首次更新时立即触发一次。</param>
+    protected WorldLogic(string name, string description, float intervalDays, bool triggerOnStart = false)
     {
         Name = name;
         Description = description;
         this.intervalDays = intervalDays;
+        this.triggerOnStart = triggerOnStart;
         elapsedDays = 0.0f;
+        hasStarted = false;
     }
 
     /// <summary>
@@ -51,6 +65,21 @@ public abstract class WorldLogic : IWorldLogic
     /// <param name="delta">时间增量（秒）。</param>
     public void UpdateDelta(float delta)
     {
+        if (!hasStarted)
+        {
+            hasStarted = true;
+            if (triggerOnStart)
+            {
+                ProcessLogic();
+                Triggered?.Invoke(this);
+
+                if (intervalDays <= 0.0f)
+                {
+                    return;
+                }
+            }
+        }
+
         if (intervalDays <= 0.0f)
         {
             ProcessLogic();

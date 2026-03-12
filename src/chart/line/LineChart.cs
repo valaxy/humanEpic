@@ -30,6 +30,21 @@ public partial class LineChart : Control
     // 标题区域高度。
     private const float TitleHeight = 24f;
 
+    // 图例区域宽度。
+    private const float LegendWidth = 180f;
+
+    // 图例区域与绘图区间距。
+    private const float LegendGap = 12f;
+
+    // 图例行高。
+    private const float LegendItemHeight = 22f;
+
+    // 图例内边距。
+    private const float LegendPadding = 8f;
+
+    // 图例勾选框尺寸。
+    private const float LegendToggleSize = 12f;
+
     // 悬浮点半径。
     private const float PointRadius = 3.5f;
 
@@ -45,6 +60,15 @@ public partial class LineChart : Control
     // 当前可交互点集合。
     private List<InteractivePoint> interactivePoints = [];
 
+    // 当前可交互图例集合。
+    private List<InteractiveLegendItem> interactiveLegendItems = [];
+
+    // 图例可见性状态（Key -> 是否可见）。
+    private Dictionary<string, bool> legendVisibility = new();
+
+    // 当前悬浮图例键。
+    private string? hoveredLegendKey;
+
     // 当前悬浮点。
     private InteractivePoint? hoveredPoint;
 
@@ -54,7 +78,9 @@ public partial class LineChart : Control
     // 悬浮提示文本。
     private Label tooltipLabel = null!;
 
-    private sealed record InteractivePoint(Vector2 Position, string XText, string YText, Color Color);
+    private sealed record InteractivePoint(string SeriesKey, Vector2 Position, string XText, string YText, Color Color);
+
+    private sealed record InteractiveLegendItem(string Key, Rect2 ToggleRect, Rect2 HoverRect);
 
     /// <summary>
     /// 初始化交互节点。
@@ -82,6 +108,7 @@ public partial class LineChart : Control
     public void Render(DataSource dataSource)
     {
         chart = chart.Update(dataSource: dataSource);
+        syncLegendState(dataSource);
         QueueRedraw();
     }
 
@@ -92,6 +119,7 @@ public partial class LineChart : Control
     public void UpdateChart(Chart chart)
     {
         this.chart = chart;
+        syncLegendState(chart.DataSource);
         QueueRedraw();
     }
 
@@ -101,21 +129,26 @@ public partial class LineChart : Control
     public override void _Draw()
     {
         interactivePoints = [];
+        interactiveLegendItems = [];
 
         Color labelColor = GetThemeColor("font_color", "Label");
         Font? font = GetThemeDefaultFont();
         int fontSize = GetThemeDefaultFontSize();
         DataSource dataSource = chart.DataSource;
+        syncLegendState(dataSource);
 
         if (!string.IsNullOrEmpty(dataSource.Title) && font is not null)
         {
             DrawString(font, new Vector2(0, TitleHeight - 6f), dataSource.Title, HorizontalAlignment.Left, -1, fontSize, labelColor);
         }
 
+        bool hasLegend = getLegendEntries(dataSource).Count > 0;
+        float legendAreaWidth = hasLegend ? LegendWidth + LegendGap : 0f;
+
         Rect2 plotRect = new Rect2(
             PlotPaddingLeft,
             TitleHeight + PlotPaddingTop,
-            Size.X - PlotPaddingLeft - PlotPaddingRight,
+            Size.X - PlotPaddingLeft - PlotPaddingRight - legendAreaWidth,
             Size.Y - TitleHeight - PlotPaddingTop - PlotPaddingBottom);
 
         if (plotRect.Size.X <= 0 || plotRect.Size.Y <= 0)
@@ -136,6 +169,10 @@ public partial class LineChart : Control
         {
             drawYTicks(plotRect, bounds.Value, font, fontSize, labelColor);
             drawXLabels(plotRect, bounds.Value, font, fontSize, labelColor);
+            if (hasLegend)
+            {
+                drawLegend(plotRect, font, fontSize, labelColor);
+            }
         }
 
         if (hoveredPoint is not null)
@@ -149,19 +186,27 @@ public partial class LineChart : Control
     /// </summary>
     public override void _GuiInput(InputEvent @event)
     {
-        if (@event is not InputEventMouseMotion mouseMotion)
+        if (@event is InputEventMouseMotion mouseMotion)
         {
+            updateHoveredLegend(mouseMotion.Position);
+            updateHoveredPoint(mouseMotion.Position);
             return;
         }
 
-        updateHoveredPoint(mouseMotion.Position);
+        if (@event is InputEventMouseButton mouseButton
+            && mouseButton.Pressed
+            && mouseButton.ButtonIndex == MouseButton.Left)
+        {
+            handleLegendToggle(mouseButton.Position);
+            return;
+        }
     }
 
     // 绘制所有折线序列。
     private void drawSeries(Rect2 plotRect, PlotBounds bounds)
     {
         DataSource dataSource = chart.DataSource;
-        List<DataSeries> seriesList = dataSource.SeriesList.ToList();
+        List<DataSeries> seriesList = getVisibleSeries(dataSource);
         if (seriesList.Count == 0)
         {
             return;
@@ -175,6 +220,10 @@ public partial class LineChart : Control
             .ForEach(series =>
             {
                 Color seriesColor = toGodotColor(series.ColorHex);
+                string seriesKey = getSeriesKey(series);
+                bool highlightedByLegend = string.IsNullOrWhiteSpace(hoveredLegendKey) || hoveredLegendKey == seriesKey;
+                Color renderColor = highlightedByLegend ? seriesColor : seriesColor.Darkened(0.45f);
+                float lineWidth = highlightedByLegend ? 2.6f : 1.5f;
                 List<PointState> pointStates = Enumerable.Range(0, series.Values.Count)
                     .Select(index => createPointState(series, index, plotRect, bounds))
                     .ToList();
@@ -184,7 +233,7 @@ public partial class LineChart : Control
                     Enumerable.Range(0, pointStates.Count - 1)
                         .Where(index => pointStates[index].Visible && pointStates[index + 1].Visible)
                         .ToList()
-                        .ForEach(index => DrawLine(pointStates[index].Position, pointStates[index + 1].Position, seriesColor, 2f, true));
+                        .ForEach(index => DrawLine(pointStates[index].Position, pointStates[index + 1].Position, renderColor, lineWidth, true));
                 }
 
                 pointStates
@@ -192,8 +241,8 @@ public partial class LineChart : Control
                     .ToList()
                     .ForEach(state =>
                     {
-                        DrawCircle(state.Position, PointRadius, seriesColor);
-                        points.Add(new InteractivePoint(state.Position, state.XText, state.YText, seriesColor));
+                        DrawCircle(state.Position, highlightedByLegend ? PointRadius : PointRadius - 0.8f, renderColor);
+                        points.Add(new InteractivePoint(seriesKey, state.Position, state.XText, state.YText, seriesColor));
                     });
             });
 
@@ -227,8 +276,8 @@ public partial class LineChart : Control
     private void drawXLabels(Rect2 plotRect, PlotBounds bounds, Font font, int fontSize, Color color)
     {
         DataSource dataSource = chart.DataSource;
-        List<DataSeries> seriesList = dataSource.SeriesList.ToList();
-        int maxPointCount = seriesList.Select(series => series.Values.Count).DefaultIfEmpty(0).Max();
+        List<LineAxisPoint> axisPoints = dataSource.AxisPoints.ToList();
+        int maxPointCount = axisPoints.Count;
 
         if (maxPointCount == 0)
         {
@@ -255,9 +304,7 @@ public partial class LineChart : Control
             {
                 float xValue = getXValue(dataSource, index);
                 float x = mapX(plotRect, bounds, xValue);
-                string xText = index < dataSource.XLabels.Count
-                    ? dataSource.XLabels[index]
-                    : chart.XAxis.Format(xValue);
+                string xText = getXText(dataSource, index);
 
                 DrawLine(new Vector2(x, plotRect.End.Y), new Vector2(x, plotRect.End.Y + 4f), color, 1f, true);
                 DrawString(font, new Vector2(x, plotRect.End.Y + fontSize + 2f), xText, HorizontalAlignment.Center, 120f, fontSize - 1, color);
@@ -270,11 +317,9 @@ public partial class LineChart : Control
         DataSource dataSource = chart.DataSource;
         float xValue = getXValue(dataSource, index);
         float yValue = series.Values[index];
-        bool visible = isPointVisible(xValue, yValue, bounds);
+        bool visible = !float.IsNaN(yValue) && isPointVisible(xValue, yValue, bounds);
         Vector2 position = new Vector2(mapX(plotRect, bounds, xValue), mapY(plotRect, bounds, yValue));
-        string xText = index < dataSource.XLabels.Count
-            ? dataSource.XLabels[index]
-            : chart.XAxis.Format(xValue);
+        string xText = getXText(dataSource, index);
         string yText = chart.YAxis.Format(yValue);
 
         return new PointState(position, xText, yText, visible);
@@ -284,6 +329,7 @@ public partial class LineChart : Control
     private void updateHoveredPoint(Vector2 mousePosition)
     {
         InteractivePoint? nearestPoint = interactivePoints
+            .Where(point => string.IsNullOrWhiteSpace(hoveredLegendKey) || point.SeriesKey == hoveredLegendKey)
             .Select(point => new { Point = point, Distance = point.Position.DistanceTo(mousePosition) })
             .Where(candidate => candidate.Distance <= HoverRadius)
             .OrderBy(candidate => candidate.Distance)
@@ -299,6 +345,95 @@ public partial class LineChart : Control
         }
 
         showTooltip(nearestPoint, mousePosition);
+        QueueRedraw();
+    }
+
+    // 绘制图例区域。
+    private void drawLegend(Rect2 plotRect, Font font, int fontSize, Color color)
+    {
+        DataSource dataSource = chart.DataSource;
+        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
+        if (legendEntries.Count == 0)
+        {
+            return;
+        }
+
+        float legendX = plotRect.End.X + LegendGap;
+        float legendY = plotRect.Position.Y;
+        float legendHeight = LegendPadding * 2f + legendEntries.Count * LegendItemHeight;
+        Rect2 legendRect = new Rect2(legendX, legendY, LegendWidth, legendHeight);
+        DrawRect(legendRect, color.Darkened(0.7f), false, 1f);
+
+        legendEntries
+            .Select((entry, index) => (entry, index))
+            .ToList()
+            .ForEach(item =>
+            {
+                float rowY = legendRect.Position.Y + LegendPadding + item.index * LegendItemHeight;
+                Rect2 rowRect = new Rect2(legendRect.Position.X + 2f, rowY, legendRect.Size.X - 4f, LegendItemHeight);
+                Rect2 toggleRect = new Rect2(rowRect.Position.X + 4f, rowRect.Position.Y + (LegendItemHeight - LegendToggleSize) / 2f, LegendToggleSize, LegendToggleSize);
+
+                bool isVisible = legendVisibility.TryGetValue(item.entry.Key, out bool visible) && visible;
+                bool isHovered = hoveredLegendKey == item.entry.Key;
+
+                if (isHovered)
+                {
+                    DrawRect(rowRect, color.Darkened(0.65f), true);
+                }
+
+                DrawRect(toggleRect, color, false, 1f);
+                if (isVisible)
+                {
+                    Rect2 innerToggleRect = new Rect2(toggleRect.Position + new Vector2(2f, 2f), toggleRect.Size - new Vector2(4f, 4f));
+                    DrawRect(innerToggleRect, toGodotColor(item.entry.ColorHex), true);
+                }
+
+                Vector2 colorDotPosition = new Vector2(toggleRect.End.X + 10f, rowRect.Position.Y + LegendItemHeight / 2f);
+                DrawCircle(colorDotPosition, 4f, toGodotColor(item.entry.ColorHex));
+
+                float textStartX = colorDotPosition.X + 10f;
+                DrawString(font, new Vector2(textStartX, rowRect.Position.Y + LegendItemHeight * 0.72f), item.entry.Name, HorizontalAlignment.Left, legendRect.Size.X - (textStartX - legendRect.Position.X) - 4f, fontSize - 1, color);
+
+                interactiveLegendItems.Add(new InteractiveLegendItem(item.entry.Key, toggleRect, rowRect));
+            });
+    }
+
+    // 更新图例悬浮项。
+    private void updateHoveredLegend(Vector2 mousePosition)
+    {
+        InteractiveLegendItem? legendItem = interactiveLegendItems
+            .Select(item => (InteractiveLegendItem?)item)
+            .FirstOrDefault(item => item != null && item.HoverRect.HasPoint(mousePosition));
+
+        string? nextHoveredLegendKey = legendItem?.Key;
+        if (nextHoveredLegendKey == hoveredLegendKey)
+        {
+            return;
+        }
+
+        hoveredLegendKey = nextHoveredLegendKey;
+        QueueRedraw();
+    }
+
+    // 处理图例勾选切换。
+    private void handleLegendToggle(Vector2 mousePosition)
+    {
+        InteractiveLegendItem? legendItem = interactiveLegendItems
+            .Select(item => (InteractiveLegendItem?)item)
+            .FirstOrDefault(item => item != null && item.ToggleRect.HasPoint(mousePosition));
+        if (legendItem == null)
+        {
+            return;
+        }
+
+        bool currentVisible = legendVisibility.TryGetValue(legendItem.Key, out bool value) && value;
+        legendVisibility[legendItem.Key] = !currentVisible;
+
+        if (hoveredPoint != null && hoveredPoint.SeriesKey == legendItem.Key && !legendVisibility[legendItem.Key])
+        {
+            hideTooltip();
+        }
+
         QueueRedraw();
     }
 
@@ -332,13 +467,13 @@ public partial class LineChart : Control
     private PlotBounds? tryBuildBounds()
     {
         DataSource dataSource = chart.DataSource;
-        List<DataSeries> seriesList = dataSource.SeriesList.ToList();
+        List<DataSeries> seriesList = getVisibleSeries(dataSource);
         if (seriesList.Count == 0)
         {
             return null;
         }
 
-        int maxPointCount = seriesList.Select(series => series.Values.Count).DefaultIfEmpty(0).Max();
+        int maxPointCount = dataSource.AxisPoints.Count;
         if (maxPointCount == 0)
         {
             return null;
@@ -358,6 +493,7 @@ public partial class LineChart : Control
             .SelectMany(series => Enumerable.Range(0, series.Values.Count)
                 .Where(index => chart.XAxis.IsInRange(getXValue(dataSource, index)))
                 .Select(index => series.Values[index])
+                .Where(value => !float.IsNaN(value))
                 .Where(value => chart.YAxis.IsInRange(value)))
             .ToList();
 
@@ -394,12 +530,88 @@ public partial class LineChart : Control
         return inTickRange && inDisplayRange;
     }
 
-    // 获取 X 值（优先使用 DataSource.XValues）。
+    // 获取 X 值。
     private static float getXValue(DataSource dataSource, int index)
     {
-        return index < dataSource.XValues.Count
-            ? dataSource.XValues[index]
-            : index;
+        if (index >= 0 && index < dataSource.AxisPoints.Count)
+        {
+            return dataSource.AxisPoints[index].Value;
+        }
+
+        return index;
+    }
+
+    // 获取 X 轴显示文本。
+    private string getXText(DataSource dataSource, int index)
+    {
+        if (index >= 0 && index < dataSource.AxisPoints.Count)
+        {
+            return dataSource.AxisPoints[index].Label;
+        }
+
+        return chart.XAxis.Format(index);
+    }
+
+    // 同步图例状态，保留已有勾选结果。
+    private void syncLegendState(DataSource dataSource)
+    {
+        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
+        if (legendEntries.Count == 0)
+        {
+            legendVisibility.Clear();
+            hoveredLegendKey = null;
+            return;
+        }
+
+        Dictionary<string, bool> nextVisibility = legendEntries
+            .ToDictionary(
+                entry => entry.Key,
+                entry => legendVisibility.TryGetValue(entry.Key, out bool visible) ? visible : true);
+        legendVisibility = nextVisibility;
+
+        if (!string.IsNullOrWhiteSpace(hoveredLegendKey) && !legendVisibility.ContainsKey(hoveredLegendKey))
+        {
+            hoveredLegendKey = null;
+        }
+    }
+
+    // 获取有效图例项（优先使用数据源显式图例定义）。
+    private static List<LineLegendItem> getLegendEntries(DataSource dataSource)
+    {
+        if (dataSource.LegendItems.Count > 0)
+        {
+            return dataSource.LegendItems.ToList();
+        }
+
+        return dataSource.SeriesList
+            .Select(series => new LineLegendItem(getSeriesKey(series), series.Name, series.ColorHex))
+            .ToList();
+    }
+
+    // 获取当前可见序列。
+    private List<DataSeries> getVisibleSeries(DataSource dataSource)
+    {
+        List<LineLegendItem> legendEntries = getLegendEntries(dataSource);
+        HashSet<string> enabledKeys = legendEntries
+            .Where(entry => legendVisibility.TryGetValue(entry.Key, out bool visible) && visible)
+            .Select(entry => entry.Key)
+            .ToHashSet();
+
+        if (legendEntries.Count == 0)
+        {
+            return dataSource.SeriesList.ToList();
+        }
+
+        return dataSource.SeriesList
+            .Where(series => enabledKeys.Contains(getSeriesKey(series)))
+            .ToList();
+    }
+
+    private static string getSeriesKey(DataSeries series)
+    {
+        return string.IsNullOrWhiteSpace(series.Key)
+            ? series.Name
+            : series.Key;
     }
 
     // 将 X 值映射到图表坐标。

@@ -1,3 +1,5 @@
+using System;
+
 /// <summary>
 /// 游戏内的时间系统
 /// </summary>
@@ -5,7 +7,7 @@
 public class TimeSystem
 {
 	[PersistField]
-	private float totalSeconds = default!;
+	private float elapsedDays = default!;
 
 	/// <summary>
 	/// 游戏内一天的秒数
@@ -15,7 +17,12 @@ public class TimeSystem
 	/// <summary>
 	/// 当前游戏总时间（秒）
 	/// </summary>
-	public float TotalSeconds => totalSeconds;
+	public float TotalSeconds => elapsedDays * SecondsPerDay;
+
+	/// <summary>
+	/// 当前游戏总天数（可带小数）
+	/// </summary>
+	public float TotalDays => elapsedDays;
 
 	/// <summary>
 	/// 无参构造函数，供反持久化调用。
@@ -26,11 +33,11 @@ public class TimeSystem
 
 
 	/// <summary>
-	/// 构造函数，允许直接设置总时间（主要用于从存档加载时使用）。
+	/// 构造函数，允许直接设置总天数（主要用于从存档加载时使用）。
 	/// </summary>
-	public TimeSystem(float totalSeconds)
+	public TimeSystem(float elapsedDays)
 	{
-		this.totalSeconds = totalSeconds;
+		this.elapsedDays = elapsedDays;
 	}
 
 
@@ -40,7 +47,7 @@ public class TimeSystem
 	/// <returns>天数</returns>
 	public int GetDay()
 	{
-		return (int)(TotalSeconds / SecondsPerDay);
+		return (int)elapsedDays;
 	}
 
 	/// <summary>
@@ -49,8 +56,8 @@ public class TimeSystem
 	/// <returns>小时</returns>
 	public int GetHour()
 	{
-		float secondsInDay = TotalSeconds % SecondsPerDay;
-		return (int)((secondsInDay / SecondsPerDay) * 24.0f);
+		float dayFraction = elapsedDays - MathF.Floor(elapsedDays);
+		return (int)(dayFraction * 24.0f);
 	}
 
 
@@ -62,6 +69,6 @@ public class TimeSystem
 	/// <param name="delta">与上一帧的时间差</param>
 	public void Update(double delta)
 	{
-		totalSeconds += (float)delta;
+		elapsedDays += (float)delta / SecondsPerDay;
 	}
 }

@@ -41,6 +41,8 @@ public partial class WorldCanvasView : Node2D
 	private static readonly Color dropShadowBorderColor = new(0.32f, 0.62f, 0.94f, 0.9f);
 	// 画布领域模型。
 	private WorldCanvas worldCanvas = new(5000f, 3200f, 280f, 96f);
+	// 交互控制器。
+	private readonly WorldCanvasInteractionController interactionController = new();
 	// 当前选中节点 ID。
 	private string selectedNodeId = string.Empty;
 	// 拖拽阴影节点 ID。
@@ -67,33 +69,35 @@ public partial class WorldCanvasView : Node2D
 	}
 
 	/// <summary>
-	/// 触发节点选中变化信号。
+	/// 处理画布输入并在内部触发基础信号。
 	/// </summary>
-	public void EmitNodeSelected(string nodeId)
+	public void HandleInputEvent(InputEvent @event, Camera2D camera)
 	{
-		EmitSignal(SignalName.NodeSelected, nodeId);
-	}
+		if (@event is InputEventMouseButton mouseButton
+			&& interactionController.TryHandleMouseButton(mouseButton, worldCanvas, camera, out string nextSelectedNodeId))
+		{
+			SetSelectedNode(nextSelectedNodeId);
+			EmitSignal(SignalName.NodeSelected, nextSelectedNodeId);
+			return;
+		}
 
-	/// <summary>
-	/// 触发节点拖拽信号。
-	/// </summary>
-	public void EmitNodeDragged(string nodeId, Vector2 position)
-	{
-		EmitSignal(SignalName.NodeDragged, nodeId, position);
-	}
+		if (@event is InputEventMouseMotion mouseMotion
+			&& interactionController.TryHandleMouseMotion(mouseMotion, worldCanvas, out string draggingNodeId, out Vector2 snappedPosition))
+		{
+			EmitSignal(SignalName.NodeDragged, draggingNodeId, snappedPosition);
+			return;
+		}
 
-	/// <summary>
-	/// 触发删除请求信号。
-	/// </summary>
-	public void EmitDeleteRequested(string nodeId)
-	{
-		EmitSignal(SignalName.DeleteRequested, nodeId);
+		if (@event is InputEventKey keyEvent && interactionController.TryHandleDeleteKey(keyEvent, out string deletingNodeId))
+		{
+			EmitSignal(SignalName.DeleteRequested, deletingNodeId);
+		}
 	}
 
 	/// <summary>
 	/// 触发落点信号。
 	/// </summary>
-	public void EmitNodePayloadDropped(string nodeId, Vector2 graphPosition)
+	public void NotifyNodePayloadDropped(string nodeId, Vector2 graphPosition)
 	{
 		EmitSignal(SignalName.NodePayloadDropped, nodeId, graphPosition);
 	}

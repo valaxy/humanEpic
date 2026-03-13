@@ -14,8 +14,6 @@ public partial class WorldCanvasViewDemo : Node2D
 	private WorldCanvasView worldCanvasView = null!;
 	// 演示摄像机。
 	private Camera2D demoCamera = null!;
-	// 演示缩放控制器。
-	private readonly WorldCanvasZoomController zoomController = new();
 
 	public override void _Ready()
 	{
@@ -30,12 +28,10 @@ public partial class WorldCanvasViewDemo : Node2D
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (@event is not InputEventMouseButton mouseButton)
-		{
-			return;
-		}
-
-		if (zoomController.TryHandle(mouseButton, demoCamera))
+		worldCanvasView.HandleInputEvent(@event, demoCamera);
+		if (@event is InputEventMouseButton mouseButton
+			&& (mouseButton.ButtonIndex == MouseButton.WheelUp || mouseButton.ButtonIndex == MouseButton.WheelDown)
+			&& mouseButton.Pressed)
 		{
 			GD.Print($"[Demo] Zoom => {demoCamera.Zoom}");
 		}
@@ -78,9 +74,29 @@ public partial class WorldCanvasViewDemo : Node2D
 	// 触发并验证基础信号链路。
 	private void testCanvasSignals()
 	{
-		worldCanvasView.EmitNodeSelected("Input");
-		worldCanvasView.EmitNodeDragged("Input", new Vector2(180f, 210f));
-		worldCanvasView.EmitDeleteRequested("Output");
-		worldCanvasView.EmitNodePayloadDropped("Process", new Vector2(520f, 180f));
+		InputEventMouseButton selectEvent = new()
+		{
+			Pressed = true,
+			ButtonIndex = MouseButton.Left,
+			Position = new Vector2(140f, 180f)
+		};
+		worldCanvasView.HandleInputEvent(selectEvent, demoCamera);
+
+		InputEventMouseMotion dragEvent = new()
+		{
+			Position = new Vector2(200f, 240f),
+			ButtonMask = MouseButtonMask.Left,
+			Relative = new Vector2(60f, 60f)
+		};
+		worldCanvasView.HandleInputEvent(dragEvent, demoCamera);
+
+		InputEventKey deleteEvent = new()
+		{
+			Pressed = true,
+			Keycode = Key.Delete
+		};
+		worldCanvasView.HandleInputEvent(deleteEvent, demoCamera);
+
+		worldCanvasView.NotifyNodePayloadDropped("Process", new Vector2(520f, 180f));
 	}
 }

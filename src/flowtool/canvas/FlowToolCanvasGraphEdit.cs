@@ -22,16 +22,10 @@ public partial class FlowToolCanvasGraphEdit : SubViewportContainer
 	private WorldCanvas worldCanvas = new(5000f, 3200f, nodeWidth, nodeHeight);
 	// 当前选中节点。
 	private string selectedNodeId = string.Empty;
-	// 当前拖拽节点。
-	private string draggingNodeId = string.Empty;
-	// 拖拽偏移量。
-	private Vector2 draggingPointerOffset = Vector2.Zero;
 	// 主视口。
 	private SubViewport mainViewport = null!;
 	// 世界层。
 	private WorldCanvasView worldLayer = null!;
-	// 缩放控制器。
-	private readonly WorldCanvasZoomController zoomController = new();
 	// 主摄像机。
 	private Camera2D mainCamera = null!;
 
@@ -147,7 +141,7 @@ public partial class FlowToolCanvasGraphEdit : SubViewportContainer
 
 		Vector2 graphPosition = snapToCanvas(localScreenPosition);
 		worldLayer.ClearDropShadow();
-		worldLayer.EmitNodePayloadDropped(nodeId, graphPosition);
+		worldLayer.NotifyNodePayloadDropped(nodeId, graphPosition);
 		return true;
 	}
 
@@ -175,22 +169,7 @@ public partial class FlowToolCanvasGraphEdit : SubViewportContainer
 
 	public override void _GuiInput(InputEvent @event)
 	{
-		if (@event is InputEventMouseButton mouseButton)
-		{
-			handleMouseButton(mouseButton);
-			return;
-		}
-
-		if (@event is InputEventMouseMotion mouseMotion)
-		{
-			handleMouseMotion(mouseMotion);
-			return;
-		}
-
-		if (@event is InputEventKey keyEvent)
-		{
-			handleKeyInput(keyEvent);
-		}
+		worldLayer.HandleInputEvent(@event, mainCamera);
 	}
 
 	// 绑定场景节点。
@@ -234,92 +213,12 @@ public partial class FlowToolCanvasGraphEdit : SubViewportContainer
 	private void clearCanvasState()
 	{
 		selectedNodeId = string.Empty;
-		draggingNodeId = string.Empty;
-		draggingPointerOffset = Vector2.Zero;
 		worldCanvas.UpdateGraph(
 			new Dictionary<string, MetricNode>(StringComparer.Ordinal),
 			new Dictionary<string, Vector2>(StringComparer.Ordinal),
 			Array.Empty<MetricEdge>());
 		worldLayer.SetSelectedNode(selectedNodeId);
 		worldLayer.QueueRedraw();
-	}
-
-	// 处理鼠标按键交互。
-	private void handleMouseButton(InputEventMouseButton mouseButton)
-	{
-		if (zoomController.TryHandle(mouseButton, mainCamera))
-		{
-			return;
-		}
-
-		if (mouseButton.ButtonIndex != MouseButton.Left)
-		{
-			return;
-		}
-
-		if (mouseButton.Pressed)
-		{
-			if (tryPickNodeIdAt(mouseButton.Position, out string nodeId))
-			{
-				draggingNodeId = nodeId;
-				draggingPointerOffset = mouseButton.Position - worldCanvas.NodeLayout[nodeId];
-				worldLayer.EmitNodeSelected(nodeId);
-			}
-			else
-			{
-				draggingNodeId = string.Empty;
-				draggingPointerOffset = Vector2.Zero;
-				worldLayer.EmitNodeSelected(string.Empty);
-			}
-			return;
-		}
-
-		draggingNodeId = string.Empty;
-		draggingPointerOffset = Vector2.Zero;
-	}
-
-	// 处理鼠标拖拽。
-	private void handleMouseMotion(InputEventMouseMotion mouseMotion)
-	{
-		if (string.IsNullOrWhiteSpace(draggingNodeId))
-		{
-			return;
-		}
-
-		if ((mouseMotion.ButtonMask & MouseButtonMask.Left) == 0)
-		{
-			return;
-		}
-
-		Vector2 nextPosition = mouseMotion.Position - draggingPointerOffset;
-		Vector2 snappedPosition = snapToCanvas(nextPosition);
-		worldLayer.EmitNodeDragged(draggingNodeId, snappedPosition);
-	}
-
-	// 处理键盘删除交互。
-	private void handleKeyInput(InputEventKey keyEvent)
-	{
-		if (keyEvent.Pressed == false || keyEvent.Keycode != Key.Delete)
-		{
-			return;
-		}
-
-		if (string.IsNullOrWhiteSpace(selectedNodeId))
-		{
-			return;
-		}
-
-		worldLayer.EmitDeleteRequested(selectedNodeId);
-	}
-
-	// 尝试根据画布坐标拾取节点。
-	private bool tryPickNodeIdAt(Vector2 canvasPosition, out string nodeId)
-	{
-		nodeId = worldCanvas.NodeLayout
-			.Where(pair => new Rect2(pair.Value, worldCanvas.NodeSize).HasPoint(canvasPosition))
-			.Select(static pair => pair.Key)
-			.FirstOrDefault() ?? string.Empty;
-		return string.IsNullOrWhiteSpace(nodeId) == false;
 	}
 
 	// 处理世界层选中信号。

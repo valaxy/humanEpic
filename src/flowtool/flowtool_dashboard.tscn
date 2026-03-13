@@ -6,6 +6,11 @@
 [ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolPanel/unassigned_pool_panel.tscn" id="4_unassigned_pool_panel"]
 
+[sub_resource type="StyleBoxFlat" id="1_pool_background_style"]
+bg_color = Color(0.08, 0.11, 0.15, 1)
+border_width_left = 1
+border_color = Color(0.19, 0.25, 0.32, 1)
+
 [node name="FlowToolCanvas" type="Control" unique_id=2058591925]
 layout_mode = 3
 anchors_preset = 15
@@ -42,18 +47,25 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 size_flags_stretch_ratio = 7.0
 
-[node name="EditorTitle" type="Label" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=8325463]
-layout_mode = 2
-theme_type_variation = &"HeaderSmall"
-text = "编辑界面"
-
-[node name="Canvas" type="GraphEdit" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=1520373558]
+[node name="Canvas" type="Control" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=1520373558]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-scroll_offset = Vector2(-193, 0)
 script = ExtResource("2_script")
 
-[node name="UnassignedPoolPanel" parent="SplitContainer/ContentSplitContainer" instance=ExtResource("4_unassigned_pool_panel")]
+[node name="UnassignedPoolBackground" type="PanelContainer" parent="SplitContainer/ContentSplitContainer"]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 3.0
+theme_override_styles/panel = SubResource("1_pool_background_style")
+
+[node name="UnassignedPoolPanel" parent="SplitContainer/ContentSplitContainer/UnassignedPoolBackground" instance=ExtResource("4_unassigned_pool_panel")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

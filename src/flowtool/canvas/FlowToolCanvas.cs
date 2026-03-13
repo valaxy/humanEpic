@@ -99,7 +99,7 @@ public partial class FlowToolCanvas : Control
 		contentSplitContainer = GetNode<HSplitContainer>("SplitContainer/ContentSplitContainer");
 		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
 		canvasPanel = GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
-		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolPanel");
+		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolBackground/UnassignedPoolPanel");
 	}
 
 	// 初始化画布行为与分栏自适应。
@@ -107,11 +107,6 @@ public partial class FlowToolCanvas : Control
 	{
 		canvasPanel.NodePayloadDropped += onNodePayloadDropped;
 		canvasPanel.SetDeleteNodeRequested(onDeleteButtonPressed);
-		canvasPanel.RightDisconnects = false;
-		canvasPanel.ShowZoomLabel = true;
-		canvasPanel.Zoom = 1f;
-		canvasPanel.MinimapEnabled = true;
-		canvasPanel.ShowArrangeButton = false;
 		layoutScopePanel.ScopeSelected += onLayoutScopeSelected;
 
 		applyAdaptiveSplitOffset();

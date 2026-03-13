@@ -1,36 +1,22 @@
 {
   "scopes": {
-    "HelloWorldFlow": {
-      "nodes": {}
-    },
-    "LabourMarketFlowSample": {
-      "nodes": {}
-    },
     "PopulationBuyLogic": {
       "nodes": {
-        "metric:PopulationBuyLogic:buyOrderPrices": {
-          "x": 3880,
-          "y": -40
-        },
-        "metric:PopulationBuyLogic:expectBuyProductsNum": {
-          "x": 2200,
-          "y": -660
-        },
         "metric:PopulationBuyLogic:productBuyHistory": {
-          "x": 2740,
-          "y": -600
+          "x": 878,
+          "y": 183
         },
         "metric:PopulationBuyLogic:productSellHistory": {
-          "x": 3160,
-          "y": 120
-        }
-      }
-    },
-    "HelloWorldFlowSample": {
-      "nodes": {
-        "metric:HelloWorldFlowSample:consumptionBudget": {
-          "x": 500,
-          "y": 40
+          "x": 533,
+          "y": 291
+        },
+        "metric:PopulationBuyLogic:expectBuyProductsNum": {
+          "x": 263,
+          "y": 474
+        },
+        "metric:PopulationBuyLogic:buyOrderPrices": {
+          "x": 103,
+          "y": 168
         }
       }
     }

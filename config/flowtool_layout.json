@@ -3,16 +3,20 @@
     "PopulationBuyLogic": {
       "nodes": {
         "metric:PopulationBuyLogic:productBuyHistory": {
-          "x": 875,
-          "y": 592
+          "x": 818,
+          "y": 668
+        },
+        "metric:PopulationBuyLogic:productSellHistory": {
+          "x": 725,
+          "y": 140
         },
         "metric:PopulationBuyLogic:expectBuyProductsNum": {
-          "x": 746,
-          "y": 869
+          "x": 689,
+          "y": 945
         },
         "metric:PopulationBuyLogic:buyOrderPrices": {
-          "x": 746,
-          "y": 371
+          "x": 433,
+          "y": 467
         }
       }
     },

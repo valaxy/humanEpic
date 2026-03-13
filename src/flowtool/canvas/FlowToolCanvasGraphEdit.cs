@@ -25,12 +25,14 @@ public partial class FlowToolCanvasGraphEdit : Control
 	private const float maxCanvasZoom = 1.8f;
 	// 每次滚轮缩放步进。
 	private const float canvasZoomStep = 0.1f;
-	// 虚拟画布宽度。
-	private const float virtualCanvasWidth = 5000f;
-	// 虚拟画布高度。
-	private const float virtualCanvasHeight = 3200f;
+	// 到达边界时背景提示条宽度。
+	private const float boundaryHintBandSize = 24f;
 	// 连线颜色。
 	private static readonly Color edgeColor = new(0.46f, 0.74f, 0.95f);
+	// 视口背景色。
+	private static readonly Color viewportBackgroundColor = new(0.06f, 0.08f, 0.11f);
+	// 画布背景色。
+	private static readonly Color canvasBackgroundColor = new(0.11f, 0.14f, 0.18f);
 	// 影子节点填充色。
 	private static readonly Color dropShadowFillColor = new(0.78f, 0.86f, 0.98f, 0.18f);
 	// 影子节点边框色。
@@ -38,6 +40,8 @@ public partial class FlowToolCanvasGraphEdit : Control
 
 	// 删除节点回调。
 	private Action<string> deleteNodeRequested = static _ => { };
+	// 画布领域对象（尺寸与约束规则）。
+	private readonly FlowToolCanvasWorld canvasWorld = new(5000f, 3200f, nodeWidth, nodeHeight);
 	// 当前节点数据映射。
 	private Dictionary<string, FlowToolMetricNode> metricByNodeId = new(StringComparer.Ordinal);
 	// 当前节点控件映射。
@@ -191,6 +195,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 
 	public override void _Draw()
 	{
+		drawCanvasBackground();
 		drawEdges();
 		drawDropShadow();
 	}
@@ -349,6 +354,30 @@ public partial class FlowToolCanvasGraphEdit : Control
 		DrawRect(shadowRect, dropShadowBorderColor, false, 2f);
 	}
 
+	// 绘制视口背景与画布区域背景。
+	private void drawCanvasBackground()
+	{
+		DrawRect(new Rect2(Vector2.Zero, Size), viewportBackgroundColor, true);
+		DrawRect(createCanvasVisibleRect(), canvasBackgroundColor, true);
+	}
+
+	// 生成当前可见画布区域矩形，到达边界时露出背景提示条。
+	private Rect2 createCanvasVisibleRect()
+	{
+		float leftInset = layoutByNodeId.Values.Any(position => position.X <= 0f) ? boundaryHintBandSize : 0f;
+		float topInset = layoutByNodeId.Values.Any(position => position.Y <= 0f) ? boundaryHintBandSize : 0f;
+		float rightBoundary = canvasWorld.Width - nodeWidth;
+		float bottomBoundary = canvasWorld.Height - nodeHeight;
+		float rightInset = layoutByNodeId.Values.Any(position => position.X >= rightBoundary) ? boundaryHintBandSize : 0f;
+		float bottomInset = layoutByNodeId.Values.Any(position => position.Y >= bottomBoundary) ? boundaryHintBandSize : 0f;
+
+		float x = leftInset;
+		float y = topInset;
+		float width = Mathf.Max(Size.X - leftInset - rightInset, 1f);
+		float height = Mathf.Max(Size.Y - topInset - bottomInset, 1f);
+		return new Rect2(new Vector2(x, y), new Vector2(width, height));
+	}
+
 	// 按增量平移整个画布中的节点布局。
 	private void panCanvasBy(Vector2 delta)
 	{
@@ -356,7 +385,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			.ToList()
 			.ForEach(pair =>
 			{
-				Vector2 nextPosition = snapToCanvas(pair.Value.Position + delta);
+				Vector2 nextPosition = canvasWorld.TranslateWithConstraint(pair.Value.Position, delta);
 				pair.Value.Position = nextPosition;
 				layoutByNodeId[pair.Key] = nextPosition;
 			});
@@ -389,7 +418,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			return;
 		}
 
-		minimap.UpdateSnapshot(layoutByNodeId, Size, new Vector2(virtualCanvasWidth, virtualCanvasHeight));
+		minimap.UpdateSnapshot(layoutByNodeId, Size, new Vector2(canvasWorld.Width, canvasWorld.Height));
 	}
 
 	// 清理拖拽影子节点。
@@ -403,8 +432,6 @@ public partial class FlowToolCanvasGraphEdit : Control
 	// 约束节点坐标到画布范围。
 	private Vector2 snapToCanvas(Vector2 position)
 	{
-		float safeX = Mathf.Clamp(position.X, 0f, Mathf.Max(virtualCanvasWidth - nodeWidth, 0f));
-		float safeY = Mathf.Clamp(position.Y, 0f, Mathf.Max(virtualCanvasHeight - nodeHeight, 0f));
-		return new Vector2(Mathf.Round(safeX), Mathf.Round(safeY));
+		return canvasWorld.ClampNodePosition(position);
 	}
 }

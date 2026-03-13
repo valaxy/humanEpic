@@ -13,16 +13,15 @@ public partial class FlowToolAutosaver : Node
 	private const string allLayoutScopeKey = "all";
 	// 自动保存节流秒数。
 	private const double autoSaveIntervalSeconds = 0.25d;
-
-	// 画布根组件。
+	// 画布根节点。
 	private FlowToolCanvas flowToolCanvas = null!;
-	// 可视画布组件。
+	// 画布组件。
 	private FlowToolCanvasGraphEdit canvasGraphEdit = null!;
 	// 布局存储器。
 	private FlowToolLayoutStore layoutStore = new(allLayoutScopeKey);
-	// 自动保存计时器。
+	// 保存计时器。
 	private double saveClockSeconds;
-	// 最近一次布局指纹。
+	// 最近布局指纹。
 	private string lastLayoutFingerprint = string.Empty;
 
 	/// <summary>
@@ -76,7 +75,9 @@ public partial class FlowToolAutosaver : Node
 	// 处理重载后的已知布局提交。
 	private void onAutosaveCommitLayout()
 	{
-		commitKnownLayout(canvasGraphEdit.CollectCurrentLayout());
+		IReadOnlyDictionary<string, Vector2> currentLayout = canvasGraphEdit.CollectCurrentLayout();
+		layoutStore.Save(currentLayout);
+		lastLayoutFingerprint = createLayoutFingerprint(currentLayout);
 	}
 
 	// 处理布局作用域切换。
@@ -97,15 +98,6 @@ public partial class FlowToolAutosaver : Node
 
 		layoutStore.Save(currentLayout);
 		lastLayoutFingerprint = currentFingerprint;
-	}
-
-	/// <summary>
-	/// 直接提交并记录指定布局，常用于加载后清理落库。
-	/// </summary>
-	private void commitKnownLayout(IReadOnlyDictionary<string, Vector2> nodePositions)
-	{
-		layoutStore.Save(nodePositions);
-		lastLayoutFingerprint = createLayoutFingerprint(nodePositions);
 	}
 
 	// 生成布局变更检测指纹。

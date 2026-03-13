@@ -8,12 +8,12 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// 基于反射提取系统动力学拓扑。
 /// </summary>
-public sealed class FlowToolTopologyExtractor
+public sealed class TopologyExtractor
 {
 	/// <summary>
 	/// 扫描当前程序集并提取被 SystemDynamicsProcessAttribute 标记的方法。
 	/// </summary>
-	public FlowToolTopology ExtractFromCurrentAssembly()
+	public WorldCanvas ExtractFromCurrentAssembly()
 	{
 		Assembly assembly = Assembly.GetExecutingAssembly();
 		FlowToolXmlDocProvider xmlDocProvider = FlowToolXmlDocProvider.Load(assembly);
@@ -29,20 +29,20 @@ public sealed class FlowToolTopologyExtractor
 			.Where(static method => method.IsSpecialName == false)
 			.ToList();
 
-		IReadOnlyList<FlowToolMetricNode> metricNodes = processMethods
+		IReadOnlyList<MetricNode> metricNodes = processMethods
 			.Select(method => createMetricNode(method, xmlDocProvider))
 			.ToList();
 
-		IReadOnlyList<FlowToolEdge> edges = processMethods
+		IReadOnlyList<MetricEdge> edges = processMethods
 			.SelectMany(method => createEdges(method, metricNodes))
 			.Distinct()
 			.ToList();
 
-		return new FlowToolTopology(metricNodes, edges);
+		return new WorldCanvas(metricNodes, edges);
 	}
 
 	// 为流程方法创建指标节点。
-	private static FlowToolMetricNode createMetricNode(MethodInfo method, FlowToolXmlDocProvider xmlDocProvider)
+	private static MetricNode createMetricNode(MethodInfo method, FlowToolXmlDocProvider xmlDocProvider)
 	{
 		string declaringTypeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
 		string metricName = method.Name;
@@ -50,11 +50,11 @@ public sealed class FlowToolTopologyExtractor
 		string nodeId = $"metric:{declaringTypeName}:{normalizedMetricName}";
 		string displayName = xmlDocProvider.GetMethodSummary(method);
 		string typeDisplayName = formatMetricTypeDisplayName(method.ReturnType);
-		return new FlowToolMetricNode(nodeId, metricName, displayName, typeDisplayName, declaringTypeName);
+		return new MetricNode(nodeId, metricName, displayName, typeDisplayName, declaringTypeName);
 	}
 
 	// 构建指标节点之间的依赖边：参数节点 -> 方法指标节点。
-	private static IReadOnlyList<FlowToolEdge> createEdges(MethodInfo method, IReadOnlyList<FlowToolMetricNode> metricNodes)
+	private static IReadOnlyList<MetricEdge> createEdges(MethodInfo method, IReadOnlyList<MetricNode> metricNodes)
 	{
 		string targetNodeId = createMetricNodeId(method);
 		string targetOwnerTypeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
@@ -67,21 +67,21 @@ public sealed class FlowToolTopologyExtractor
 
 		return parameterMetricNames
 			.SelectMany(parameterMetricName => resolveSourceMetrics(parameterMetricName, targetNodeId, targetOwnerTypeName, metricNodes))
-			.Select(sourceNode => new FlowToolEdge(sourceNode.NodeId, targetNodeId))
+			.Select(sourceNode => new MetricEdge(sourceNode.NodeId, targetNodeId))
 			.ToList();
 	}
 
 	// 按“同名指标”规则解析参数来源指标，优先同类。
-	private static IReadOnlyList<FlowToolMetricNode> resolveSourceMetrics(
+	private static IReadOnlyList<MetricNode> resolveSourceMetrics(
 		string parameterMetricName,
 		string targetNodeId,
 		string targetOwnerTypeName,
-		IReadOnlyList<FlowToolMetricNode> metricNodes)
+		IReadOnlyList<MetricNode> metricNodes)
 	{
-		IReadOnlyList<FlowToolMetricNode> allCandidates = metricNodes
+		IReadOnlyList<MetricNode> allCandidates = metricNodes
 			.Where(metricNode => normalizeMetricName(metricNode.MetricName) == parameterMetricName)
 			.ToList();
-		IReadOnlyList<FlowToolMetricNode> sameOwnerCandidates = allCandidates
+		IReadOnlyList<MetricNode> sameOwnerCandidates = allCandidates
 			.Where(metricNode => metricNode.OwnerTypeFullName == targetOwnerTypeName)
 			.ToList();
 

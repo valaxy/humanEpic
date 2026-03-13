@@ -6,7 +6,6 @@ using System.Linq;
 /// <summary>
 /// 系统动力学仪表盘编辑器入口。
 /// </summary>
-[Tool]
 [GlobalClass]
 public partial class FlowToolCanvas : Control
 {
@@ -40,43 +39,34 @@ public partial class FlowToolCanvas : Control
 	[Signal]
 	public delegate void AutosaveScopeChangedEventHandler(string layoutScopeKey);
 
-	// 全部类布局作用域键。
+	// 全部布局作用域键。
 	private const string allLayoutScopeKey = "all";
-
-	// 反射拓扑提取器。
-	private readonly FlowToolTopologyExtractor topologyExtractor = new();
-	// 布局存储器。
+	// 拓扑提取器。
+	private readonly TopologyExtractor topologyExtractor = new();
+	// 布局存储。
 	private FlowToolLayoutStore layoutStore = new(allLayoutScopeKey);
-
-	// 当前拓扑快照。
-	private FlowToolTopology topology = FlowToolTopology.Empty;
-	// 当前全部拓扑快照。
-	private FlowToolTopology fullTopology = FlowToolTopology.Empty;
+	// 当前作用域拓扑。
+	private WorldCanvas topology = WorldCanvas.Empty;
 	// 当前布局坐标。
 	private IReadOnlyDictionary<string, Vector2> layoutPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
-	// 当前布局作用域键。
+	// 当前布局作用域。
 	private string selectedLayoutScopeKey = allLayoutScopeKey;
 	// 当前布局作用域列表。
 	private IReadOnlyList<FlowToolLayoutScopeItem> layoutScopes = Array.Empty<FlowToolLayoutScopeItem>();
-	// 当前已激活节点集合。
+	// 当前激活节点。
 	private HashSet<string> activeNodeIds = new(StringComparer.Ordinal);
-
-	// 左侧类列表与右侧内容分栏容器。
-	private HSplitContainer splitContainer = null!;
-	// 中央编辑区与右侧未分配池分栏容器。
-	private HSplitContainer contentSplitContainer = null!;
-	// 左侧类列表组件。
+	// 左侧作用域面板。
 	private ScopePanel layoutScopePanel = null!;
-	// 中央编辑画布组件。
+	// 中央画布面板。
 	private FlowToolCanvasGraphEdit canvasPanel = null!;
-	// 右侧未分配池组件。
+	// 右侧未分配池面板。
 	private UnassignedPoolPanel unassignedPoolPanel = null!;
 
 	public override void _Ready()
 	{
-		bindUiFromScene();
-		configureUiBehavior();
-		reloadTopologyAndRender();
+		bindUi();
+		bindSignals();
+		reloadAndRender();
 	}
 
 	public override void _Process(double delta)
@@ -119,41 +109,20 @@ public partial class FlowToolCanvas : Control
 		}
 	}
 
-	// 从 tscn 场景树绑定所需节点。
-	private void bindUiFromScene()
+	// 绑定场景节点。
+	private void bindUi()
 	{
-		splitContainer = GetNode<HSplitContainer>("SplitContainer");
-		contentSplitContainer = GetNode<HSplitContainer>("SplitContainer/ContentSplitContainer");
 		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
 		canvasPanel = GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
 		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolBackground/UnassignedPoolPanel");
 	}
 
-	// 初始化画布行为与分栏自适应。
-	private void configureUiBehavior()
+	// 绑定组件信号。
+	private void bindSignals()
 	{
 		canvasPanel.NodePayloadDropped += onNodePayloadDropped;
 		canvasPanel.SetDeleteNodeRequested(onDeleteButtonPressed);
 		layoutScopePanel.ScopeSelected += onLayoutScopeSelected;
-
-		applyAdaptiveSplitOffset();
-		Resized += onDashboardResized;
-	}
-
-	// 根节点尺寸变化时更新分栏比例，避免窗口变化后内容挤压。
-	private void onDashboardResized()
-	{
-		applyAdaptiveSplitOffset();
-	}
-
-	// 按当前窗口宽度计算分栏位置。
-	private void applyAdaptiveSplitOffset()
-	{
-		float safeWidth = Mathf.Max(Size.X, 640f);
-		float classPanelWidth = Mathf.Clamp(safeWidth * 0.22f, 220f, 320f);
-		float editorPanelWidth = Mathf.Clamp(safeWidth * 0.5f, 420f, safeWidth - classPanelWidth - 280f);
-		splitContainer.SplitOffsets = [Mathf.RoundToInt(classPanelWidth)];
-		contentSplitContainer.SplitOffsets = [Mathf.RoundToInt(editorPanelWidth)];
 	}
 
 	// 计算当前鼠标在画布容器内的局部坐标。
@@ -171,20 +140,16 @@ public partial class FlowToolCanvas : Control
 		return true;
 	}
 
-	// 执行提取、状态合并与重绘。
-	private void reloadTopologyAndRender()
+	// 执行提取并重绘。
+	private void reloadAndRender()
 	{
-		fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
+		WorldCanvas fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes(fullTopology);
-		topology = selectedLayoutScopeKey == allLayoutScopeKey
-			? fullTopology
-			: fullTopology.FilterByOwnerType(selectedLayoutScopeKey);
+		topology = selectedLayoutScopeKey == allLayoutScopeKey ? fullTopology : fullTopology.FilterByOwnerType(selectedLayoutScopeKey);
 		IReadOnlyCollection<string> validNodeIds = topology.CollectMetricNodeIds();
-
 		IReadOnlyDictionary<string, Vector2> persistedLayout = layoutStore.Load();
 		layoutPositions = layoutStore.FilterInvalidNodes(persistedLayout, validNodeIds);
 		activeNodeIds = topology.DeriveActiveNodeIds(layoutPositions.Keys);
-
 		layoutScopePanel.Update(layoutScopes, selectedLayoutScopeKey);
 		canvasPanel.RenderTopology(topology, activeNodeIds, layoutPositions);
 		unassignedPoolPanel.Update(topology, activeNodeIds);
@@ -209,13 +174,16 @@ public partial class FlowToolCanvas : Control
 		EmitSignal(SignalName.AutosaveSnapshotRequested);
 		selectedLayoutScopeKey = selectedScope.ScopeKey;
 		layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
-		reloadTopologyAndRender();
+		reloadAndRender();
 	}
 
 	// 构建布局作用域列表。
-	private void rebuildLayoutScopes(FlowToolTopology sourceTopology)
+	private void rebuildLayoutScopes(WorldCanvas sourceTopology)
 	{
-		layoutScopes = sourceTopology.BuildLayoutScopes();
+		IReadOnlyList<FlowToolLayoutScopeItem> scoped = sourceTopology.BuildLayoutScopes();
+		layoutScopes = (new[] { new FlowToolLayoutScopeItem(allLayoutScopeKey, "全部") })
+			.Concat(scoped)
+			.ToList();
 
 		if (layoutScopes.Any(scope => scope.ScopeKey == selectedLayoutScopeKey) == false)
 		{
@@ -263,5 +231,4 @@ public partial class FlowToolCanvas : Control
 		unassignedPoolPanel.Update(topology, activeNodeIds);
 		EmitSignal(SignalName.AutosaveForced);
 	}
-
 }

@@ -5,7 +5,6 @@ using System.Linq;
 /// <summary>
 /// 右侧未分配池面板，负责展示当前作用域下未放置到画布的节点列表。
 /// </summary>
-[Tool]
 [GlobalClass]
 public partial class UnassignedPoolPanel : VBoxContainer
 {
@@ -23,7 +22,7 @@ public partial class UnassignedPoolPanel : VBoxContainer
 	/// <summary>
 	/// 渲染未分配池列表。
 	/// </summary>
-	public void Update(FlowToolTopology topology, IReadOnlyCollection<string> activeNodeIds)
+	public void Update(WorldCanvas topology, IReadOnlyCollection<string> activeNodeIds)
 	{
 		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
 
@@ -37,7 +36,7 @@ public partial class UnassignedPoolPanel : VBoxContainer
 	}
 
 	// 创建指标池项。
-	private static UnassignedItem createMetricPoolItem(FlowToolMetricNode metricNode)
+	private static UnassignedItem createMetricPoolItem(MetricNode metricNode)
 	{
 		UnassignedItem button = new();
 		button.Setup($"{metricNode.DisplayName}", metricNode.NodeId);

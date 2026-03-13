@@ -1,15 +1,16 @@
-﻿- √ createNodeCard使用一个tscn文件来实例化节点，关于节点的样式和构造逻辑都抽取到一个独立的文件里
-- √ 删除按钮出现在节点的右上角，点击节点后才会显示
-- √ 修复运行时问题：
-- √ 0:0:1.897 | System.NullReferenceException: Object reference not set to an instance of an object.
-- √ 现在有bug咯，打开界面什么都没有显示
-- √ 在画布的右下角显示一个缩略图，方便用户快速定位和导航整个画布，核心代码放在一个独立的文件里
-- √ 我在拖动节点移动的时候不应该使得画布也跟着移动
-- √ 当拖动画布使得节点可能超出视口时就应该自然的移出视口，而不是像现在这样，节点会被视口挡住，这是有问题的
-- √ flowtool_canvas_node_card.tscn默认就应该提供一个完整的参数配置，方便我在godot编辑器中直接预览
-- √ bug：画布的视口只位于中间，现在节点可能超出中间画布区域与左边和右边的面板重叠
-- √ 新增一个领域实体：画布，负责管理画布大小、坐标、约束规则等，请将已有的逻辑从现有代码中抽取过来
-- √ bug：从未分配池拖动节点到画布上无法成功
-- √ 修复运行时错误：WARNING: Can't change the size of a `SubViewport` with a `SubViewportContainer` parent that has `stretch` enabled. Set `SubViewportContainer.stretch` to `false` to allow changing the size manually.
-- √ 移除FlowToolCanvas、FlowToolCanvasGraphEdit、FlowToolCanvasNodeCard的冗余代码
-- √ 将节点从未分配池拖动到画布仍然没有任何反应，我怀疑是因为旧式的控件方式与FlowToolCanvasWorldLayer2D不兼容的原因
+﻿- FlowToolCanvasWorld重命名为WorldCanvas，管理画布尺寸和节点尺寸，以及管理所有的节点和连线数据
+- FlowToolCanvasWorldLayer2D重命名为WorldCanvasView，负责纯绘制相关的逻辑，在初始化时传入WorldCanvas使用；为WorldCanvasView创建一个demo
+- 将节点绘制的逻辑从FlowToolCanvasNodeCard、FlowToolCanvasGraphEdit、FlowToolCanvas抽取到WorldCanvasView中去
+- 文件拆分和重命名：
+	* 将FlowToolMetricNode重命名为MetricNode，并拆分到独立的文件里
+	* 将FlowToolEdge重命名为MetricEdge，并拆分到独立的文件里
+- 调整了线的绘制顺序，确保线在节点的下方绘制
+- createNodeDetailText抽取到MetricNode里去
+- 将对节点的视觉逻辑包括绘制和样式抽取到独立的模块里，以工厂形式提供
+- 将对边的视觉逻辑包括绘制和样式抽取到独立的模块里，以工厂形式提供
+- FlowToolTopologyExtractor重命名为TopologyExtractor
+- WorldCanvasNodePainter和WorldCanvasNodePainterFactory整合到一起，直接使用静态方法的形式使用即可
+- WorldCanvasEdgePainterFactory和WorldCanvasEdgePainter整合到一起，直接使用静态方法的形式使用即可
+- 将FlowToolTopology与WorldCanvas整合到一起，实际上它们的职责是一致的
+- 将canvas基本信号的触发封装在WorldCanvasView里，其他模块应当监听这些信号再进行相应的处理；demo中请编写代码对这些信号进行测试
+- 将鼠标滚动即可缩放画布的功能从FlowToolCanvas和FlowToolCanvasGraphEdit抽取出来，放到一个独立的文件里；最后与WorldCanvasView一起使用编写一个DEMO

@@ -6,8 +6,6 @@ using Godot.Collections;
 /// </summary>
 public partial class FlowToolCanvasGraphEdit : GraphEdit
 {
-	// 过程节点类型标识。
-	private const string processNodeKind = "process";
 	// 影子节点标题前缀。
 	private const string shadowTitlePrefix = "预放置";
 
@@ -95,7 +93,7 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 			Draggable = false,
 			Resizable = false,
 			Selectable = false,
-			Size = nodeKind == processNodeKind ? new Vector2(240f, 90f) : new Vector2(220f, 70f),
+			Size = new Vector2(240f, 80f),
 			MouseFilter = MouseFilterEnum.Ignore,
 			Modulate = new Color(1f, 1f, 1f, 0.55f)
 		};

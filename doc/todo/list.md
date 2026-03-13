@@ -1,0 +1,1 @@
+- FlowToolLayoutStore不需要兼容旧版结构的逻辑

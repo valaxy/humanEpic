@@ -11,8 +11,6 @@ using System.Linq;
 [GlobalClass]
 public partial class FlowToolDashboard : Control
 {
-	// 过程节点类型标识。
-	private const string processNodeKind = "process";
 	// 全部类布局作用域键。
 	private const string allLayoutScopeKey = "all";
 	// 自动保存节流秒数。
@@ -24,9 +22,9 @@ public partial class FlowToolDashboard : Control
 	private FlowToolLayoutStore layoutStore = new(allLayoutScopeKey);
 
 	// 当前拓扑快照。
-	private FlowToolTopology topology = new(Array.Empty<FlowToolProcessNode>(), Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
+	private FlowToolTopology topology = new(Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
 	// 当前全部拓扑快照。
-	private FlowToolTopology fullTopology = new(Array.Empty<FlowToolProcessNode>(), Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
+	private FlowToolTopology fullTopology = new(Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
 	// 当前布局坐标。
 	private IReadOnlyDictionary<string, Vector2> layoutPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
 	// 当前布局作用域键。
@@ -125,22 +123,20 @@ public partial class FlowToolDashboard : Control
 		fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes(fullTopology);
 		topology = filterTopologyByLayoutScope(fullTopology, selectedLayoutScopeKey);
-		IReadOnlyCollection<string> validNodeIds = topology.Processes
-			.Select(static process => process.NodeId)
-			.Concat(topology.Metrics.Select(static metric => metric.NodeId))
+		IReadOnlyCollection<string> validNodeIds = topology.Metrics
+			.Select(static metric => metric.NodeId)
 			.ToHashSet(StringComparer.Ordinal);
 
 		IReadOnlyDictionary<string, Vector2> persistedLayout = layoutStore.Load();
 		layoutPositions = layoutStore.FilterInvalidNodes(persistedLayout, validNodeIds);
 		activeNodeIds = deriveActiveNodeIds(layoutPositions.Keys);
-		seedInitialActiveNodesWhenEmpty();
 
 		layoutScopePanel.RenderScopes(layoutScopes, selectedLayoutScopeKey);
 		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
 		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
 		persistLayoutCleanup();
 
-		unassignedPoolPanel.SetStatus($"{statusText}\n布局: {selectedLayoutScopeDisplayName} | 过程节点: {topology.Processes.Count} | 指标节点: {topology.Metrics.Count} | 激活节点: {activeNodeIds.Count}");
+		unassignedPoolPanel.SetStatus($"{statusText}\n布局: {selectedLayoutScopeDisplayName} | 指标节点: {topology.Metrics.Count} | 激活节点: {activeNodeIds.Count}");
 	}
 
 	// 切换布局作用域。
@@ -172,12 +168,12 @@ public partial class FlowToolDashboard : Control
 	// 构建布局作用域列表。
 	private void rebuildLayoutScopes(FlowToolTopology sourceTopology)
 	{
-		layoutScopes = sourceTopology.Processes
-			.Select(static process => getProcessOwnerTypeName(process.NodeId))
+		layoutScopes = sourceTopology.Metrics
+			.Select(static metric => metric.OwnerTypeFullName)
 			.Where(static ownerTypeName => string.IsNullOrWhiteSpace(ownerTypeName) == false)
 			.Distinct(StringComparer.Ordinal)
 			.OrderBy(static ownerTypeName => ownerTypeName, StringComparer.Ordinal)
-			.Select(static ownerTypeName => new FlowToolLayoutScopeItem(ownerTypeName!, ownerTypeName!.Split('.').Last()))
+			.Select(static ownerTypeName => new FlowToolLayoutScopeItem(ownerTypeName!, getTypeShortName(ownerTypeName!)))
 			.ToList();
 
 		if (layoutScopes.Any(scope => scope.ScopeKey == selectedLayoutScopeKey) == false)
@@ -197,85 +193,53 @@ public partial class FlowToolDashboard : Control
 			return sourceTopology;
 		}
 
-		IReadOnlyList<FlowToolProcessNode> scopedProcesses = sourceTopology.Processes
-			.Where(process => getProcessOwnerTypeName(process.NodeId) == layoutScopeKey)
+		IReadOnlyList<FlowToolMetricNode> scopedMetrics = sourceTopology.Metrics
+			.Where(metric => metric.OwnerTypeFullName == layoutScopeKey)
 			.ToList();
-		HashSet<string> processNodeIdSet = scopedProcesses
-			.Select(static process => process.NodeId)
+		HashSet<string> scopedMetricNodeIds = scopedMetrics
+			.Select(static metric => metric.NodeId)
 			.ToHashSet(StringComparer.Ordinal);
 
 		IReadOnlyList<FlowToolEdge> scopedEdges = sourceTopology.Edges
-			.Where(edge => processNodeIdSet.Contains(edge.FromNodeId) || processNodeIdSet.Contains(edge.ToNodeId))
-			.ToList();
-		HashSet<string> metricNodeIdSet = scopedEdges
-			.SelectMany(static edge => new[] { edge.FromNodeId, edge.ToNodeId })
-			.Where(static nodeId => nodeId.StartsWith("metric:", StringComparison.Ordinal))
-			.ToHashSet(StringComparer.Ordinal);
-
-		IReadOnlyList<FlowToolMetricNode> scopedMetrics = sourceTopology.Metrics
-			.Where(metric => metricNodeIdSet.Contains(metric.NodeId))
+			.Where(edge => scopedMetricNodeIds.Contains(edge.FromNodeId) && scopedMetricNodeIds.Contains(edge.ToNodeId))
 			.ToList();
 
-		return new FlowToolTopology(scopedProcesses, scopedMetrics, scopedEdges);
+		return new FlowToolTopology(scopedMetrics, scopedEdges);
 	}
 
-	// 从过程节点 ID 提取所属类全名。
-	private static string? getProcessOwnerTypeName(string processNodeId)
+	// 获取类型短名。
+	private static string getTypeShortName(string fullTypeName)
 	{
-		if (processNodeId.StartsWith("process:", StringComparison.Ordinal) == false)
+		if (string.IsNullOrWhiteSpace(fullTypeName))
 		{
-			return null;
+			return string.Empty;
 		}
 
-		string processToken = processNodeId["process:".Length..];
-		int separatorIndex = processToken.LastIndexOf(".", StringComparison.Ordinal);
-		if (separatorIndex <= 0)
-		{
-			return null;
-		}
-
-		return processToken[..separatorIndex];
+		string[] segments = fullTypeName.Split('.', StringSplitOptions.RemoveEmptyEntries);
+		return segments.LastOrDefault() ?? fullTypeName;
 	}
 
-	// 根据布局恢复激活态，并补齐已激活过程关联指标。
+	// 根据布局恢复激活态，仅保留当前拓扑内的有效指标。
 	private HashSet<string> deriveActiveNodeIds(IEnumerable<string> layoutNodeIds)
 	{
-		HashSet<string> layoutIdSet = layoutNodeIds.ToHashSet(StringComparer.Ordinal);
-		HashSet<string> processIdsInLayout = layoutIdSet
-			.Where(static nodeId => nodeId.StartsWith("process:", StringComparison.Ordinal))
+		HashSet<string> validMetricNodeIds = topology.Metrics
+			.Select(static metric => metric.NodeId)
 			.ToHashSet(StringComparer.Ordinal);
-
-		HashSet<string> processRelatedMetricIds = topology.Edges
-			.Where(edge => processIdsInLayout.Contains(edge.FromNodeId) || processIdsInLayout.Contains(edge.ToNodeId))
-			.SelectMany(static edge => new[] { edge.FromNodeId, edge.ToNodeId })
-			.Where(static nodeId => nodeId.StartsWith("metric:", StringComparison.Ordinal))
-			.ToHashSet(StringComparer.Ordinal);
-
-		HashSet<string> activeIds = layoutIdSet
-			.Union(processRelatedMetricIds)
+		HashSet<string> activeIds = layoutNodeIds
+			.Where(validMetricNodeIds.Contains)
 			.ToHashSet(StringComparer.Ordinal);
 
 		return activeIds;
 	}
 
 	// 将拖拽节点加入画布并触发自动连线。
-	private void onNodePayloadDropped(string nodeId, string nodeKind, Vector2 graphPosition)
+	private void onNodePayloadDropped(string nodeId, string _, Vector2 graphPosition)
 	{
 		bool isNewlyActivated = activeNodeIds.Add(nodeId);
 		if (isNewlyActivated == false)
 		{
 			return;
 		}
-
-		IReadOnlyList<string> relatedMetricIds = nodeKind == processNodeKind
-			? topology.Edges
-				.Where(edge => edge.FromNodeId == nodeId || edge.ToNodeId == nodeId)
-				.SelectMany(static edge => new[] { edge.FromNodeId, edge.ToNodeId })
-				.Where(static relatedNodeId => relatedNodeId.StartsWith("metric:", StringComparison.Ordinal))
-				.Distinct(StringComparer.Ordinal)
-				.ToList()
-			: Array.Empty<string>();
-		relatedMetricIds.ToList().ForEach(relatedMetricId => activeNodeIds.Add(relatedMetricId));
 
 		Dictionary<string, Vector2> nextLayout = activeNodeIds
 			.ToDictionary(
@@ -285,7 +249,6 @@ public partial class FlowToolDashboard : Control
 			);
 
 		nextLayout[nodeId] = graphPosition;
-		applyDefaultMetricPositionsForProcessDrop(nextLayout, nodeId, relatedMetricIds, graphPosition);
 		layoutPositions = nextLayout;
 
 		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
@@ -293,109 +256,11 @@ public partial class FlowToolDashboard : Control
 		autoSaveLayoutIfChanged(forceSave: true);
 	}
 
-	// 在首次打开且无布局时，自动激活一个过程与相关指标，避免空画布无反馈。
-	private void seedInitialActiveNodesWhenEmpty()
-	{
-		if (activeNodeIds.Count > 0)
-		{
-			return;
-		}
-
-		FlowToolProcessNode? seedProcess = topology.Processes
-			.OrderBy(static process => process.DisplayName, StringComparer.Ordinal)
-			.FirstOrDefault();
-		if (seedProcess is null)
-		{
-			return;
-		}
-
-		activeNodeIds.Add(seedProcess.NodeId);
-
-		IReadOnlyList<string> inputMetricIds = topology.Edges
-			.Where(edge => edge.ToNodeId == seedProcess.NodeId && edge.FromNodeId.StartsWith("metric:", StringComparison.Ordinal))
-			.Select(static edge => edge.FromNodeId)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static metricId => metricId, StringComparer.Ordinal)
-			.ToList();
-		IReadOnlyList<string> outputMetricIds = topology.Edges
-			.Where(edge => edge.FromNodeId == seedProcess.NodeId && edge.ToNodeId.StartsWith("metric:", StringComparison.Ordinal))
-			.Select(static edge => edge.ToNodeId)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static metricId => metricId, StringComparer.Ordinal)
-			.ToList();
-
-		inputMetricIds.Concat(outputMetricIds).ToList().ForEach(metricId => activeNodeIds.Add(metricId));
-
-		Vector2 seedProcessPosition = new(260f, 200f);
-		Dictionary<string, Vector2> seededLayout = layoutPositions.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
-		seededLayout[seedProcess.NodeId] = seedProcessPosition;
-
-		inputMetricIds
-			.Select((metricId, index) => new { metricId, index })
-			.ToList()
-			.ForEach(item => seededLayout[item.metricId] = new Vector2(30f, 120f + (item.index * 110f)));
-		outputMetricIds
-			.Select((metricId, index) => new { metricId, index })
-			.ToList()
-			.ForEach(item => seededLayout[item.metricId] = new Vector2(520f, 160f + (item.index * 110f)));
-
-		layoutPositions = seededLayout;
-	}
-
-	// 为刚激活的过程补齐默认指标位置，防止全部重叠在同一点。
-	private void applyDefaultMetricPositionsForProcessDrop(
-		Dictionary<string, Vector2> nextLayout,
-		string processNodeId,
-		IReadOnlyList<string> relatedMetricIds,
-		Vector2 processPosition)
-	{
-		if (processNodeId.StartsWith("process:", StringComparison.Ordinal) == false)
-		{
-			return;
-		}
-
-		IReadOnlyList<string> inputMetricIds = topology.Edges
-			.Where(edge => edge.ToNodeId == processNodeId && relatedMetricIds.Contains(edge.FromNodeId))
-			.Select(static edge => edge.FromNodeId)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static metricId => metricId, StringComparer.Ordinal)
-			.ToList();
-		IReadOnlyList<string> outputMetricIds = topology.Edges
-			.Where(edge => edge.FromNodeId == processNodeId && relatedMetricIds.Contains(edge.ToNodeId))
-			.Select(static edge => edge.ToNodeId)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static metricId => metricId, StringComparer.Ordinal)
-			.ToList();
-
-		inputMetricIds
-			.Where(metricId => layoutPositions.ContainsKey(metricId) == false)
-			.Select((metricId, index) => new { metricId, index })
-			.ToList()
-			.ForEach(item => nextLayout[item.metricId] = processPosition + new Vector2(-240f, -80f + (item.index * 90f)));
-		outputMetricIds
-			.Where(metricId => layoutPositions.ContainsKey(metricId) == false)
-			.Select((metricId, index) => new { metricId, index })
-			.ToList()
-			.ForEach(item => nextLayout[item.metricId] = processPosition + new Vector2(260f, -40f + (item.index * 90f)));
-	}
-
 	// 删除节点并将其回收到未分配池，同时清理失去依附的指标节点。
 	private void onDeleteButtonPressed(string nodeId)
 	{
-		HashSet<string> remainingNodeIds = activeNodeIds
+		activeNodeIds = activeNodeIds
 			.Where(activeNodeId => activeNodeId != nodeId)
-			.ToHashSet(StringComparer.Ordinal);
-		HashSet<string> remainingProcessNodeIds = remainingNodeIds
-			.Where(static activeNodeId => activeNodeId.StartsWith("process:", StringComparison.Ordinal))
-			.ToHashSet(StringComparer.Ordinal);
-		HashSet<string> retainedMetricNodeIds = topology.Edges
-			.Where(edge => remainingProcessNodeIds.Contains(edge.FromNodeId) || remainingProcessNodeIds.Contains(edge.ToNodeId))
-			.SelectMany(static edge => new[] { edge.FromNodeId, edge.ToNodeId })
-			.Where(static activeNodeId => activeNodeId.StartsWith("metric:", StringComparison.Ordinal))
-			.ToHashSet(StringComparer.Ordinal);
-
-		activeNodeIds = remainingNodeIds
-			.Where(activeNodeId => activeNodeId.StartsWith("process:", StringComparison.Ordinal) || retainedMetricNodeIds.Contains(activeNodeId))
 			.ToHashSet(StringComparer.Ordinal);
 		layoutPositions = layoutPositions
 			.Where(pair => activeNodeIds.Contains(pair.Key))
@@ -410,12 +275,6 @@ public partial class FlowToolDashboard : Control
 	// 根据节点 ID 返回当前显示名。
 	private string getNodeDisplayName(string nodeId)
 	{
-		FlowToolProcessNode? processNode = topology.Processes.FirstOrDefault(process => process.NodeId == nodeId);
-		if (processNode is not null)
-		{
-			return processNode.DisplayName;
-		}
-
 		FlowToolMetricNode? metricNode = topology.Metrics.FirstOrDefault(metric => metric.NodeId == nodeId);
 		return metricNode?.DisplayName ?? nodeId;
 	}

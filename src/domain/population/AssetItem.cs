@@ -17,7 +17,7 @@ public class AssetItem
 
 	// 每日消费量（键为第几天）。
 	[PersistField]
-	private Dictionary<int, float> consumedAmountByDay = new();
+	private DailyHistoryData<float> consumedAmountHistory = new(30);
 
 	/// <summary>
 	/// 产品类型。
@@ -45,9 +45,7 @@ public class AssetItem
 	/// </summary>
 	public float GetConsumedAmountByDay(int day)
 	{
-		return consumedAmountByDay.TryGetValue(day, out float value)
-			? value
-			: 0.0f;
+		return consumedAmountHistory.GetValueByDay(day);
 	}
 
 	/// <summary>
@@ -55,10 +53,15 @@ public class AssetItem
 	/// </summary>
 	public IReadOnlyList<float> GetLast30DaysConsumption(int currentDay)
 	{
-		int startDay = currentDay - 29;
-		return Enumerable.Range(startDay, 30)
-			.Select(day => day < 0 ? 0.0f : GetConsumedAmountByDay(day))
-			.ToList();
+		return consumedAmountHistory.GetRecentValues(currentDay, 30).ToList();
+	}
+
+	/// <summary>
+	/// 获取最近 X 天的平均消费量。
+	/// </summary>
+	public double GetRecentAverageConsumption(int currentDay, int recentDays)
+	{
+		return consumedAmountHistory.GetRecentAverage(currentDay, recentDays);
 	}
 
 
@@ -114,15 +117,6 @@ public class AssetItem
 	// 记录并裁剪 30 天窗口。
 	private void recordDailyConsumption(int day, float consumed)
 	{
-		float currentValue = consumedAmountByDay.TryGetValue(day, out float value)
-			? value
-			: 0.0f;
-		consumedAmountByDay[day] = currentValue + consumed;
-
-		int minDay = day - 29;
-		consumedAmountByDay.Keys
-			.Where(itemDay => itemDay < minDay)
-			.ToList()
-			.ForEach(itemDay => consumedAmountByDay.Remove(itemDay));
+		consumedAmountHistory.AddCurrentDayValue(day, consumed);
 	}
 }

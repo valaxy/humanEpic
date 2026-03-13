@@ -1,198 +1,20 @@
 {
   "scopes": {
-    "all": {
-      "nodes": {
-        "metric:System.Int32:basePopulation": {
-          "x": -100,
-          "y": 760
-        },
-        "metric:System.Int32:basePrice": {
-          "x": 395.54547,
-          "y": 470.89093
-        },
-        "metric:System.Int32:capitalStock": {
-          "x": 872.94543,
-          "y": 469.79092
-        },
-        "metric:System.Int32:consumptionBudget": {
-          "x": 1020,
-          "y": 160
-        },
-        "metric:System.Int32:demandIndex": {
-          "x": 866.34546,
-          "y": 346.5909
-        },
-        "metric:System.Int32:laborSupply": {
-          "x": 1200,
-          "y": 260
-        },
-        "metric:System.Int32:leavingResidents": {
-          "x": 1540.712,
-          "y": 360.73563
-        },
-        "metric:System.Int32:newResidents": {
-          "x": 672.39844,
-          "y": 384.3038
-        },
-        "metric:System.Int32:output": {
-          "x": -520,
-          "y": -120
-        },
-        "metric:System.Int32:participationRate": {
-          "x": 700,
-          "y": -20
-        },
-        "metric:System.Int32:population": {
-          "x": -320,
-          "y": 260
-        },
-        "metric:System.Int32:populationDelta": {
-          "x": -420,
-          "y": 520
-        },
-        "process:HelloWorldFlow.ConsumptionBudget": {
-          "x": 420,
-          "y": 60
-        },
-        "process:HelloWorldFlow.DemandIndex": {
-          "x": 1700,
-          "y": 60
-        },
-        "process:HelloWorldFlow.LaborSupply": {
-          "x": 1660,
-          "y": -380
-        },
-        "process:HelloWorldFlow.Output": {
-          "x": 933.11206,
-          "y": 519.54016
-        },
-        "process:HelloWorldFlow.Population": {
-          "x": 474.74545,
-          "y": 317.99094
-        },
-        "process:HelloWorldFlow.PopulationDelta": {
-          "x": 912.39844,
-          "y": 464.3038
-        }
-      }
-    },
     "HelloWorldFlow": {
-      "nodes": {
-        "metric:System.Int32:basePopulation": {
-          "x": 1132.2472,
-          "y": 583.1638
-        },
-        "metric:System.Int32:basePrice": {
-          "x": 1180,
-          "y": 140
-        },
-        "metric:System.Int32:capitalStock": {
-          "x": 340,
-          "y": 800
-        },
-        "metric:System.Int32:consumptionBudget": {
-          "x": -40,
-          "y": 620
-        },
-        "metric:System.Int32:demandIndex": {
-          "x": 2500,
-          "y": 200
-        },
-        "metric:System.Int32:laborSupply": {
-          "x": 1920,
-          "y": 260
-        },
-        "metric:System.Int32:leavingResidents": {
-          "x": -140,
-          "y": -100
-        },
-        "metric:System.Int32:newResidents": {
-          "x": 360,
-          "y": 0
-        },
-        "metric:System.Int32:output": {
-          "x": 820,
-          "y": 180
-        },
-        "metric:System.Int32:participationRate": {
-          "x": 1295.5972,
-          "y": 315.75385
-        },
-        "metric:System.Int32:population": {
-          "x": 120,
-          "y": 560
-        },
-        "metric:System.Int32:populationDelta": {
-          "x": 1132.2472,
-          "y": 673.1638
-        },
-        "process:HelloWorldFlow.ConsumptionBudget": {
-          "x": 896,
-          "y": 504
-        },
-        "process:HelloWorldFlow.DemandIndex": {
-          "x": 1400,
-          "y": -40
-        },
-        "process:HelloWorldFlow.LaborSupply": {
-          "x": 1535.5972,
-          "y": 395.75385
-        },
-        "process:HelloWorldFlow.Output": {
-          "x": 651.0871,
-          "y": 540.95386
-        },
-        "process:HelloWorldFlow.Population": {
-          "x": 1372.2472,
-          "y": 663.1638
-        },
-        "process:HelloWorldFlow.PopulationDelta": {
-          "x": -700,
-          "y": 500
-        }
-      }
+      "nodes": {}
     },
     "LabourMarketFlowSample": {
+      "nodes": {}
+    },
+    "PopulationBuyLogic": {
       "nodes": {
-        "metric:System.Int32:employmentDelta": {
-          "x": 980,
-          "y": 180
+        "metric:PopulationBuyLogic:expectBuyProductsNum": {
+          "x": 640,
+          "y": -220
         },
-        "metric:System.Int32:hiringCount": {
-          "x": 340,
-          "y": 80
-        },
-        "metric:System.Int32:jobDemand": {
-          "x": 1003,
-          "y": 360
-        },
-        "metric:System.Int32:recruitmentIntent": {
-          "x": 1216,
-          "y": 38
-        },
-        "metric:System.Int32:separationCount": {
-          "x": 220,
-          "y": 320
-        },
-        "metric:System.Int32:skillMatchRate": {
-          "x": 1216,
-          "y": 128
-        },
-        "metric:System.Int32:wageLevel": {
-          "x": 1003,
-          "y": 450
-        },
-        "process:LabourMarketFlowSample.EmploymentDelta": {
-          "x": 600,
-          "y": 360
-        },
-        "process:LabourMarketFlowSample.HiringCount": {
-          "x": 1456,
-          "y": 118
-        },
-        "process:LabourMarketFlowSample.RecruitmentIntent": {
-          "x": 1243,
-          "y": 440
+        "metric:PopulationBuyLogic:productMarket": {
+          "x": 80,
+          "y": -260
         }
       }
     }

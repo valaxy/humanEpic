@@ -9,8 +9,6 @@ using System.Linq;
 /// </summary>
 public sealed class FlowToolCanvasPanelController
 {
-	// 过程节点类型标识。
-	private const string processNodeKind = "process";
 	// 指标节点类型标识。
 	private const string metricNodeKind = "metric";
 
@@ -62,11 +60,10 @@ public sealed class FlowToolCanvasPanelController
 		graphNodeNameByNodeId = new Dictionary<string, string>(StringComparer.Ordinal);
 		deleteButtonByNodeId = new Dictionary<string, Button>(StringComparer.Ordinal);
 
-		IReadOnlyDictionary<string, FlowToolProcessNode> processById = topology.Processes.ToDictionary(static process => process.NodeId, StringComparer.Ordinal);
 		IReadOnlyDictionary<string, FlowToolMetricNode> metricById = topology.Metrics.ToDictionary(static metric => metric.NodeId, StringComparer.Ordinal);
 
 		IReadOnlyList<FlowToolVisualNodeDescriptor> descriptors = activeNodeIds
-			.Select(nodeId => createVisualDescriptor(nodeId, processById, metricById))
+			.Select(nodeId => createVisualDescriptor(nodeId, metricById))
 			.Where(static descriptor => descriptor is not null)
 			.Select(static descriptor => descriptor!)
 			.OrderBy(static descriptor => descriptor.Kind, StringComparer.Ordinal)
@@ -107,17 +104,11 @@ public sealed class FlowToolCanvasPanelController
 	// 构建可视节点描述。
 	private static FlowToolVisualNodeDescriptor? createVisualDescriptor(
 		string nodeId,
-		IReadOnlyDictionary<string, FlowToolProcessNode> processById,
 		IReadOnlyDictionary<string, FlowToolMetricNode> metricById)
 	{
-		if (processById.TryGetValue(nodeId, out FlowToolProcessNode? processNode))
-		{
-			return new FlowToolVisualNodeDescriptor(processNode.NodeId, processNode.DisplayName, processNodeKind, "过程节点");
-		}
-
 		if (metricById.TryGetValue(nodeId, out FlowToolMetricNode? metricNode))
 		{
-			return new FlowToolVisualNodeDescriptor(metricNode.NodeId, metricNode.DisplayName, metricNodeKind, $"参数类型: {metricNode.TypeDisplayName}");
+			return new FlowToolVisualNodeDescriptor(metricNode.NodeId, metricNode.DisplayName, metricNodeKind, $"指标: {metricNode.MetricName} | 类型: {metricNode.TypeDisplayName}");
 		}
 
 		return null;
@@ -136,7 +127,7 @@ public sealed class FlowToolCanvasPanelController
 			PositionOffset = layoutPositions.TryGetValue(descriptor.NodeId, out Vector2 position) ? position : new Vector2(80f, 80f),
 			Resizable = false,
 			Draggable = true,
-			CustomMinimumSize = new Vector2(descriptor.Kind == processNodeKind ? 240f : 220f, 0f)
+			CustomMinimumSize = new Vector2(240f, 0f)
 		};
 		graphNode.GetTitlebarHBox().Visible = false;
 
@@ -173,7 +164,7 @@ public sealed class FlowToolCanvasPanelController
 		body.AddChild(kindLabel);
 		graphNode.AddChild(body);
 
-		Color portColor = descriptor.Kind == processNodeKind ? new Color(0.92f, 0.69f, 0.39f) : new Color(0.39f, 0.69f, 0.92f);
+		Color portColor = new Color(0.39f, 0.69f, 0.92f);
 		graphNode.SetSlot(0, true, 0, portColor, true, 0, portColor);
 		applyNodeStyle(graphNode, descriptor.Kind);
 		graphNode.ResetSize();
@@ -202,16 +193,16 @@ public sealed class FlowToolCanvasPanelController
 	{
 		StyleBoxFlat panelStyle = new()
 		{
-			BgColor = nodeKind == processNodeKind ? new Color(0.18f, 0.14f, 0.1f) : new Color(0.12f, 0.16f, 0.2f),
-			BorderColor = nodeKind == processNodeKind ? new Color(0.92f, 0.69f, 0.39f) : new Color(0.39f, 0.69f, 0.92f),
+			BgColor = new Color(0.12f, 0.16f, 0.2f),
+			BorderColor = new Color(0.39f, 0.69f, 0.92f),
 			BorderWidthBottom = 2,
 			BorderWidthTop = 2,
 			BorderWidthLeft = 2,
 			BorderWidthRight = 2,
-			CornerRadiusTopLeft = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusTopRight = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusBottomLeft = nodeKind == processNodeKind ? 12 : 0,
-			CornerRadiusBottomRight = nodeKind == processNodeKind ? 12 : 0
+			CornerRadiusTopLeft = 8,
+			CornerRadiusTopRight = 8,
+			CornerRadiusBottomLeft = 8,
+			CornerRadiusBottomRight = 8
 		};
 		graphNode.AddThemeStyleboxOverride("panel", panelStyle);
 	}

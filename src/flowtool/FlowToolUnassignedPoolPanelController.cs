@@ -7,8 +7,6 @@ using System.Linq;
 /// </summary>
 public sealed class FlowToolUnassignedPoolPanelController
 {
-	// 过程节点类型标识。
-	private const string processNodeKind = "process";
 	// 指标节点类型标识。
 	private const string metricNodeKind = "metric";
 
@@ -33,19 +31,13 @@ public sealed class FlowToolUnassignedPoolPanelController
 	{
 		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
 
-		IReadOnlyList<FlowToolPoolItemButton> processItems = topology.Processes
-			.Where(process => activeNodeIds.Contains(process.NodeId) == false)
-			.OrderBy(static process => process.DisplayName, System.StringComparer.Ordinal)
-			.Select(createProcessPoolItem)
-			.ToList();
-
 		IReadOnlyList<FlowToolPoolItemButton> metricItems = topology.Metrics
 			.Where(metric => activeNodeIds.Contains(metric.NodeId) == false)
 			.OrderBy(static metric => metric.DisplayName, System.StringComparer.Ordinal)
 			.Select(createMetricPoolItem)
 			.ToList();
 
-		processItems.Concat(metricItems).ToList().ForEach(item => unassignedPoolList.AddChild(item));
+		metricItems.ToList().ForEach(item => unassignedPoolList.AddChild(item));
 	}
 
 	/// <summary>
@@ -54,14 +46,6 @@ public sealed class FlowToolUnassignedPoolPanelController
 	public void SetStatus(string text)
 	{
 		statusLabel.Text = text;
-	}
-
-	// 创建过程池项。
-	private static FlowToolPoolItemButton createProcessPoolItem(FlowToolProcessNode processNode)
-	{
-		FlowToolPoolItemButton button = new();
-		button.Setup($"[过程] {processNode.DisplayName}", processNode.NodeId, processNodeKind);
-		return button;
 	}
 
 	// 创建指标池项。

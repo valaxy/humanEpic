@@ -1,5 +1,7 @@
+
+
 [SystemDynamicsFlow]
-public class HelloWorldFlow
+public class HelloWorldFlowSample
 {
     /// <summary>
     /// 根据新增人口与离开人口计算总人口变化。

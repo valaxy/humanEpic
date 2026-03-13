@@ -1,34 +1,28 @@
 using Godot;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
-/// 画布缩略图组件，负责展示节点全局分布并提供快速定位能力。
+/// 画布缩略图覆盖层，负责显示主摄像机视口框并处理导航点击。
 /// </summary>
 [Tool]
 [GlobalClass]
 public partial class FlowToolCanvasMinimap : Control
 {
-	// 缩略图内边距。
-	private const float innerPadding = 8f;
-	// 节点示意最小尺寸。
-	private const float minDotSize = 4f;
-	// 背景颜色。
-	private static readonly Color backgroundColor = new(0.05f, 0.07f, 0.1f, 0.85f);
 	// 边框颜色。
-	private static readonly Color borderColor = new(0.35f, 0.45f, 0.56f, 1f);
-	// 节点颜色。
-	private static readonly Color nodeColor = new(0.44f, 0.74f, 0.95f, 0.95f);
+	private static readonly Color borderColor = new(0.35f, 0.45f, 0.56f, 0.95f);
 	// 视口框颜色。
 	private static readonly Color viewportRectColor = new(0.96f, 0.91f, 0.56f, 0.95f);
 
-	// 当前节点布局快照。
-	private IReadOnlyDictionary<string, Vector2> layoutByNodeId = new Dictionary<string, Vector2>(StringComparer.Ordinal);
-	// 当前世界边界。
-	private Rect2 worldBounds = new(Vector2.Zero, new Vector2(1f, 1f));
-	// 当前视口尺寸。
-	private Vector2 viewportSize = new(1f, 1f);
+	// 主视口。
+	private SubViewport mainViewport = null!;
+	// 缩略图视口。
+	private SubViewport minimapViewport = null!;
+	// 主摄像机。
+	private Camera2D mainCamera = null!;
+	// 缩略图摄像机。
+	private Camera2D minimapCamera = null!;
+	// 画布世界尺寸。
+	private Vector2 worldSize = new(1f, 1f);
 	// 导航请求回调。
 	private Action<Vector2> navigateRequested = static _ => { };
 
@@ -41,107 +35,123 @@ public partial class FlowToolCanvasMinimap : Control
 	}
 
 	/// <summary>
-	/// 绑定缩略图导航回调。
+	/// 配置缩略图与双摄像机上下文。
 	/// </summary>
-	public void SetNavigateRequested(Action<Vector2> onNavigateRequested)
+	public void Configure(
+		SubViewport inputMainViewport,
+		SubViewport inputMinimapViewport,
+		Camera2D inputMainCamera,
+		Camera2D inputMinimapCamera,
+		Vector2 inputWorldSize,
+		Action<Vector2> onNavigateRequested)
 	{
+		mainViewport = inputMainViewport;
+		minimapViewport = inputMinimapViewport;
+		mainCamera = inputMainCamera;
+		minimapCamera = inputMinimapCamera;
+		worldSize = new Vector2(Mathf.Max(inputWorldSize.X, 1f), Mathf.Max(inputWorldSize.Y, 1f));
 		navigateRequested = onNavigateRequested;
+		QueueRedraw();
 	}
 
 	/// <summary>
-	/// 刷新缩略图展示数据。
+	/// 触发缩略图覆盖层重绘。
 	/// </summary>
-	public void UpdateSnapshot(IReadOnlyDictionary<string, Vector2> nodeLayout, Vector2 inputViewportSize, Vector2 inputWorldSize)
+	public void Refresh()
 	{
-		layoutByNodeId = nodeLayout
-			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
-		viewportSize = new Vector2(Mathf.Max(inputViewportSize.X, 1f), Mathf.Max(inputViewportSize.Y, 1f));
-		worldBounds = new Rect2(
-			Vector2.Zero,
-			new Vector2(
-				Mathf.Max(inputWorldSize.X, viewportSize.X),
-				Mathf.Max(inputWorldSize.Y, viewportSize.Y)));
 		QueueRedraw();
 	}
 
 	public override void _Draw()
 	{
-		Rect2 minimapRect = new(Vector2.Zero, Size);
-		DrawRect(minimapRect, backgroundColor, true);
-		DrawRect(minimapRect, borderColor, false, 1f);
+		if (isConfigured() == false)
+		{
+			return;
+		}
 
-		Rect2 contentRect = createContentRect();
-		drawNodeDots(contentRect);
-		drawViewportRect(contentRect);
+		DrawRect(new Rect2(Vector2.Zero, Size), borderColor, false, 1f);
+		drawMainViewportRect();
 	}
 
 	public override void _GuiInput(InputEvent @event)
 	{
+		if (isConfigured() == false)
+		{
+			return;
+		}
+
 		if (@event is not InputEventMouseButton mouseButton || mouseButton.ButtonIndex != MouseButton.Left || mouseButton.Pressed == false)
 		{
 			return;
 		}
 
-		Rect2 contentRect = createContentRect();
-		if (contentRect.HasPoint(mouseButton.Position) == false)
+		if (new Rect2(Vector2.Zero, Size).HasPoint(mouseButton.Position) == false)
 		{
 			return;
 		}
 
-		Vector2 normalized = new(
-			(mouseButton.Position.X - contentRect.Position.X) / Mathf.Max(contentRect.Size.X, 1f),
-			(mouseButton.Position.Y - contentRect.Position.Y) / Mathf.Max(contentRect.Size.Y, 1f));
-		Vector2 worldTarget = new(
-			worldBounds.Position.X + normalized.X * worldBounds.Size.X,
-			worldBounds.Position.Y + normalized.Y * worldBounds.Size.Y);
+		Vector2 worldTarget = minimapScreenToWorld(mouseButton.Position);
 		navigateRequested(worldTarget);
 	}
 
-	// 创建缩略图内容区域。
-	private Rect2 createContentRect()
+	// 判断当前是否已完成依赖注入。
+	private bool isConfigured()
 	{
-		float width = Mathf.Max(Size.X - innerPadding * 2f, 1f);
-		float height = Mathf.Max(Size.Y - innerPadding * 2f, 1f);
-		return new Rect2(new Vector2(innerPadding, innerPadding), new Vector2(width, height));
+		return mainViewport != null && minimapViewport != null && mainCamera != null && minimapCamera != null;
 	}
 
-	// 绘制所有节点示意点。
-	private void drawNodeDots(Rect2 contentRect)
+	// 绘制主摄像机视口在缩略图中的覆盖框。
+	private void drawMainViewportRect()
 	{
-		layoutByNodeId
-			.Values
-			.ToList()
-			.ForEach(position =>
-			{
-				Vector2 ratio = toContentRatio(position);
-				Vector2 dotPos = new(
-					contentRect.Position.X + ratio.X * contentRect.Size.X,
-					contentRect.Position.Y + ratio.Y * contentRect.Size.Y);
-				Rect2 dotRect = new(dotPos - new Vector2(minDotSize * 0.5f, minDotSize * 0.5f), new Vector2(minDotSize, minDotSize));
-				DrawRect(dotRect, nodeColor, true);
-			});
-	}
+		Vector2 mainViewportSize = new(
+			Mathf.Max(mainViewport.Size.X, 1),
+			Mathf.Max(mainViewport.Size.Y, 1));
+		Vector2 mainHalfSize = new(
+			mainViewportSize.X * 0.5f * mainCamera.Zoom.X,
+			mainViewportSize.Y * 0.5f * mainCamera.Zoom.Y);
+		Vector2 mainTopLeftWorld = mainCamera.Position - mainHalfSize;
+		Vector2 mainBottomRightWorld = mainCamera.Position + mainHalfSize;
 
-	// 绘制当前视口边界示意。
-	private void drawViewportRect(Rect2 contentRect)
-	{
-		Vector2 viewportRatio = new(
-			Mathf.Clamp(viewportSize.X / Mathf.Max(worldBounds.Size.X, 1f), 0.05f, 1f),
-			Mathf.Clamp(viewportSize.Y / Mathf.Max(worldBounds.Size.Y, 1f), 0.05f, 1f));
-		Rect2 viewportRect = new(
-			contentRect.Position,
-			new Vector2(contentRect.Size.X * viewportRatio.X, contentRect.Size.Y * viewportRatio.Y));
+		Vector2 minimapTopLeftScreen = worldToMinimapScreen(mainTopLeftWorld);
+		Vector2 minimapBottomRightScreen = worldToMinimapScreen(mainBottomRightWorld);
+		Rect2 viewportRect = new(minimapTopLeftScreen, minimapBottomRightScreen - minimapTopLeftScreen);
 		DrawRect(viewportRect, viewportRectColor, false, 2f);
 	}
 
-	// 将世界坐标映射到缩略图归一化坐标。
-	private Vector2 toContentRatio(Vector2 worldPosition)
+	// 将世界坐标映射到缩略图屏幕坐标。
+	private Vector2 worldToMinimapScreen(Vector2 worldPosition)
 	{
-		float normalizedX = (worldPosition.X - worldBounds.Position.X) / Mathf.Max(worldBounds.Size.X, 1f);
-		float normalizedY = (worldPosition.Y - worldBounds.Position.Y) / Mathf.Max(worldBounds.Size.Y, 1f);
+		Vector2 minimapViewportSize = new(
+			Mathf.Max(minimapViewport.Size.X, 1),
+			Mathf.Max(minimapViewport.Size.Y, 1));
+		Vector2 minimapHalfSize = new(
+			minimapViewportSize.X * 0.5f * minimapCamera.Zoom.X,
+			minimapViewportSize.Y * 0.5f * minimapCamera.Zoom.Y);
+		Vector2 minimapTopLeftWorld = minimapCamera.Position - minimapHalfSize;
+		Vector2 local = new(
+			(worldPosition.X - minimapTopLeftWorld.X) / Mathf.Max(minimapCamera.Zoom.X, 0.0001f),
+			(worldPosition.Y - minimapTopLeftWorld.Y) / Mathf.Max(minimapCamera.Zoom.Y, 0.0001f));
 		return new Vector2(
-			Mathf.Clamp(normalizedX, 0f, 1f),
-			Mathf.Clamp(normalizedY, 0f, 1f));
+			Mathf.Clamp(local.X, 0f, Size.X),
+			Mathf.Clamp(local.Y, 0f, Size.Y));
 	}
 
+	// 将缩略图屏幕坐标映射回世界坐标。
+	private Vector2 minimapScreenToWorld(Vector2 minimapScreenPosition)
+	{
+		Vector2 minimapViewportSize = new(
+			Mathf.Max(minimapViewport.Size.X, 1),
+			Mathf.Max(minimapViewport.Size.Y, 1));
+		Vector2 minimapHalfSize = new(
+			minimapViewportSize.X * 0.5f * minimapCamera.Zoom.X,
+			minimapViewportSize.Y * 0.5f * minimapCamera.Zoom.Y);
+		Vector2 minimapTopLeftWorld = minimapCamera.Position - minimapHalfSize;
+		Vector2 world = new(
+			minimapTopLeftWorld.X + minimapScreenPosition.X * minimapCamera.Zoom.X,
+			minimapTopLeftWorld.Y + minimapScreenPosition.Y * minimapCamera.Zoom.Y);
+
+		return new Vector2(
+			Mathf.Clamp(world.X, 0f, worldSize.X),
+			Mathf.Clamp(world.Y, 0f, worldSize.Y));
+	}
 }

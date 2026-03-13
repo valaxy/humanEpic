@@ -6,6 +6,11 @@ using Godot.Collections;
 /// </summary>
 public partial class UnassignedItem : Button
 {
+	// 拖拽载荷中的节点 ID 键。
+	private static readonly StringName dragNodeIdKey = "nodeId";
+	// 拖拽载荷中的显示名键。
+	private static readonly StringName dragDisplayTextKey = "displayText";
+
 	// 节点 ID。
 	private string nodeId = string.Empty;
 
@@ -33,9 +38,9 @@ public partial class UnassignedItem : Button
 
 		Dictionary dragPayload = new()
 		{
-			["nodeId"] = nodeId,
-			["displayText"] = Text
+			[dragNodeIdKey] = nodeId,
+			[dragDisplayTextKey] = Text
 		};
-		return Variant.From(dragPayload);
+		return dragPayload;
 	}
 }

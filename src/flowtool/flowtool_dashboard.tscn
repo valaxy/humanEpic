@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasGraphEdit.cs" id="2_script"]
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolAutosaver.cs" id="5_autosave_controler"]
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasMinimap.cs" id="6_minimap_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasWorldLayer2D.cs" id="7_world_layer_script"]
 [ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolPanel/unassigned_pool_panel.tscn" id="4_unassigned_pool_panel"]
 
@@ -48,27 +49,68 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 size_flags_stretch_ratio = 7.0
 
-[node name="Canvas" type="Control" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=1520373558]
+[node name="Canvas" type="SubViewportContainer" parent="SplitContainer/ContentSplitContainer/EditorPanel" unique_id=1520373558]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("2_script")
 
+[node name="MainViewport" type="SubViewport" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas"]
+handle_input_locally = true
+disable_3d = true
+transparent_bg = false
+
+[node name="CanvasRoot" type="Node2D" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport"]
+
+[node name="WorldLayer" type="Node2D" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot"]
+script = ExtResource("7_world_layer_script")
+
+[node name="NodesLayer" type="Node2D" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot"]
+
+[node name="MainCamera" type="Camera2D" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot"]
+enabled = true
+position_smoothing_enabled = false
+
 [node name="Minimap" type="Control" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas"]
-z_index = 100
+z_index = 120
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -236.0
-offset_top = -156.0
+offset_left = -260.0
+offset_top = -180.0
 offset_right = -12.0
 offset_bottom = -12.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="MinimapViewportContainer" type="SubViewportContainer" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/Minimap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = false
+
+[node name="MinimapViewport" type="SubViewport" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/Minimap/MinimapViewportContainer"]
+disable_3d = true
+transparent_bg = false
+
+[node name="MinimapCamera" type="Camera2D" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/Minimap/MinimapViewportContainer/MinimapViewport"]
+enabled = true
+
+[node name="MinimapOverlay" type="Control" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas/Minimap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("6_minimap_script")
 
 [node name="UnassignedPoolBackground" type="PanelContainer" parent="SplitContainer/ContentSplitContainer"]

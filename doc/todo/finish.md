@@ -9,3 +9,7 @@
 - √ flowtool_canvas_node_card.tscn默认就应该提供一个完整的参数配置，方便我在godot编辑器中直接预览
 - √ bug：画布的视口只位于中间，现在节点可能超出中间画布区域与左边和右边的面板重叠
 - √ 新增一个领域实体：画布，负责管理画布大小、坐标、约束规则等，请将已有的逻辑从现有代码中抽取过来
+- √ bug：从未分配池拖动节点到画布上无法成功
+- √ 修复运行时错误：WARNING: Can't change the size of a `SubViewport` with a `SubViewportContainer` parent that has `stretch` enabled. Set `SubViewportContainer.stretch` to `false` to allow changing the size manually.
+- √ 移除FlowToolCanvas、FlowToolCanvasGraphEdit、FlowToolCanvasNodeCard的冗余代码
+- √ 将节点从未分配池拖动到画布仍然没有任何反应，我怀疑是因为旧式的控件方式与FlowToolCanvasWorldLayer2D不兼容的原因

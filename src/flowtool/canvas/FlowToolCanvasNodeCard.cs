@@ -110,19 +110,22 @@ public partial class FlowToolCanvasNodeCard : PanelContainer
 	private void refreshPreviewContent()
 	{
 		titleLabel.Text = PreviewMetricName;
-		string optionalDisplayLine = string.Equals(PreviewDisplayName, PreviewMetricName, StringComparison.Ordinal)
-			? string.Empty
-			: $"\n中文名: {PreviewDisplayName}";
-		detailLabel.Text = $"类型: {PreviewTypeDisplayName}{optionalDisplayLine}";
+		detailLabel.Text = createDetailText(PreviewTypeDisplayName, PreviewDisplayName, PreviewMetricName);
 	}
 
 	// 创建节点详情文本。
 	private static string createNodeDetailText(FlowToolMetricNode metricNode)
 	{
-		string optionalDisplayLine = string.Equals(metricNode.DisplayName, metricNode.MetricName, StringComparison.Ordinal)
+		return createDetailText(metricNode.TypeDisplayName, metricNode.DisplayName, metricNode.MetricName);
+	}
+
+	// 创建节点详情文本主体。
+	private static string createDetailText(string typeDisplayName, string displayName, string metricName)
+	{
+		string optionalDisplayLine = string.Equals(displayName, metricName, StringComparison.Ordinal)
 			? string.Empty
-			: $"\n中文名: {metricNode.DisplayName}";
-		return $"类型: {metricNode.TypeDisplayName}{optionalDisplayLine}";
+			: $"\n中文名: {displayName}";
+		return $"类型: {typeDisplayName}{optionalDisplayLine}";
 	}
 
 	// 创建节点卡片样式。

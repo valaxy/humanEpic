@@ -56,8 +56,6 @@ public partial class FlowToolCanvas : Control
 	private IReadOnlyDictionary<string, Vector2> layoutPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
 	// 当前布局作用域键。
 	private string selectedLayoutScopeKey = allLayoutScopeKey;
-	// 当前布局作用域显示名。
-	private string selectedLayoutScopeDisplayName = string.Empty;
 	// 当前布局作用域列表。
 	private IReadOnlyList<FlowToolLayoutScopeItem> layoutScopes = Array.Empty<FlowToolLayoutScopeItem>();
 	// 当前已激活节点集合。
@@ -84,12 +82,41 @@ public partial class FlowToolCanvas : Control
 	public override void _Process(double delta)
 	{
 		EmitSignal(SignalName.AutosavePulse, delta);
-		canvasPanel.UpdateDeleteButtonVisibility();
 	}
 
 	public override void _ExitTree()
 	{
 		EmitSignal(SignalName.AutosaveForced);
+	}
+
+	public override bool _CanDropData(Vector2 atPosition, Variant data)
+	{
+		if (tryGetCanvasLocalPointerPosition(out Vector2 canvasLocalPointerPosition) == false)
+		{
+			canvasPanel.ClearDropPreview();
+			return false;
+		}
+
+		return canvasPanel.CanAcceptNodePayloadDropAtScreenPosition(canvasLocalPointerPosition, data);
+	}
+
+	public override void _DropData(Vector2 atPosition, Variant data)
+	{
+		if (tryGetCanvasLocalPointerPosition(out Vector2 canvasLocalPointerPosition) == false)
+		{
+			canvasPanel.ClearDropPreview();
+			return;
+		}
+
+		canvasPanel.DropNodePayloadAtScreenPosition(canvasLocalPointerPosition, data);
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationDragEnd)
+		{
+			canvasPanel.ClearDropPreview();
+		}
 	}
 
 	// 从 tscn 场景树绑定所需节点。
@@ -129,6 +156,21 @@ public partial class FlowToolCanvas : Control
 		contentSplitContainer.SplitOffsets = [Mathf.RoundToInt(editorPanelWidth)];
 	}
 
+	// 计算当前鼠标在画布容器内的局部坐标。
+	private bool tryGetCanvasLocalPointerPosition(out Vector2 canvasLocalPointerPosition)
+	{
+		canvasLocalPointerPosition = Vector2.Zero;
+		Vector2 pointerGlobalPosition = GetGlobalMousePosition();
+		Rect2 canvasGlobalRect = canvasPanel.GetGlobalRect();
+		if (canvasGlobalRect.HasPoint(pointerGlobalPosition) == false)
+		{
+			return false;
+		}
+
+		canvasLocalPointerPosition = canvasPanel.GetGlobalTransformWithCanvas().AffineInverse() * pointerGlobalPosition;
+		return true;
+	}
+
 	// 执行提取、状态合并与重绘。
 	private void reloadTopologyAndRender()
 	{
@@ -166,7 +208,6 @@ public partial class FlowToolCanvas : Control
 
 		EmitSignal(SignalName.AutosaveSnapshotRequested);
 		selectedLayoutScopeKey = selectedScope.ScopeKey;
-		selectedLayoutScopeDisplayName = selectedScope.DisplayName;
 		layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
 		reloadTopologyAndRender();
 	}
@@ -180,7 +221,6 @@ public partial class FlowToolCanvas : Control
 		{
 			FlowToolLayoutScopeItem? fallbackScope = layoutScopes.FirstOrDefault();
 			selectedLayoutScopeKey = fallbackScope?.ScopeKey ?? allLayoutScopeKey;
-			selectedLayoutScopeDisplayName = fallbackScope?.DisplayName ?? string.Empty;
 			layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
 		}
 	}

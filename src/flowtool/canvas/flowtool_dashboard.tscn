@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://bq1ow0tmjqg6h"]
 
-[ext_resource type="Script" uid="uid://cy76qwtvql56q" path="res://src/flowtool/FlowToolDashboard.cs" id="1_script"]
-[ext_resource type="Script" uid="uid://d06d263t23hyh" path="res://src/flowtool/FlowToolCanvasGraphEdit.cs" id="2_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvas.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasGraphEdit.cs" id="2_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolAutosaver.cs" id="5_autosave_controler"]
 [ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
+[ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolPanel/unassigned_pool_panel.tscn" id="4_unassigned_pool_panel"]
 
-[node name="FlowToolDashboard" type="Control" unique_id=2058591925]
+[node name="FlowToolCanvas" type="Control" unique_id=2058591925]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,6 +14,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_script")
+
+[node name="AutosaveControler" type="Node" parent="." unique_id=1811182024]
+script = ExtResource("5_autosave_controler")
 
 [node name="SplitContainer" type="HSplitContainer" parent="." unique_id=1664315101]
 layout_mode = 1
@@ -50,29 +55,5 @@ size_flags_vertical = 3
 scroll_offset = Vector2(-193, 0)
 script = ExtResource("2_script")
 
-[node name="UnassignedPanel" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer" unique_id=421242835]
-custom_minimum_size = Vector2(280, 0)
+[node name="UnassignedPoolPanel" parent="SplitContainer/ContentSplitContainer" instance=ExtResource("4_unassigned_pool_panel")]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-size_flags_stretch_ratio = 3.0
-
-[node name="PanelTitle" type="Label" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=1538446448]
-layout_mode = 2
-theme_type_variation = &"HeaderSmall"
-text = "未分配池"
-horizontal_alignment = 1
-
-[node name="PoolScrollContainer" type="ScrollContainer" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=707593014]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="UnassignedPoolList" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer" unique_id=1069791387]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="StatusLabel" type="Label" parent="SplitContainer/ContentSplitContainer/UnassignedPanel" unique_id=600328482]
-layout_mode = 2
-text = "等待提取..."
-autowrap_mode = 3

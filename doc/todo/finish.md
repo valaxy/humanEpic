@@ -1,4 +1,17 @@
 ## 2026-03-13
+- √ 移除FlowToolVisualNodeDescriptor这种中间结构，纯属多余，用FlowToolMetricNode即可
+- √ createDropShadowNode也抽取到FlowToolGraphNodeFactory里面去
+- √ FlowToolCanvasPanelController完全可以合入FlowToolCanvasGraphEdit里了
+- √ AutosaveControler可以依赖于其他UI组件或者领域层的对象直接完成保存相关的交互和逻辑，不需要FlowToolCanvas来中转逻辑；AutosaveControler应当是一个逻辑处理类，不被其他类依赖，其他类可以通过信号的方式对他抛出事件去处理
+- √ 采用一个工厂方法模式，将FlowToolCanvasGraphEdit中关于GraphNode创建的代码抽取到一个独立的文件里
+- √ FlowToolCanvasPanelController中有很多代码是不是属于FlowToolCanvasGraphEdit的职责了，考虑一下是否需要将它们抽取到FlowToolCanvasGraphEdit里
+- √ 新增一个AutosaveControler，负责监听UI组件的关键行为，并实现自动保存功能，相关逻辑需要从FlowToolDashboard抽取出来
+- √ FlowToolDashboard.cs重命名为FlowToolCanvas，并移动到flowtool/canvas目录
+- √ 移除unassigned_pool_panel.tscn的StatusLabel，不需要相关的文本状态展示
+- √ FlowToolPoolItemButton重命名为UnassignedItem
+- √ 可以移除nodeKind了，因为只有一种节点类型，所以节点类型不再有价值了
+- √ ScopePanel是一个UI组件，负责对外抛出交互信号
+- √ UnassignedPoolPanel将其改造为一个独立的组件，并且有自己独立的tscn文件，相关逻辑从其他文件中抽取
 - √ ScopePanel是一个左侧类列表组件，将其改造为一个独立的组件，并且有自己独立的tscn文件，相关逻辑从其他文件中抽取
 - √ FlowToolLayoutStore不需要兼容旧版结构的逻辑
 - √ 新增一个通用类叫历史数据：专门负责管理按天统计的数据

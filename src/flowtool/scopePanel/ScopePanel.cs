@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,15 +8,14 @@ using System.Linq;
 [GlobalClass]
 public partial class ScopePanel : VBoxContainer
 {
+	/// <summary>
+	/// 当列表选项被选中时发出。
+	/// </summary>
+	[Signal]
+	public delegate void ScopeSelectedEventHandler(long selectedIndex);
+
 	// 列表控件。
 	private ItemList layoutScopeList = null!;
-	// 列表更新锁。
-	private bool isUpdatingSelection;
-
-	/// <summary>
-	/// 当前是否处于列表更新中。
-	/// </summary>
-	public bool IsUpdatingSelection => isUpdatingSelection;
 
 	/// <summary>
 	/// 组件初始化。
@@ -25,22 +23,14 @@ public partial class ScopePanel : VBoxContainer
 	public override void _Ready()
 	{
 		layoutScopeList = GetNode<ItemList>("LayoutScopeList");
-	}
-
-	/// <summary>
-	/// 绑定列表选择事件。
-	/// </summary>
-	public void BindSelection(Action<long> onSelected)
-	{
-		layoutScopeList.ItemSelected += selectedIndex => onSelected(selectedIndex);
+		layoutScopeList.ItemSelected += onItemSelected;
 	}
 
 	/// <summary>
 	/// 渲染类列表项并同步当前选中项。
 	/// </summary>
-	public void Setup(IReadOnlyList<FlowToolLayoutScopeItem> scopes, string selectedScopeKey)
+	public void Update(IReadOnlyList<FlowToolLayoutScopeItem> scopes, string selectedScopeKey)
 	{
-		isUpdatingSelection = true;
 		layoutScopeList.Clear();
 		scopes
 			.Select(static scope => scope.DisplayName)
@@ -53,12 +43,17 @@ public partial class ScopePanel : VBoxContainer
 			.Select(static item => item.index)
 			.DefaultIfEmpty(0)
 			.First();
+
 		if (scopes.Count > 0)
 		{
 			layoutScopeList.Select(selectedScopeIndex);
 		}
+	}
 
-		isUpdatingSelection = false;
+	// 转发 ItemList 交互为组件级信号。
+	private void onItemSelected(long selectedIndex)
+	{
+		EmitSignal(SignalName.ScopeSelected, selectedIndex);
 	}
 }
 

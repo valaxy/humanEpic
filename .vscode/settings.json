@@ -16,8 +16,7 @@
         ".VSCodeCounter": true,
         "bin": true,
     },
-    "dotnet-test-explorer.runSettingsPath": ".runsettings",
-    "chat.agent.maxRequests": 90,
+    "chat.agent.maxRequests": 120,
     "comment-formula.languages": [
         "csharp"
     ],

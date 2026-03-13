@@ -4,26 +4,24 @@ using Godot.Collections;
 /// <summary>
 /// 右侧未分配池中的可拖拽节点按钮。
 /// </summary>
-public partial class FlowToolPoolItemButton : Button
+public partial class UnassignedItem : Button
 {
 	// 节点 ID。
 	private string nodeId = string.Empty;
-	// 节点类型。
-	private string nodeKind = string.Empty;
 
 	/// <summary>
 	/// 初始化按钮显示与拖拽载荷。
 	/// </summary>
-	public void Setup(string displayText, string inputNodeId, string inputNodeKind)
+	public void Setup(string displayText, string inputNodeId)
 	{
 		Text = displayText;
 		TooltipText = inputNodeId;
 		nodeId = inputNodeId;
-		nodeKind = inputNodeKind;
 		SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		Alignment = HorizontalAlignment.Left;
 	}
 
+	// 拖拽到canvas里，由canvas接管并处理
 	public override Variant _GetDragData(Vector2 atPosition)
 	{
 		Label dragPreview = new()
@@ -36,7 +34,6 @@ public partial class FlowToolPoolItemButton : Button
 		Dictionary dragPayload = new()
 		{
 			["nodeId"] = nodeId,
-			["nodeKind"] = nodeKind,
 			["displayText"] = Text
 		};
 		return Variant.From(dragPayload);

@@ -5,33 +5,29 @@ using System.Linq;
 /// <summary>
 /// 右侧未分配池面板，负责展示当前作用域下未放置到画布的节点列表。
 /// </summary>
-public sealed class UnassignedPoolPanel
+[Tool]
+[GlobalClass]
+public partial class UnassignedPoolPanel : VBoxContainer
 {
-	// 指标节点类型标识。
-	private const string metricNodeKind = "metric";
-
 	// 未分配池列表容器。
-	private readonly VBoxContainer unassignedPoolList;
-	// 状态栏文本。
-	private readonly Label statusLabel;
+	private VBoxContainer unassignedPoolList = null!;
 
 	/// <summary>
-	/// 构造未分配池组件。
+	/// 组件初始化。
 	/// </summary>
-	public UnassignedPoolPanel(VBoxContainer unassignedPoolList, Label statusLabel)
+	public override void _Ready()
 	{
-		this.unassignedPoolList = unassignedPoolList;
-		this.statusLabel = statusLabel;
+		unassignedPoolList = GetNode<VBoxContainer>("PoolScrollContainer/UnassignedPoolList");
 	}
 
 	/// <summary>
 	/// 渲染未分配池列表。
 	/// </summary>
-	public void RenderPool(FlowToolTopology topology, IReadOnlyCollection<string> activeNodeIds)
+	public void Update(FlowToolTopology topology, IReadOnlyCollection<string> activeNodeIds)
 	{
 		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
 
-		IReadOnlyList<FlowToolPoolItemButton> metricItems = topology.Metrics
+		IReadOnlyList<UnassignedItem> metricItems = topology.Metrics
 			.Where(metric => activeNodeIds.Contains(metric.NodeId) == false)
 			.OrderBy(static metric => metric.DisplayName, System.StringComparer.Ordinal)
 			.Select(createMetricPoolItem)
@@ -40,19 +36,11 @@ public sealed class UnassignedPoolPanel
 		metricItems.ToList().ForEach(item => unassignedPoolList.AddChild(item));
 	}
 
-	/// <summary>
-	/// 更新状态栏文本。
-	/// </summary>
-	public void SetStatus(string text)
-	{
-		statusLabel.Text = text;
-	}
-
 	// 创建指标池项。
-	private static FlowToolPoolItemButton createMetricPoolItem(FlowToolMetricNode metricNode)
+	private static UnassignedItem createMetricPoolItem(FlowToolMetricNode metricNode)
 	{
-		FlowToolPoolItemButton button = new();
-		button.Setup($"{metricNode.DisplayName}", metricNode.NodeId, metricNodeKind);
+		UnassignedItem button = new();
+		button.Setup($"{metricNode.DisplayName}", metricNode.NodeId);
 		return button;
 	}
 }

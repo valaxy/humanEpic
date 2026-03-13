@@ -9,12 +9,20 @@
     "PopulationBuyLogic": {
       "nodes": {
         "metric:PopulationBuyLogic:expectBuyProductsNum": {
-          "x": 640,
-          "y": -220
+          "x": 847.99786,
+          "y": 418.9235
         },
         "metric:PopulationBuyLogic:productMarket": {
-          "x": 80,
-          "y": -260
+          "x": 200,
+          "y": -200
+        }
+      }
+    },
+    "HelloWorldFlowSample": {
+      "nodes": {
+        "metric:HelloWorldFlowSample:consumptionBudget": {
+          "x": 1073,
+          "y": -101
         }
       }
     }

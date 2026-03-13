@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 /// <summary>
@@ -9,12 +8,40 @@ using System.Linq;
 /// </summary>
 [Tool]
 [GlobalClass]
-public partial class FlowToolDashboard : Control
+public partial class FlowToolCanvas : Control
 {
+	/// <summary>
+	/// 自动保存心跳信号。
+	/// </summary>
+	[Signal]
+	public delegate void AutosavePulseEventHandler(double delta);
+
+	/// <summary>
+	/// 自动保存强制落库信号。
+	/// </summary>
+	[Signal]
+	public delegate void AutosaveForcedEventHandler();
+
+	/// <summary>
+	/// 自动保存快照请求信号。
+	/// </summary>
+	[Signal]
+	public delegate void AutosaveSnapshotRequestedEventHandler();
+
+	/// <summary>
+	/// 自动保存布局提交信号。
+	/// </summary>
+	[Signal]
+	public delegate void AutosaveCommitLayoutEventHandler();
+
+	/// <summary>
+	/// 自动保存作用域切换信号。
+	/// </summary>
+	[Signal]
+	public delegate void AutosaveScopeChangedEventHandler(string layoutScopeKey);
+
 	// 全部类布局作用域键。
 	private const string allLayoutScopeKey = "all";
-	// 自动保存节流秒数。
-	private const double autoSaveIntervalSeconds = 0.25d;
 
 	// 反射拓扑提取器。
 	private readonly FlowToolTopologyExtractor topologyExtractor = new();
@@ -43,38 +70,26 @@ public partial class FlowToolDashboard : Control
 	// 左侧类列表组件。
 	private ScopePanel layoutScopePanel = null!;
 	// 中央编辑画布组件。
-	private FlowToolCanvasPanelController canvasPanel = null!;
+	private FlowToolCanvasGraphEdit canvasPanel = null!;
 	// 右侧未分配池组件。
 	private UnassignedPoolPanel unassignedPoolPanel = null!;
-
-	// 自动保存计时器。
-	private double saveClockSeconds;
-	// 最近一次布局指纹。
-	private string lastLayoutFingerprint = string.Empty;
 
 	public override void _Ready()
 	{
 		bindUiFromScene();
 		configureUiBehavior();
-		reloadTopologyAndRender("已完成初次反射提取");
+		reloadTopologyAndRender();
 	}
 
 	public override void _Process(double delta)
 	{
-		saveClockSeconds += delta;
-		if (saveClockSeconds < autoSaveIntervalSeconds)
-		{
-			return;
-		}
-
-		saveClockSeconds = 0d;
-		autoSaveLayoutIfChanged();
+		EmitSignal(SignalName.AutosavePulse, delta);
 		canvasPanel.UpdateDeleteButtonVisibility();
 	}
 
 	public override void _ExitTree()
 	{
-		autoSaveLayoutIfChanged(forceSave: true);
+		EmitSignal(SignalName.AutosaveForced);
 	}
 
 	// 从 tscn 场景树绑定所需节点。
@@ -83,19 +98,21 @@ public partial class FlowToolDashboard : Control
 		splitContainer = GetNode<HSplitContainer>("SplitContainer");
 		contentSplitContainer = GetNode<HSplitContainer>("SplitContainer/ContentSplitContainer");
 		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
-		canvasPanel = new FlowToolCanvasPanelController(
-			GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas"),
-			onDeleteButtonPressed);
-		unassignedPoolPanel = new UnassignedPoolPanel(
-			GetNode<VBoxContainer>("SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer/UnassignedPoolList"),
-			GetNode<Label>("SplitContainer/ContentSplitContainer/UnassignedPanel/StatusLabel"));
+		canvasPanel = GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
+		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolPanel");
 	}
 
 	// 初始化画布行为与分栏自适应。
 	private void configureUiBehavior()
 	{
-		canvasPanel.Configure(onNodePayloadDropped);
-		layoutScopePanel.BindSelection(onLayoutScopeSelected);
+		canvasPanel.NodePayloadDropped += onNodePayloadDropped;
+		canvasPanel.SetDeleteNodeRequested(onDeleteButtonPressed);
+		canvasPanel.RightDisconnects = false;
+		canvasPanel.ShowZoomLabel = true;
+		canvasPanel.Zoom = 1f;
+		canvasPanel.MinimapEnabled = true;
+		canvasPanel.ShowArrangeButton = false;
+		layoutScopePanel.ScopeSelected += onLayoutScopeSelected;
 
 		applyAdaptiveSplitOffset();
 		Resized += onDashboardResized;
@@ -118,7 +135,7 @@ public partial class FlowToolDashboard : Control
 	}
 
 	// 执行提取、状态合并与重绘。
-	private void reloadTopologyAndRender(string statusText)
+	private void reloadTopologyAndRender()
 	{
 		fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes(fullTopology);
@@ -131,22 +148,16 @@ public partial class FlowToolDashboard : Control
 		layoutPositions = layoutStore.FilterInvalidNodes(persistedLayout, validNodeIds);
 		activeNodeIds = deriveActiveNodeIds(layoutPositions.Keys);
 
-		layoutScopePanel.Setup(layoutScopes, selectedLayoutScopeKey);
-		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
-		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
-		persistLayoutCleanup();
-
-		unassignedPoolPanel.SetStatus($"{statusText}\n布局: {selectedLayoutScopeDisplayName} | 指标节点: {topology.Metrics.Count} | 激活节点: {activeNodeIds.Count}");
+		layoutScopePanel.Update(layoutScopes, selectedLayoutScopeKey);
+		canvasPanel.RenderTopology(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.Update(topology, activeNodeIds);
+		EmitSignal(SignalName.AutosaveScopeChanged, selectedLayoutScopeKey);
+		EmitSignal(SignalName.AutosaveCommitLayout);
 	}
 
 	// 切换布局作用域。
 	private void onLayoutScopeSelected(long selectedIndex)
 	{
-		if (layoutScopePanel.IsUpdatingSelection)
-		{
-			return;
-		}
-
 		if (selectedIndex < 0 || selectedIndex >= layoutScopes.Count)
 		{
 			return;
@@ -158,11 +169,11 @@ public partial class FlowToolDashboard : Control
 			return;
 		}
 
-		persistCurrentLayoutSnapshot();
+		EmitSignal(SignalName.AutosaveSnapshotRequested);
 		selectedLayoutScopeKey = selectedScope.ScopeKey;
 		selectedLayoutScopeDisplayName = selectedScope.DisplayName;
 		layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
-		reloadTopologyAndRender($"已切换到布局: {selectedLayoutScopeDisplayName}");
+		reloadTopologyAndRender();
 	}
 
 	// 构建布局作用域列表。
@@ -233,7 +244,7 @@ public partial class FlowToolDashboard : Control
 	}
 
 	// 将拖拽节点加入画布并触发自动连线。
-	private void onNodePayloadDropped(string nodeId, string _, Vector2 graphPosition)
+	private void onNodePayloadDropped(string nodeId, Vector2 graphPosition)
 	{
 		bool isNewlyActivated = activeNodeIds.Add(nodeId);
 		if (isNewlyActivated == false)
@@ -251,9 +262,9 @@ public partial class FlowToolDashboard : Control
 		nextLayout[nodeId] = graphPosition;
 		layoutPositions = nextLayout;
 
-		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
-		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
-		autoSaveLayoutIfChanged(forceSave: true);
+		canvasPanel.RenderTopology(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.Update(topology, activeNodeIds);
+		EmitSignal(SignalName.AutosaveForced);
 	}
 
 	// 删除节点并将其回收到未分配池，同时清理失去依附的指标节点。
@@ -266,60 +277,9 @@ public partial class FlowToolDashboard : Control
 			.Where(pair => activeNodeIds.Contains(pair.Key))
 			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
 
-		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
-		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
-		autoSaveLayoutIfChanged(forceSave: true);
-		unassignedPoolPanel.SetStatus($"已移回未分配池: {getNodeDisplayName(nodeId)}");
+		canvasPanel.RenderTopology(topology, activeNodeIds, layoutPositions);
+		unassignedPoolPanel.Update(topology, activeNodeIds);
+		EmitSignal(SignalName.AutosaveForced);
 	}
 
-	// 根据节点 ID 返回当前显示名。
-	private string getNodeDisplayName(string nodeId)
-	{
-		FlowToolMetricNode? metricNode = topology.Metrics.FirstOrDefault(metric => metric.NodeId == nodeId);
-		return metricNode?.DisplayName ?? nodeId;
-	}
-
-	// 自动保存布局变更。
-	private void autoSaveLayoutIfChanged(bool forceSave = false)
-	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = canvasPanel.CollectCurrentLayout();
-		string currentFingerprint = createLayoutFingerprint(currentLayout);
-		if (forceSave == false && currentFingerprint == lastLayoutFingerprint)
-		{
-			return;
-		}
-
-		layoutPositions = currentLayout;
-		layoutStore.Save(layoutPositions);
-		lastLayoutFingerprint = currentFingerprint;
-		unassignedPoolPanel.SetStatus($"布局已自动保存: {DateTime.Now:HH:mm:ss}");
-	}
-
-	// 在重载布局作用域或拓扑前立即保存当前画布，避免被后续重绘覆盖。
-	private void persistCurrentLayoutSnapshot()
-	{
-		if (canvasPanel.HasRenderedNodes == false)
-		{
-			return;
-		}
-
-		autoSaveLayoutIfChanged(forceSave: true);
-	}
-
-	// 保存一次过滤后的布局，清理失效节点坐标。
-	private void persistLayoutCleanup()
-	{
-		lastLayoutFingerprint = createLayoutFingerprint(layoutPositions);
-		layoutStore.Save(layoutPositions);
-	}
-
-	// 生成布局变更检测指纹。
-	private static string createLayoutFingerprint(IReadOnlyDictionary<string, Vector2> nodePositions)
-	{
-		IReadOnlyList<string> tokens = nodePositions
-			.OrderBy(static pair => pair.Key, StringComparer.Ordinal)
-			.Select(static pair => $"{pair.Key}:{pair.Value.X.ToString("F2", CultureInfo.InvariantCulture)},{pair.Value.Y.ToString("F2", CultureInfo.InvariantCulture)}")
-			.ToList();
-		return string.Join("|", tokens);
-	}
 }

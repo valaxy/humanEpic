@@ -80,7 +80,6 @@ public static class GraphNodeFactory
 		VBoxContainer body = new()
 		{
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			SizeFlagsVertical = Control.SizeFlags.ExpandFill
 		};
 		HBoxContainer header = new()
 		{
@@ -92,8 +91,7 @@ public static class GraphNodeFactory
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center,
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			SizeFlagsVertical = Control.SizeFlags.ExpandFill
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		Button deleteButton = createDeleteButton(onDeleteRequested);
 		Label detailLabel = new()
@@ -112,8 +110,12 @@ public static class GraphNodeFactory
 
 		Color portColor = new Color(0.39f, 0.69f, 0.92f);
 		graphNode.SetSlot(0, true, 0, portColor, true, 0, portColor);
+		
 		applyMetricNodeStyle(graphNode);
 		graphNode.ResetSize();
+		
+		Vector2 compactSize = graphNode.Size;
+		graphNode.Size = new Vector2(Mathf.Max(compactSize.X, 240f), Mathf.Clamp(compactSize.Y, 72f, 120f));
 
 		return new FlowToolGraphNodeBuildResult(nodeId, graphNode, deleteButton);
 	}

@@ -48,7 +48,14 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 	/// </summary>
 	public void RenderTopology(FlowToolTopology topology, IReadOnlyCollection<string> activeNodeIds, IReadOnlyDictionary<string, Vector2> layoutPositions)
 	{
-		activeGraphNodes.Values.ToList().ForEach(static node => node.QueueFree());
+		ClearConnections();
+		activeGraphNodes.Values
+			.ToList()
+			.ForEach(node =>
+			{
+				RemoveChild(node);
+				node.QueueFree();
+			});
 		activeGraphNodes = new Dictionary<string, GraphNode>(StringComparer.Ordinal);
 		graphNodeNameByNodeId = new Dictionary<string, string>(StringComparer.Ordinal);
 		deleteButtonByNodeId = new Dictionary<string, Button>(StringComparer.Ordinal);
@@ -63,7 +70,6 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 			.ToList()
 			.ForEach(node => AddChild(node));
 
-		ClearConnections();
 		topology.Edges
 			.Where(edge => activeNodeIds.Contains(edge.FromNodeId) && activeNodeIds.Contains(edge.ToNodeId))
 			.ToList()
@@ -168,7 +174,7 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 			nodeName,
 			metricNode.NodeId,
 			metricNode.DisplayName,
-			$"指标: {metricNode.MetricName} | 类型: {metricNode.TypeDisplayName}",
+			$"指标: {metricNode.MetricName} \n 类型: {metricNode.TypeDisplayName}",
 			layoutPositions.TryGetValue(metricNode.NodeId, out Vector2 position) ? position : new Vector2(80f, 80f),
 			() => deleteNodeRequested(metricNode.NodeId));
 

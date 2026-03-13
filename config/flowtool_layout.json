@@ -8,13 +8,21 @@
     },
     "PopulationBuyLogic": {
       "nodes": {
-        "metric:PopulationBuyLogic:expectBuyProductsNum": {
-          "x": 680,
-          "y": -260
+        "metric:PopulationBuyLogic:buyOrderPrices": {
+          "x": 3880,
+          "y": -40
         },
-        "metric:PopulationBuyLogic:productMarket": {
-          "x": 60,
-          "y": -160
+        "metric:PopulationBuyLogic:expectBuyProductsNum": {
+          "x": 2200,
+          "y": -660
+        },
+        "metric:PopulationBuyLogic:productBuyHistory": {
+          "x": 2740,
+          "y": -600
+        },
+        "metric:PopulationBuyLogic:productSellHistory": {
+          "x": 3160,
+          "y": 120
         }
       }
     },

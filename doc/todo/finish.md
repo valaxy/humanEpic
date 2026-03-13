@@ -1,4 +1,5 @@
 ## 2026-03-13
+- √ flowtool支持节点到自己的自我连线，如果一个方法的名称和参数的名称相同就会出现这种情况
 - √ 移除FlowToolVisualNodeDescriptor这种中间结构，纯属多余，用FlowToolMetricNode即可
 - √ createDropShadowNode也抽取到FlowToolGraphNodeFactory里面去
 - √ FlowToolCanvasPanelController完全可以合入FlowToolCanvasGraphEdit里了
@@ -26,6 +27,10 @@
 	- 对应方法中的参数，若存在与参数同名的指标则连接一条参数节点指向指标节点的有向边
 	- 移除过程节点这种设计，所有的节点都是指标节点
 - √ 默认情况下所有的节点都在未分配池
+- √ 节点的标题和内容重复了，可以移除标题，但是要保留删除按钮
+- √ 如果节点的中文名存在，那么也要显示
+- √ 节点的类型要显示完整
+- √ flowtool的领域层不要使用record这总方法来对领域模型进行封装，使用类，并利用面向对象模式对领域层模型进行重构，相关的逻辑从UI组件中抽取过来，但要注意领域层代码不依赖于UI层代码
 
 ## 2026-03-12
 - √ flowtool似乎没有正确的保存，确认每隔一段时间以及在关闭应用程序的时候自动保存一份当前布局配置到config目录，文件格式是JSON

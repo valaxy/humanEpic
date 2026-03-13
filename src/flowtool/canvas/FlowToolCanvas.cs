@@ -49,9 +49,9 @@ public partial class FlowToolCanvas : Control
 	private FlowToolLayoutStore layoutStore = new(allLayoutScopeKey);
 
 	// 当前拓扑快照。
-	private FlowToolTopology topology = new(Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
+	private FlowToolTopology topology = FlowToolTopology.Empty;
 	// 当前全部拓扑快照。
-	private FlowToolTopology fullTopology = new(Array.Empty<FlowToolMetricNode>(), Array.Empty<FlowToolEdge>());
+	private FlowToolTopology fullTopology = FlowToolTopology.Empty;
 	// 当前布局坐标。
 	private IReadOnlyDictionary<string, Vector2> layoutPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
 	// 当前布局作用域键。
@@ -139,14 +139,14 @@ public partial class FlowToolCanvas : Control
 	{
 		fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes(fullTopology);
-		topology = filterTopologyByLayoutScope(fullTopology, selectedLayoutScopeKey);
-		IReadOnlyCollection<string> validNodeIds = topology.Metrics
-			.Select(static metric => metric.NodeId)
-			.ToHashSet(StringComparer.Ordinal);
+		topology = selectedLayoutScopeKey == allLayoutScopeKey
+			? fullTopology
+			: fullTopology.FilterByOwnerType(selectedLayoutScopeKey);
+		IReadOnlyCollection<string> validNodeIds = topology.CollectMetricNodeIds();
 
 		IReadOnlyDictionary<string, Vector2> persistedLayout = layoutStore.Load();
 		layoutPositions = layoutStore.FilterInvalidNodes(persistedLayout, validNodeIds);
-		activeNodeIds = deriveActiveNodeIds(layoutPositions.Keys);
+		activeNodeIds = topology.DeriveActiveNodeIds(layoutPositions.Keys);
 
 		layoutScopePanel.Update(layoutScopes, selectedLayoutScopeKey);
 		canvasPanel.RenderTopology(topology, activeNodeIds, layoutPositions);
@@ -179,13 +179,7 @@ public partial class FlowToolCanvas : Control
 	// 构建布局作用域列表。
 	private void rebuildLayoutScopes(FlowToolTopology sourceTopology)
 	{
-		layoutScopes = sourceTopology.Metrics
-			.Select(static metric => metric.OwnerTypeFullName)
-			.Where(static ownerTypeName => string.IsNullOrWhiteSpace(ownerTypeName) == false)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static ownerTypeName => ownerTypeName, StringComparer.Ordinal)
-			.Select(static ownerTypeName => new FlowToolLayoutScopeItem(ownerTypeName!, getTypeShortName(ownerTypeName!)))
-			.ToList();
+		layoutScopes = sourceTopology.BuildLayoutScopes();
 
 		if (layoutScopes.Any(scope => scope.ScopeKey == selectedLayoutScopeKey) == false)
 		{
@@ -194,53 +188,6 @@ public partial class FlowToolCanvas : Control
 			selectedLayoutScopeDisplayName = fallbackScope?.DisplayName ?? string.Empty;
 			layoutStore = new FlowToolLayoutStore(selectedLayoutScopeKey);
 		}
-	}
-
-	// 按布局作用域过滤拓扑。
-	private static FlowToolTopology filterTopologyByLayoutScope(FlowToolTopology sourceTopology, string layoutScopeKey)
-	{
-		if (layoutScopeKey == allLayoutScopeKey)
-		{
-			return sourceTopology;
-		}
-
-		IReadOnlyList<FlowToolMetricNode> scopedMetrics = sourceTopology.Metrics
-			.Where(metric => metric.OwnerTypeFullName == layoutScopeKey)
-			.ToList();
-		HashSet<string> scopedMetricNodeIds = scopedMetrics
-			.Select(static metric => metric.NodeId)
-			.ToHashSet(StringComparer.Ordinal);
-
-		IReadOnlyList<FlowToolEdge> scopedEdges = sourceTopology.Edges
-			.Where(edge => scopedMetricNodeIds.Contains(edge.FromNodeId) && scopedMetricNodeIds.Contains(edge.ToNodeId))
-			.ToList();
-
-		return new FlowToolTopology(scopedMetrics, scopedEdges);
-	}
-
-	// 获取类型短名。
-	private static string getTypeShortName(string fullTypeName)
-	{
-		if (string.IsNullOrWhiteSpace(fullTypeName))
-		{
-			return string.Empty;
-		}
-
-		string[] segments = fullTypeName.Split('.', StringSplitOptions.RemoveEmptyEntries);
-		return segments.LastOrDefault() ?? fullTypeName;
-	}
-
-	// 根据布局恢复激活态，仅保留当前拓扑内的有效指标。
-	private HashSet<string> deriveActiveNodeIds(IEnumerable<string> layoutNodeIds)
-	{
-		HashSet<string> validMetricNodeIds = topology.Metrics
-			.Select(static metric => metric.NodeId)
-			.ToHashSet(StringComparer.Ordinal);
-		HashSet<string> activeIds = layoutNodeIds
-			.Where(validMetricNodeIds.Contains)
-			.ToHashSet(StringComparer.Ordinal);
-
-		return activeIds;
 	}
 
 	// 将拖拽节点加入画布并触发自动连线。

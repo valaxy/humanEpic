@@ -85,12 +85,8 @@ public static class GraphNodeFactory
 		{
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		Label titleLabel = new()
+		Control spacer = new()
 		{
-			Text = displayName,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		Button deleteButton = createDeleteButton(onDeleteRequested);
@@ -101,8 +97,7 @@ public static class GraphNodeFactory
 			AutowrapMode = TextServer.AutowrapMode.WordSmart,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		titleLabel.SizeFlagsStretchRatio = 1f;
-		header.AddChild(titleLabel);
+		header.AddChild(spacer);
 		header.AddChild(deleteButton);
 		body.AddChild(header);
 		body.AddChild(detailLabel);

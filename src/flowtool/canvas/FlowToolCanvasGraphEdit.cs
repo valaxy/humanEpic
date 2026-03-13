@@ -169,12 +169,16 @@ public partial class FlowToolCanvasGraphEdit : GraphEdit
 	{
 		string nodeName = $"Node_{activeGraphNodes.Count.ToString(CultureInfo.InvariantCulture)}";
 		graphNodeNameByNodeId[metricNode.NodeId] = nodeName;
+		string optionalDisplayNameLine = string.Equals(metricNode.DisplayName, metricNode.MetricName, StringComparison.Ordinal)
+			? string.Empty
+			: $"\n中文名: {metricNode.DisplayName}";
+		string detailText = $"指标: {metricNode.MetricName}{optionalDisplayNameLine} \n 类型: {metricNode.TypeDisplayName}";
 
 		FlowToolGraphNodeBuildResult buildResult = GraphNodeFactory.CreateMetricNode(
 			nodeName,
 			metricNode.NodeId,
 			metricNode.DisplayName,
-			$"指标: {metricNode.MetricName} \n 类型: {metricNode.TypeDisplayName}",
+			detailText,
 			layoutPositions.TryGetValue(metricNode.NodeId, out Vector2 position) ? position : new Vector2(80f, 80f),
 			() => deleteNodeRequested(metricNode.NodeId));
 

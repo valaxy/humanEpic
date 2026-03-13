@@ -31,9 +31,17 @@ public class PopulationBuyLogic : WorldLogic
 	}
 
 
+	
+	[SystemDynamicsProcess]
+	private Dictionary<ProductType.Enums, DailyHistoryData<float>> productBuyHistory()
+	{
+		throw new NotImplementedException();
+	}
+
+
 
 	[SystemDynamicsProcess]
-	private ProductMarket productMarket()
+	private Dictionary<ProductType.Enums, DailyHistoryData<float>> productSellHistory()
 	{
 		throw new NotImplementedException();
 	}
@@ -53,10 +61,16 @@ public class PopulationBuyLogic : WorldLogic
 	}
 
 
-	private void xx()
+	/// <summary>
+	/// 商品购买订单价格
+	/// </summary>
+	[SystemDynamicsProcess]
+	private Dictionary<ProductType.Enums, float> buyOrderPrices(
+		Dictionary<ProductType.Enums, float> buyOrderPrices,
+		Dictionary<ProductType.Enums, DailyHistoryData<float>> productBuyHistory,
+		Dictionary<ProductType.Enums, DailyHistoryData<float>> productSellHistory)
 	{
-
+		throw new NotImplementedException();
 	}
-
 
 }

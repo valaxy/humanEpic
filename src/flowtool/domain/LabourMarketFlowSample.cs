@@ -1,7 +1,7 @@
 /// <summary>
 /// flowtool 示例类：用于验证多类反射解析与布局切换。
 /// </summary>
-[SystemDynamicsFlow]
+// [SystemDynamicsFlow]
 public class LabourMarketFlowSample
 {
     /// <summary>

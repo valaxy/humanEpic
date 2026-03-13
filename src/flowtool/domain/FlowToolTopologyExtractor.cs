@@ -79,7 +79,6 @@ public sealed class FlowToolTopologyExtractor
 		IReadOnlyList<FlowToolMetricNode> metricNodes)
 	{
 		IReadOnlyList<FlowToolMetricNode> allCandidates = metricNodes
-			.Where(metricNode => metricNode.NodeId != targetNodeId)
 			.Where(metricNode => normalizeMetricName(metricNode.MetricName) == parameterMetricName)
 			.ToList();
 		IReadOnlyList<FlowToolMetricNode> sameOwnerCandidates = allCandidates
@@ -99,23 +98,44 @@ public sealed class FlowToolTopologyExtractor
 		return $"metric:{declaringTypeName}:{normalizedMetricName}";
 	}
 
-	// 将类型名格式化为更易读的显示文本。
+	// 将类型名格式化为完整显示文本。
 	private static string formatMetricTypeDisplayName(Type type)
 	{
-		return type.FullName switch
+		if (type.IsByRef)
 		{
-			"System.Boolean" => "bool",
-			"System.Byte" => "byte",
-			"System.Decimal" => "decimal",
-			"System.Double" => "double",
-			"System.Int16" => "short",
-			"System.Int32" => "int",
-			"System.Int64" => "long",
-			"System.Single" => "float",
-			"System.String" => "string",
-			"System.Void" => "void",
-			_ => type.Name
-		};
+			Type? elementType = type.GetElementType();
+			return elementType is null
+				? "UnknownByRefType"
+				: $"{formatMetricTypeDisplayName(elementType)}&";
+		}
+
+		if (type.IsArray)
+		{
+			Type? elementType = type.GetElementType();
+			return elementType is null
+				? "UnknownArrayType[]"
+				: $"{formatMetricTypeDisplayName(elementType)}[]";
+		}
+
+		if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+		{
+			Type? nullableElementType = Nullable.GetUnderlyingType(type);
+			return nullableElementType is null
+				? "System.Nullable<?>"
+				: $"{formatMetricTypeDisplayName(nullableElementType)}?";
+		}
+
+		if (type.IsGenericType)
+		{
+			Type genericTypeDefinition = type.GetGenericTypeDefinition();
+			string genericTypeName = (genericTypeDefinition.FullName ?? genericTypeDefinition.Name).Split('`')[0];
+			string genericArguments = string.Join(
+				", ",
+				type.GetGenericArguments().Select(formatMetricTypeDisplayName));
+			return $"{genericTypeName}<{genericArguments}>";
+		}
+
+		return type.FullName ?? type.Name;
 	}
 
 	// 统一指标命名，确保过程输出与输入参数可以按名称对齐。

@@ -41,11 +41,11 @@ public partial class FlowToolDashboard : Control
 	// 中央编辑区与右侧未分配池分栏容器。
 	private HSplitContainer contentSplitContainer = null!;
 	// 左侧类列表组件。
-	private FlowToolLayoutScopePanelController layoutScopePanel = null!;
+	private ScopePanel layoutScopePanel = null!;
 	// 中央编辑画布组件。
 	private FlowToolCanvasPanelController canvasPanel = null!;
 	// 右侧未分配池组件。
-	private FlowToolUnassignedPoolPanelController unassignedPoolPanel = null!;
+	private UnassignedPoolPanel unassignedPoolPanel = null!;
 
 	// 自动保存计时器。
 	private double saveClockSeconds;
@@ -82,11 +82,11 @@ public partial class FlowToolDashboard : Control
 	{
 		splitContainer = GetNode<HSplitContainer>("SplitContainer");
 		contentSplitContainer = GetNode<HSplitContainer>("SplitContainer/ContentSplitContainer");
-		layoutScopePanel = new FlowToolLayoutScopePanelController(GetNode<ItemList>("SplitContainer/ClassPanel/LayoutScopeList"));
+		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
 		canvasPanel = new FlowToolCanvasPanelController(
 			GetNode<FlowToolCanvasGraphEdit>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas"),
 			onDeleteButtonPressed);
-		unassignedPoolPanel = new FlowToolUnassignedPoolPanelController(
+		unassignedPoolPanel = new UnassignedPoolPanel(
 			GetNode<VBoxContainer>("SplitContainer/ContentSplitContainer/UnassignedPanel/PoolScrollContainer/UnassignedPoolList"),
 			GetNode<Label>("SplitContainer/ContentSplitContainer/UnassignedPanel/StatusLabel"));
 	}
@@ -131,7 +131,7 @@ public partial class FlowToolDashboard : Control
 		layoutPositions = layoutStore.FilterInvalidNodes(persistedLayout, validNodeIds);
 		activeNodeIds = deriveActiveNodeIds(layoutPositions.Keys);
 
-		layoutScopePanel.RenderScopes(layoutScopes, selectedLayoutScopeKey);
+		layoutScopePanel.Setup(layoutScopes, selectedLayoutScopeKey);
 		canvasPanel.Render(topology, activeNodeIds, layoutPositions);
 		unassignedPoolPanel.RenderPool(topology, activeNodeIds);
 		persistLayoutCleanup();

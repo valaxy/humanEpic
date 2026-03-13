@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// flowtool 左侧类列表组件。
+/// 左侧类列表组件。
 /// </summary>
-public sealed class FlowToolLayoutScopePanelController
+[GlobalClass]
+public partial class ScopePanel : VBoxContainer
 {
 	// 列表控件。
-	private readonly ItemList layoutScopeList;
+	private ItemList layoutScopeList = null!;
 	// 列表更新锁。
 	private bool isUpdatingSelection;
 
@@ -19,11 +20,11 @@ public sealed class FlowToolLayoutScopePanelController
 	public bool IsUpdatingSelection => isUpdatingSelection;
 
 	/// <summary>
-	/// 构造类列表组件。
+	/// 组件初始化。
 	/// </summary>
-	public FlowToolLayoutScopePanelController(ItemList layoutScopeList)
+	public override void _Ready()
 	{
-		this.layoutScopeList = layoutScopeList;
+		layoutScopeList = GetNode<ItemList>("LayoutScopeList");
 	}
 
 	/// <summary>
@@ -37,7 +38,7 @@ public sealed class FlowToolLayoutScopePanelController
 	/// <summary>
 	/// 渲染类列表项并同步当前选中项。
 	/// </summary>
-	public void RenderScopes(IReadOnlyList<FlowToolLayoutScopeItem> scopes, string selectedScopeKey)
+	public void Setup(IReadOnlyList<FlowToolLayoutScopeItem> scopes, string selectedScopeKey)
 	{
 		isUpdatingSelection = true;
 		layoutScopeList.Clear();
@@ -61,7 +62,3 @@ public sealed class FlowToolLayoutScopePanelController
 	}
 }
 
-/// <summary>
-/// flowtool 类列表项。
-/// </summary>
-public sealed record FlowToolLayoutScopeItem(string ScopeKey, string DisplayName);

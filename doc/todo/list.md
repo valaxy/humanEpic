@@ -1,1 +1,3 @@
-- FlowToolLayoutStore不需要兼容旧版结构的逻辑
+- ScopePanel是一个UI组件，负责对外抛出交互信号
+- UnassignedPoolPanel将其改造为一个独立的组件，并且有自己独立的tscn文件，相关逻辑从其他文件中抽取
+- 移除nodeKind，因为所有只有一种节点类型，所以节点类型不再有价值了

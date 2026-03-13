@@ -42,12 +42,12 @@ public class PopulationBuyLogic : WorldLogic
 	/// <summary>
 	/// 本轮预期商品购买数量
 	/// </summary>
-	/// <param name="market"></param>
+	/// <param name="productMarket"></param>
 	/// <param name="budgetMoney"></param>
 	/// <returns></returns>
 	/// <exception cref="NotImplementedException"></exception>
 	[SystemDynamicsProcess]
-	private Dictionary<ProductType.Enums, float> expectBuyProductsNum(ProductMarket market, float budgetMoney)
+	private Dictionary<ProductType.Enums, float> expectBuyProductsNum(ProductMarket productMarket, float budgetMoney)
 	{
 		throw new NotImplementedException();
 	}

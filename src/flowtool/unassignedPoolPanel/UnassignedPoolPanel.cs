@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// flowtool 右侧未分配池组件。
+/// 右侧未分配池面板，负责展示当前作用域下未放置到画布的节点列表。
 /// </summary>
-public sealed class FlowToolUnassignedPoolPanelController
+public sealed class UnassignedPoolPanel
 {
 	// 指标节点类型标识。
 	private const string metricNodeKind = "metric";
@@ -18,7 +18,7 @@ public sealed class FlowToolUnassignedPoolPanelController
 	/// <summary>
 	/// 构造未分配池组件。
 	/// </summary>
-	public FlowToolUnassignedPoolPanelController(VBoxContainer unassignedPoolList, Label statusLabel)
+	public UnassignedPoolPanel(VBoxContainer unassignedPoolList, Label statusLabel)
 	{
 		this.unassignedPoolList = unassignedPoolList;
 		this.statusLabel = statusLabel;
@@ -52,7 +52,7 @@ public sealed class FlowToolUnassignedPoolPanelController
 	private static FlowToolPoolItemButton createMetricPoolItem(FlowToolMetricNode metricNode)
 	{
 		FlowToolPoolItemButton button = new();
-		button.Setup($"[指标] {metricNode.DisplayName}", metricNode.NodeId, metricNodeKind);
+		button.Setup($"{metricNode.DisplayName}", metricNode.NodeId, metricNodeKind);
 		return button;
 	}
 }

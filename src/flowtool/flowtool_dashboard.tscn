@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cy76qwtvql56q" path="res://src/flowtool/FlowToolDashboard.cs" id="1_script"]
 [ext_resource type="Script" uid="uid://d06d263t23hyh" path="res://src/flowtool/FlowToolCanvasGraphEdit.cs" id="2_script"]
+[ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
 
 [node name="FlowToolDashboard" type="Control" unique_id=2058591925]
 layout_mode = 3
@@ -20,23 +21,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ClassPanel" type="VBoxContainer" parent="SplitContainer" unique_id=22840708]
-custom_minimum_size = Vector2(220, 0)
+[node name="ScopePanel" parent="SplitContainer" instance=ExtResource("3_scope_panel")]
 layout_mode = 2
-size_flags_vertical = 3
-size_flags_stretch_ratio = 2.0
-
-[node name="LayoutScopeTitle" type="Label" parent="SplitContainer/ClassPanel" unique_id=1559159027]
-layout_mode = 2
-theme_type_variation = &"HeaderSmall"
-text = "类列表"
-
-[node name="LayoutScopeList" type="ItemList" parent="SplitContainer/ClassPanel" unique_id=205491711]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-allow_reselect = true
-same_column_width = true
 
 [node name="ContentSplitContainer" type="HSplitContainer" parent="SplitContainer" unique_id=2137249802]
 layout_mode = 2

@@ -3,20 +3,32 @@
     "PopulationBuyLogic": {
       "nodes": {
         "metric:PopulationBuyLogic:productBuyHistory": {
-          "x": 878,
-          "y": 183
-        },
-        "metric:PopulationBuyLogic:productSellHistory": {
-          "x": 533,
-          "y": 291
+          "x": 875,
+          "y": 592
         },
         "metric:PopulationBuyLogic:expectBuyProductsNum": {
-          "x": 263,
-          "y": 474
+          "x": 746,
+          "y": 869
         },
         "metric:PopulationBuyLogic:buyOrderPrices": {
-          "x": 103,
-          "y": 168
+          "x": 746,
+          "y": 371
+        }
+      }
+    },
+    "all": {
+      "nodes": {
+        "metric:PopulationBuyLogic:productBuyHistory": {
+          "x": 626,
+          "y": 358
+        },
+        "metric:PopulationBuyLogic:expectBuyProductsNum": {
+          "x": 493,
+          "y": 257
+        },
+        "metric:PopulationBuyLogic:buyOrderPrices": {
+          "x": 476,
+          "y": 296
         }
       }
     }

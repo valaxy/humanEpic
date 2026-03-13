@@ -17,12 +17,18 @@ public partial class FlowToolCanvasGraphEdit : Control
 	private const float defaultPositionX = 80f;
 	// 默认起始位置 Y。
 	private const float defaultPositionY = 80f;
-	// 节点基础背景色。
-	private static readonly Color defaultNodeBackgroundColor = new(0.12f, 0.16f, 0.2f);
-	// 节点选中背景色。
-	private static readonly Color selectedNodeBackgroundColor = new(0.16f, 0.24f, 0.3f);
-	// 节点边框色。
-	private static readonly Color nodeBorderColor = new(0.39f, 0.69f, 0.92f);
+	// 节点卡片场景资源。
+	private static readonly PackedScene canvasNodeCardScene = GD.Load<PackedScene>("res://src/flowtool/canvas/flowtool_canvas_node_card.tscn");
+	// 画布最小缩放倍率。
+	private const float minCanvasZoom = 0.6f;
+	// 画布最大缩放倍率。
+	private const float maxCanvasZoom = 1.8f;
+	// 每次滚轮缩放步进。
+	private const float canvasZoomStep = 0.1f;
+	// 虚拟画布宽度。
+	private const float virtualCanvasWidth = 5000f;
+	// 虚拟画布高度。
+	private const float virtualCanvasHeight = 3200f;
 	// 连线颜色。
 	private static readonly Color edgeColor = new(0.46f, 0.74f, 0.95f);
 	// 影子节点填充色。
@@ -35,7 +41,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 	// 当前节点数据映射。
 	private Dictionary<string, FlowToolMetricNode> metricByNodeId = new(StringComparer.Ordinal);
 	// 当前节点控件映射。
-	private Dictionary<string, PanelContainer> cardByNodeId = new(StringComparer.Ordinal);
+	private Dictionary<string, FlowToolCanvasNodeCard> cardByNodeId = new(StringComparer.Ordinal);
 	// 当前节点布局映射。
 	private Dictionary<string, Vector2> layoutByNodeId = new(StringComparer.Ordinal);
 	// 当前边集合。
@@ -48,6 +54,25 @@ public partial class FlowToolCanvasGraphEdit : Control
 	private Vector2 dropShadowPosition = Vector2.Zero;
 	// 当前影子节点 ID。
 	private string dropShadowNodeId = string.Empty;
+	// 右下角缩略图组件。
+	private FlowToolCanvasMinimap minimap = null!;
+	// 当前画布缩放倍率。
+	private float canvasZoom = 1f;
+	// 画布是否处于拖动平移状态。
+	private bool isCanvasPanning;
+	// 最近一次画布拖动时的鼠标位置。
+	private Vector2 lastCanvasMousePosition = Vector2.Zero;
+
+	/// <summary>
+	/// 初始化画布内部依赖组件。
+	/// </summary>
+	public override void _Ready()
+	{
+		ClipContents = true;
+		minimap = GetNode<FlowToolCanvasMinimap>("Minimap");
+		minimap.SetNavigateRequested(onMinimapNavigateRequested);
+		refreshMinimap();
+	}
 
 	/// <summary>
 	/// 当前是否已有已渲染节点。
@@ -93,6 +118,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			.ForEach(card => AddChild(card));
 
 		UpdateDeleteButtonVisibility();
+		refreshMinimap();
 		QueueRedraw();
 	}
 
@@ -114,8 +140,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			.ToList()
 			.ForEach(pair =>
 			{
-				Button deleteButton = pair.Value.GetNode<Button>("Body/ActionRow/DeleteButton");
-				deleteButton.Visible = pair.Key == selectedNodeId;
+				pair.Value.SetDeleteVisible(pair.Key == selectedNodeId);
 			});
 	}
 
@@ -159,6 +184,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 
 		if (what == NotificationResized)
 		{
+			refreshMinimap();
 			QueueRedraw();
 		}
 	}
@@ -167,6 +193,35 @@ public partial class FlowToolCanvasGraphEdit : Control
 	{
 		drawEdges();
 		drawDropShadow();
+	}
+
+	public override void _GuiInput(InputEvent @event)
+	{
+		if (@event is InputEventMouseButton mouseButton && mouseButton.ButtonIndex == MouseButton.WheelUp && mouseButton.Pressed)
+		{
+			setCanvasZoom(canvasZoom + canvasZoomStep);
+			return;
+		}
+
+		if (@event is InputEventMouseButton wheelDownButton && wheelDownButton.ButtonIndex == MouseButton.WheelDown && wheelDownButton.Pressed)
+		{
+			setCanvasZoom(canvasZoom - canvasZoomStep);
+			return;
+		}
+
+		if (@event is InputEventMouseButton leftButton && leftButton.ButtonIndex == MouseButton.Left)
+		{
+			isCanvasPanning = leftButton.Pressed && string.IsNullOrWhiteSpace(draggingNodeId);
+			lastCanvasMousePosition = leftButton.Position;
+			return;
+		}
+
+		if (@event is InputEventMouseMotion motion && isCanvasPanning && string.IsNullOrWhiteSpace(draggingNodeId))
+		{
+			Vector2 delta = motion.Position - lastCanvasMousePosition;
+			panCanvasBy(delta);
+			lastCanvasMousePosition = motion.Position;
+		}
 	}
 
 	// 清理当前所有节点控件。
@@ -179,78 +234,20 @@ public partial class FlowToolCanvasGraphEdit : Control
 				RemoveChild(card);
 				card.QueueFree();
 			});
-		cardByNodeId = new Dictionary<string, PanelContainer>(StringComparer.Ordinal);
+		cardByNodeId = new Dictionary<string, FlowToolCanvasNodeCard>(StringComparer.Ordinal);
 		selectedNodeId = string.Empty;
 		draggingNodeId = string.Empty;
 	}
 
 	// 创建节点卡片控件。
-	private PanelContainer createNodeCard(FlowToolMetricNode metricNode)
+	private FlowToolCanvasNodeCard createNodeCard(FlowToolMetricNode metricNode)
 	{
-		PanelContainer card = new()
-		{
-			Name = $"Card_{cardByNodeId.Count.ToString()}",
-			Position = layoutByNodeId[metricNode.NodeId],
-			Size = new Vector2(nodeWidth, nodeHeight),
-			MouseFilter = MouseFilterEnum.Stop,
-			FocusMode = FocusModeEnum.None
-		};
-		card.AddThemeStyleboxOverride("panel", createCardStyle(isSelected: false));
-
-		VBoxContainer body = new()
-		{
-			Name = "Body",
-			SizeFlagsHorizontal = SizeFlags.ExpandFill,
-			SizeFlagsVertical = SizeFlags.ExpandFill,
-			Alignment = BoxContainer.AlignmentMode.Center,
-			MouseFilter = MouseFilterEnum.Ignore
-		};
-		body.SetAnchorsPreset(LayoutPreset.FullRect);
-		body.OffsetLeft = 0f;
-		body.OffsetTop = 0f;
-		body.OffsetRight = 0f;
-		body.OffsetBottom = 0f;
-		HBoxContainer actionRow = new()
-		{
-			Name = "ActionRow",
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		Control actionSpacer = new()
-		{
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		actionRow.AddChild(actionSpacer);
-		Label titleLabel = new()
-		{
-			Text = metricNode.MetricName,
-			HorizontalAlignment = HorizontalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		Label detailLabel = new()
-		{
-			Text = createNodeDetailText(metricNode),
-			HorizontalAlignment = HorizontalAlignment.Center,
-			AutowrapMode = TextServer.AutowrapMode.WordSmart,
-			SizeFlagsHorizontal = SizeFlags.ExpandFill
-		};
-		Button deleteButton = new()
-		{
-			Name = "DeleteButton",
-			Text = "删除",
-			Visible = false,
-			CustomMinimumSize = new Vector2(56f, 28f),
-			MouseDefaultCursorShape = CursorShape.PointingHand,
-			FocusMode = FocusModeEnum.None
-		};
-		deleteButton.Pressed += () => deleteNodeRequested(metricNode.NodeId);
-
-		actionRow.AddChild(deleteButton);
-		body.AddChild(actionRow);
-		body.AddChild(titleLabel);
-		body.AddChild(detailLabel);
-		card.AddChild(body);
-
+		FlowToolCanvasNodeCard card = canvasNodeCardScene.Instantiate<FlowToolCanvasNodeCard>();
+		card.Name = $"Card_{cardByNodeId.Count.ToString()}";
+		card.Position = layoutByNodeId[metricNode.NodeId];
+		card.Size = new Vector2(nodeWidth, nodeHeight);
+		card.Configure(metricNode, deleteNodeRequested);
+		card.SetSelected(isSelected: false);
 		card.GuiInput += inputEvent => onCardGuiInput(metricNode.NodeId, inputEvent);
 		cardByNodeId[metricNode.NodeId] = card;
 		return card;
@@ -269,6 +266,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			selectedNodeId = nodeId;
 			if (mouseButton.Pressed)
 			{
+				isCanvasPanning = false;
 				draggingNodeId = nodeId;
 			}
 			else
@@ -284,11 +282,12 @@ public partial class FlowToolCanvasGraphEdit : Control
 
 		if (inputEvent is InputEventMouseMotion motion && string.IsNullOrWhiteSpace(draggingNodeId) == false && draggingNodeId == nodeId)
 		{
-			PanelContainer card = cardByNodeId[nodeId];
+			FlowToolCanvasNodeCard card = cardByNodeId[nodeId];
 			Vector2 nextPosition = card.Position + motion.Relative;
 			Vector2 snappedPosition = snapToCanvas(nextPosition);
 			card.Position = snappedPosition;
 			layoutByNodeId[nodeId] = snappedPosition;
+			refreshMinimap();
 			QueueRedraw();
 		}
 	}
@@ -300,7 +299,7 @@ public partial class FlowToolCanvasGraphEdit : Control
 			.ToList()
 			.ForEach(pair =>
 			{
-				pair.Value.AddThemeStyleboxOverride("panel", createCardStyle(pair.Key == selectedNodeId));
+				pair.Value.SetSelected(pair.Key == selectedNodeId);
 			});
 	}
 
@@ -316,17 +315,18 @@ public partial class FlowToolCanvasGraphEdit : Control
 	// 绘制单条连线（支持自环）。
 	private void drawEdge(FlowToolEdge edge)
 	{
-		PanelContainer fromCard = cardByNodeId[edge.FromNodeId];
-		PanelContainer toCard = cardByNodeId[edge.ToNodeId];
-		Vector2 fromCenter = fromCard.Position + (fromCard.Size / 2f);
-		Vector2 toCenter = toCard.Position + (toCard.Size / 2f);
+		FlowToolCanvasNodeCard fromCard = cardByNodeId[edge.FromNodeId];
+		FlowToolCanvasNodeCard toCard = cardByNodeId[edge.ToNodeId];
+		Vector2 cardSize = new(nodeWidth, nodeHeight);
+		Vector2 fromCenter = fromCard.Position + (cardSize / 2f);
+		Vector2 toCenter = toCard.Position + (cardSize / 2f);
 
 		if (edge.FromNodeId == edge.ToNodeId)
 		{
-			Vector2 start = fromCard.Position + new Vector2(fromCard.Size.X, fromCard.Size.Y * 0.5f);
+			Vector2 start = fromCard.Position + new Vector2(cardSize.X, cardSize.Y * 0.5f);
 			Vector2 turnRightUp = start + new Vector2(44f, -28f);
-			Vector2 turnLeftUp = fromCard.Position + new Vector2(-44f, fromCard.Size.Y * 0.5f - 48f);
-			Vector2 end = fromCard.Position + new Vector2(0f, fromCard.Size.Y * 0.5f);
+			Vector2 turnLeftUp = fromCard.Position + new Vector2(-44f, cardSize.Y * 0.5f - 48f);
+			Vector2 end = fromCard.Position + new Vector2(0f, cardSize.Y * 0.5f);
 			DrawLine(start, turnRightUp, edgeColor, 2f, true);
 			DrawLine(turnRightUp, turnLeftUp, edgeColor, 2f, true);
 			DrawLine(turnLeftUp, end, edgeColor, 2f, true);
@@ -349,31 +349,47 @@ public partial class FlowToolCanvasGraphEdit : Control
 		DrawRect(shadowRect, dropShadowBorderColor, false, 2f);
 	}
 
-	// 创建节点详情文本。
-	private static string createNodeDetailText(FlowToolMetricNode metricNode)
+	// 按增量平移整个画布中的节点布局。
+	private void panCanvasBy(Vector2 delta)
 	{
-		string optionalDisplayLine = string.Equals(metricNode.DisplayName, metricNode.MetricName, StringComparison.Ordinal)
-			? string.Empty
-			: $"\n中文名: {metricNode.DisplayName}";
-		return $"类型: {metricNode.TypeDisplayName}{optionalDisplayLine}";
+		cardByNodeId
+			.ToList()
+			.ForEach(pair =>
+			{
+				Vector2 nextPosition = snapToCanvas(pair.Value.Position + delta);
+				pair.Value.Position = nextPosition;
+				layoutByNodeId[pair.Key] = nextPosition;
+			});
+		refreshMinimap();
+		QueueRedraw();
 	}
 
-	// 创建节点卡片样式。
-	private static StyleBoxFlat createCardStyle(bool isSelected)
+	// 调整画布缩放倍率。
+	private void setCanvasZoom(float zoomValue)
 	{
-		return new StyleBoxFlat
+		canvasZoom = Mathf.Clamp(zoomValue, minCanvasZoom, maxCanvasZoom);
+		Scale = new Vector2(canvasZoom, canvasZoom);
+		refreshMinimap();
+		QueueRedraw();
+	}
+
+	// 响应缩略图点击导航。
+	private void onMinimapNavigateRequested(Vector2 targetWorldPosition)
+	{
+		Vector2 viewportCenter = new(Size.X * 0.5f, Size.Y * 0.5f);
+		Vector2 delta = viewportCenter - targetWorldPosition;
+		panCanvasBy(delta);
+	}
+
+	// 刷新缩略图快照。
+	private void refreshMinimap()
+	{
+		if (IsInsideTree() == false)
 		{
-			BgColor = isSelected ? selectedNodeBackgroundColor : defaultNodeBackgroundColor,
-			BorderColor = nodeBorderColor,
-			BorderWidthBottom = 2,
-			BorderWidthTop = 2,
-			BorderWidthLeft = 2,
-			BorderWidthRight = 2,
-			CornerRadiusTopLeft = 8,
-			CornerRadiusTopRight = 8,
-			CornerRadiusBottomLeft = 8,
-			CornerRadiusBottomRight = 8
-		};
+			return;
+		}
+
+		minimap.UpdateSnapshot(layoutByNodeId, Size, new Vector2(virtualCanvasWidth, virtualCanvasHeight));
 	}
 
 	// 清理拖拽影子节点。
@@ -387,8 +403,8 @@ public partial class FlowToolCanvasGraphEdit : Control
 	// 约束节点坐标到画布范围。
 	private Vector2 snapToCanvas(Vector2 position)
 	{
-		float safeX = Mathf.Clamp(position.X, 0f, Mathf.Max(Size.X - nodeWidth, 0f));
-		float safeY = Mathf.Clamp(position.Y, 0f, Mathf.Max(Size.Y - nodeHeight, 0f));
+		float safeX = Mathf.Clamp(position.X, 0f, Mathf.Max(virtualCanvasWidth - nodeWidth, 0f));
+		float safeY = Mathf.Clamp(position.Y, 0f, Mathf.Max(virtualCanvasHeight - nodeHeight, 0f));
 		return new Vector2(Mathf.Round(safeX), Mathf.Round(safeY));
 	}
 }

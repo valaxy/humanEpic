@@ -9,8 +9,12 @@ public partial class CanvasViewDemo2 : PanelContainer
 {
 	// 演示画布领域模型。
 	private readonly TopologyCanvas topologyCanvas = TopologyCanvas.Instance;
+	// 节点拖拽控制器。
+	private NodeDraggable nodeDraggable = null!;
 	// 演示视图节点。
 	private CanvasView canvasView = null!;
+	// 滚轮缩放控制器。
+	private MouseWheelZoomable mouseWheelZoomable = null!;
 
 	/// <summary>
 	/// 初始化演示界面并装载演示数据。
@@ -22,7 +26,8 @@ public partial class CanvasViewDemo2 : PanelContainer
 		canvasView.NodeSelect += onNodeSelectedRecognized;
 		canvasView.SelectedNodeDelete += onNodeDeleteRequested;
 		canvasView.Setup(topologyCanvas);
-		new NodeDraggable(canvasView, topologyCanvas);
+		mouseWheelZoomable = new MouseWheelZoomable(canvasView);
+		nodeDraggable = new NodeDraggable(canvasView, topologyCanvas);
 	}
 
 	// 重新加载演示作用域。

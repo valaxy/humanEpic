@@ -104,6 +104,24 @@ public partial class CanvasView : Node2D
 	}
 
 	/// <summary>
+	/// 主摄像机的位置。
+	/// </summary>
+	public Vector2 CameraPosition
+	{
+		get => mainCamera.Position;
+		set => mainCamera.Position = value;
+	}
+
+	/// <summary>
+	/// 主摄像机的缩放。
+	/// </summary>
+	public Vector2 CameraZoom
+	{
+		get => mainCamera.Zoom;
+		set => mainCamera.Zoom = value;
+	}
+
+	/// <summary>
 	/// 将摄像机重置到当前内容中心位置。
 	/// </summary>
 	public void ResetCameraToContentCenter()

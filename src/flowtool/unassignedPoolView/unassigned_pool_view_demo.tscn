@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/flowtool/unassignedPoolView/UnassignedPoolViewDemo.cs" id="1_demo_script"]
+[ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolView/unassigned_pool_view.tscn" id="2_pool_view"]
+[ext_resource type="Script" path="res://src/flowtool/unassignedPoolView/UnassignedPoolDropTarget.cs" id="3_drop_target_script"]
+
+[node name="UnassignedPoolViewDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_demo_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.12, 0.16, 1)
+
+[node name="UnassignedPoolView" parent="." instance=ExtResource("2_pool_view")]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 24.0
+offset_top = -260.0
+offset_right = 344.0
+offset_bottom = 260.0
+
+[node name="DropTarget" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -344.0
+offset_top = -200.0
+offset_right = -24.0
+offset_bottom = 200.0
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("3_drop_target_script")
+
+[node name="Margin" type="MarginContainer" parent="DropTarget"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Status" type="Label" parent="DropTarget/Margin"]
+layout_mode = 2
+autowrap_mode = 2
+text = "拖拽左侧节点到这里，验证 nodeId 与 displayText 载荷。"

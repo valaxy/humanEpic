@@ -1,1 +1,1 @@
-﻿- canvas_view_demo1.tscn还是一片空白，镜头重置到中心生效了，canvas_view_demo2.tscn有内容，
+﻿

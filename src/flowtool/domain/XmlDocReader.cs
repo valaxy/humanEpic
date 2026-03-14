@@ -29,7 +29,7 @@ public static class XmlDocReader
             return summary;
         }
 
-        throw new InvalidOperationException($"未找到方法的 XML 注释: {method.DeclaringType.FullName}.{method.Name}");
+        return string.Empty;
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public static class XmlDocReader
             return summary;
         }
 
-        throw new InvalidOperationException($"未找到类型的 XML 注释: {buildXmlTypeName(type)}");
+        return string.Empty;
     }
 
 

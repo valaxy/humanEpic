@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/flowtool/demo/ScopePanelDemo.cs" id="1_demo_script"]
-[ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="2_scope_panel"]
+[ext_resource type="Script" path="res://src/flowtool/demo/ScopePanelViewDemo.cs" id="1_demo_script"]
+[ext_resource type="PackedScene" path="res://src/flowtool/scopePanelView/scope_panel_view.tscn" id="2_scope_panel"]
 
 [node name="ScopePanelDemo" type="Control"]
 layout_mode = 3

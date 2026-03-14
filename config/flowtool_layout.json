@@ -57,14 +57,14 @@
           "isActive": true
         },
         "consumptionBudget": {
-          "x": -95,
-          "y": 18,
+          "x": 128,
+          "y": -111,
           "isActive": true
         },
         "demandIndex": {
-          "x": 615,
-          "y": -46,
-          "isActive": true
+          "x": 607.2793,
+          "y": 8.279297,
+          "isActive": false
         }
       }
     }

@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://duaiimy1fo2e1"]
+
+[ext_resource type="Script" uid="uid://b13srd01bobac" path="res://src/flowtool/FlowtoolMain.cs" id="1_main_script"]
+[ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="2_scope_panel_scene"]
+[ext_resource type="PackedScene" uid="uid://bvx4xudsy123d" path="res://src/flowtool/canvasView/canvas_view.tscn" id="3_canvas_view_scene"]
+[ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolView/unassigned_pool_view.tscn" id="4_unassigned_pool_scene"]
+[ext_resource type="Script" uid="uid://k1d31llcn75b" path="res://src/flowtool/CanvasDropOverlay.cs" id="5_canvas_drop_overlay_script"]
+
+[node name="FlowtoolMain" type="Control" unique_id=139521371]
+offset_right = 2532.0
+offset_bottom = 1000.0
+script = ExtResource("1_main_script")
+
+[node name="Layout" type="HBoxContainer" parent="." unique_id=1479475287]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ScopePanel" parent="Layout" unique_id=667234834 instance=ExtResource("2_scope_panel_scene")]
+layout_mode = 2
+
+[node name="CanvasCenter" type="PanelContainer" parent="Layout" unique_id=2104724661]
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CanvasView" parent="Layout/CanvasCenter" unique_id=844366284 instance=ExtResource("3_canvas_view_scene")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CanvasDropOverlay" type="Control" parent="Layout/CanvasCenter" unique_id=243646740]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("5_canvas_drop_overlay_script")
+
+[node name="UnassignedPoolView" parent="Layout" unique_id=1055787754 instance=ExtResource("4_unassigned_pool_scene")]
+layout_mode = 2

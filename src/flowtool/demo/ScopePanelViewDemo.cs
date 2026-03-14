@@ -7,10 +7,10 @@ using System.Linq;
 /// </summary>
 [Tool]
 [GlobalClass]
-public partial class ScopePanelDemo : Control
+public partial class ScopePanelViewDemo : Control
 {
 	// 演示面板。
-	private ScopePanel scopePanel = null!;
+	private ScopePanelView scopePanel = null!;
 	// 演示系统数据。
 	private GameSystem demoSystem = null!;
 
@@ -19,7 +19,7 @@ public partial class ScopePanelDemo : Control
 	/// </summary>
 	public override void _Ready()
 	{
-		scopePanel = GetNode<ScopePanel>("ScopePanel");
+		scopePanel = GetNode<ScopePanelView>("ScopePanel");
 		demoSystem = createDemoSystem();
 		scopePanel.ScopeSelected += onScopeSelected;
 		scopePanel.Setup(demoSystem, "scope:population");

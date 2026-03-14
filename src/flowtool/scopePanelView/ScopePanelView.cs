@@ -7,7 +7,7 @@ using System.Linq;
 /// 左侧拓扑作用域列表视图。
 /// </summary>
 [GlobalClass]
-public partial class ScopePanel : VBoxContainer
+public partial class ScopePanelView : VBoxContainer
 {
 	/// <summary>
 	/// 当列表选项被选中时发出。

@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/flowtool/scopePanel/ScopePanel.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/flowtool/scopePanelView/ScopePanelView.cs" id="1_script"]
 
 [node name="ScopePanel" type="VBoxContainer"]
 custom_minimum_size = Vector2(220, 0)

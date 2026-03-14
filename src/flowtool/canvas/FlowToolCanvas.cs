@@ -74,8 +74,6 @@ public partial class FlowToolCanvas : Control
 	private Vector2 draggingPointerOffset = Vector2.Zero;
 	// 左侧作用域面板。
 	private ScopePanel layoutScopePanel = null!;
-	// 中央画布容器。
-	private SubViewportContainer canvasPanel = null!;
 	// 右侧未分配池面板。
 	private UnassignedPoolPanel unassignedPoolPanel = null!;
 	// 主视口。
@@ -159,7 +157,6 @@ public partial class FlowToolCanvas : Control
 	private void bindUi()
 	{
 		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
-		canvasPanel = GetNode<SubViewportContainer>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
 		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolBackground/UnassignedPoolPanel");
 		mainViewport = GetNode<SubViewport>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport");
 		worldLayer = GetNode<CanvasView>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot/WorldLayer");
@@ -170,7 +167,9 @@ public partial class FlowToolCanvas : Control
 	private void bindSignals()
 	{
 		layoutScopePanel.ScopeSelected += onLayoutScopeSelected;
-		canvasPanel.GuiInput += onCanvasGuiInput;
+		worldLayer.MouseButtonInputRecognized += handleMouseButton;
+		worldLayer.MouseMotionInputRecognized += handleMouseMotion;
+		worldLayer.DeleteKeyInputRecognized += handleDeleteKey;
 	}
 
 	// 配置主视口。
@@ -187,46 +186,15 @@ public partial class FlowToolCanvas : Control
 	// 更新视口尺寸。
 	private void updateViewportSizes()
 	{
-		Vector2I canvasViewportSize = new(
-			Mathf.Max(Mathf.RoundToInt(canvasPanel.Size.X), 1),
-			Mathf.Max(Mathf.RoundToInt(canvasPanel.Size.Y), 1));
+		Vector2I canvasViewportSize = worldLayer.GetCanvasViewportSize();
 		mainViewport.Size = canvasViewportSize;
 	}
 
 	// 计算当前鼠标在画布容器内的局部坐标。
 	private bool tryGetCanvasLocalPointerPosition(out Vector2 canvasLocalPointerPosition)
 	{
-		canvasLocalPointerPosition = Vector2.Zero;
 		Vector2 pointerGlobalPosition = GetGlobalMousePosition();
-		Rect2 canvasGlobalRect = canvasPanel.GetGlobalRect();
-		if (canvasGlobalRect.HasPoint(pointerGlobalPosition) == false)
-		{
-			return false;
-		}
-
-		canvasLocalPointerPosition = canvasPanel.GetGlobalTransformWithCanvas().AffineInverse() * pointerGlobalPosition;
-		return true;
-	}
-
-	// 处理画布输入事件。
-	private void onCanvasGuiInput(InputEvent @event)
-	{
-		if (@event is InputEventMouseButton mouseButton)
-		{
-			handleMouseButton(mouseButton);
-			return;
-		}
-
-		if (@event is InputEventMouseMotion mouseMotion)
-		{
-			handleMouseMotion(mouseMotion);
-			return;
-		}
-
-		if (@event is InputEventKey keyEvent)
-		{
-			handleDeleteKey(keyEvent);
-		}
+		return worldLayer.TryMapGlobalPointerToCanvas(pointerGlobalPosition, out canvasLocalPointerPosition);
 	}
 
 	// 处理鼠标按钮输入。
@@ -288,13 +256,8 @@ public partial class FlowToolCanvas : Control
 	}
 
 	// 处理删除键请求。
-	private void handleDeleteKey(InputEventKey keyEvent)
+	private void handleDeleteKey()
 	{
-		if (keyEvent.Pressed == false || keyEvent.Keycode != Key.Delete)
-		{
-			return;
-		}
-
 		if (string.IsNullOrWhiteSpace(selectedNodeId))
 		{
 			return;
@@ -420,7 +383,7 @@ public partial class FlowToolCanvas : Control
 	// 根据当前选中状态同步节点高亮。
 	private void updateDeleteButtonVisibility()
 	{
-		worldLayer.SetSelectedNode(selectedNodeId);
+		worldLayer.UpdateSelectedNode(selectedNodeId);
 	}
 
 	// 清理当前画布状态。
@@ -431,7 +394,7 @@ public partial class FlowToolCanvas : Control
 			new Dictionary<string, MetricNode>(StringComparer.Ordinal),
 			new Dictionary<string, Vector2>(StringComparer.Ordinal),
 			Array.Empty<MetricEdge>());
-		worldLayer.SetSelectedNode(selectedNodeId);
+		worldLayer.UpdateSelectedNode(selectedNodeId);
 		worldLayer.QueueRedraw();
 	}
 

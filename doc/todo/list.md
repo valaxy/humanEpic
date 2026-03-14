@@ -1,3 +1,1 @@
-﻿- 修复canvas_view_demo.tscn的问题，为什么打开之后整个canvasView出现在右下方？不应该有这个样式才对
-- 将CanvasView的drawEdge/drawEdges进一步抽取到CanvasEdgePainter中去；将CanvasView的drawNode/drawNodes进一步抽取到CanvasNodePainter中去
-- 将对画布鼠标交互事件信号的识别从FlowToolCanvas抽取到CanvasView，CanvasView只负责信号的识别，不负责处理，注意依赖关系
+﻿- 启动canvas_view_demo.tscn时遇到运行时问题：ERROR: Node not found: "Canvas" (relative to "/root/CanvasViewDemo/CanvasView").

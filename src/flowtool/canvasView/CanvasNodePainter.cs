@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Linq;
 
 /// <summary>
 /// 画布节点视觉绘制器，封装节点样式与文本绘制规则。
@@ -33,5 +34,19 @@ public static class CanvasNodePainter
 		string detailText = node.CreateDetailText();
 		Vector2 detailPosition = position + new Vector2(12f, 52f);
 		canvas.DrawString(font, detailPosition, detailText, HorizontalAlignment.Left, nodeSize.X - 24f, Math.Max(fontSize - 2, 10), detailTextColor);
+	}
+
+	/// <summary>
+	/// 绘制画布中的所有节点。
+	/// </summary>
+	public static void DrawNodes(Node2D canvas, TopologyCanvas topologyCanvas, string selectedNodeId)
+	{
+		Font fallbackFont = ThemeDB.FallbackFont;
+		int fallbackFontSize = ThemeDB.FallbackFontSize;
+		topologyCanvas.Nodes
+			.Where(pair => topologyCanvas.NodeLayout.ContainsKey(pair.Key))
+			.Select(pair => new { pair.Key, Node = pair.Value, Position = topologyCanvas.NodeLayout[pair.Key] })
+			.ToList()
+			.ForEach(item => Draw(canvas, item.Node, item.Position, topologyCanvas.NodeSize, fallbackFont, fallbackFontSize, item.Key == selectedNodeId));
 	}
 }

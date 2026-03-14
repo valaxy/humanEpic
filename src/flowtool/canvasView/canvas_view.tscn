@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasView.cs" id="1_canvas_view_script"]
+
+[node name="EditorPanel" type="VBoxContainer"]
+custom_minimum_size = Vector2(520, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Canvas" type="SubViewportContainer" parent="."]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MainViewport" type="SubViewport" parent="Canvas"]
+handle_input_locally = true
+disable_3d = true
+transparent_bg = false
+
+[node name="CanvasRoot" type="Node2D" parent="Canvas/MainViewport"]
+
+[node name="WorldLayer" type="Node2D" parent="Canvas/MainViewport/CanvasRoot"]
+script = ExtResource("1_canvas_view_script")
+
+[node name="MainCamera" type="Camera2D" parent="Canvas/MainViewport/CanvasRoot"]
+enabled = true
+position_smoothing_enabled = false

@@ -13,3 +13,11 @@
 	* TopologyCanvas：负责管理画布尺寸、节点尺寸与布局数据
 	* GameSystem：整个游戏演化的复杂系统，负责管理多个TopologyScope
 - canvasCore目录重命名为canvasView，移动到flowtool目录下，与canvas目录平级
+- 修复canvas_view_demo.tscn的问题，为什么打开之后整个canvasView出现在右下方？不应该有这个样式才对
+- 将CanvasView的drawEdge/drawEdges进一步抽取到CanvasEdgePainter中去；将CanvasView的drawNode/drawNodes进一步抽取到CanvasNodePainter中去
+- 将对画布鼠标交互事件信号的识别从FlowToolCanvas抽取到CanvasView，CanvasView只负责信号的识别，不负责处理，注意依赖关系
+- 修复整个flowtool_dashboard.tscn的布局问题，目前布局是乱的，右侧未分配池也超出了位置；整体是左中右三列布局
+- 将flowtool_dashboard.tscn中属于CanvasView职责的的节点与CanvasView模块整合到一起，形成一个完整的CanvasView模块，生成对应的tscn文件
+- 彻底移除Canvas缩略图的相关功能
+- [node name="EditorPanel" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer" unique_id=1858856966]和相关的逻辑，可以进一步从FlowToolCanvas下沉到canvasView模块中去
+- FlowToolCanvas中的canvasPanel应该放在canvasView中处理

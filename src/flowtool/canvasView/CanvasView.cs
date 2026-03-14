@@ -252,7 +252,7 @@ public partial class CanvasView : Node2D
 		{
 			if (mouseButton.ButtonIndex == MouseButton.Left && mouseButton.Pressed)
 			{
-				Vector2 graphPointerPosition = mapCanvasLocalPointerToGraph(mouseButton.Position);
+				Vector2 graphPointerPosition = MapCanvasLocalPointerToGraph(mouseButton.Position);
 				if (tryGetSelectedNodeDeleteButtonRect(out Rect2 deleteButtonRect)
 					&& deleteButtonRect.HasPoint(graphPointerPosition)
 					&& tryEmitNodeDeleteSignal())
@@ -295,8 +295,12 @@ public partial class CanvasView : Node2D
 		return true;
 	}
 
-	// 将画布局部坐标映射到画布世界坐标。
-	private Vector2 mapCanvasLocalPointerToGraph(Vector2 canvasLocalPointerPosition)
+ 
+
+	/// <summary>
+	/// 将画布局部坐标映射到画布世界坐标。
+	/// </summary>
+	public Vector2 MapCanvasLocalPointerToGraph(Vector2 canvasLocalPointerPosition)
 	{
 		return mainViewport.CanvasTransform.AffineInverse() * canvasLocalPointerPosition;
 	}

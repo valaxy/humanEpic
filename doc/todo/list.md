@@ -1,1 +1,1 @@
-﻿
+﻿- 为CanvasView新增一个鼠标滚轮滚动可以放大缩小的功能，核心逻辑放到一个MouseWheelZoomable的类当中，依赖于CanvasView传递的交互信号来实现，但是CanvasView不依赖于MouseWheelZoomable

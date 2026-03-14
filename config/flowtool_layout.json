@@ -4,27 +4,67 @@
       "nodes": {
         "consumptionBudget": {
           "x": 120,
-          "y": 160
+          "y": 160,
+          "isActive": true
         },
         "demandIndex": {
           "x": 480,
-          "y": 160
+          "y": 160,
+          "isActive": true
         },
         "laborSupply": {
           "x": 840,
-          "y": 160
+          "y": 160,
+          "isActive": true
         },
         "output": {
           "x": 1200,
-          "y": 160
+          "y": 160,
+          "isActive": true
         },
         "population": {
           "x": 120,
-          "y": 380
+          "y": 380,
+          "isActive": true
         },
         "populationDelta": {
           "x": 480,
-          "y": 380
+          "y": 380,
+          "isActive": true
+        }
+      }
+    },
+    "canvas_view_demo2_scope": {
+      "nodes": {
+        "populationDelta": {
+          "x": 449,
+          "y": 331,
+          "isActive": true
+        },
+        "population": {
+          "x": 107,
+          "y": 238,
+          "isActive": true
+        },
+        "laborSupply": {
+          "x": 802,
+          "y": 280,
+          "isActive": true
+        },
+        "output": {
+          "x": 1113,
+          "y": 80,
+          "isActive": true
+        },
+        "consumptionBudget": {
+          "x": -95,
+          "y": 18,
+          "isActive": true
+        },
+        "demandIndex": {
+          "x": 615,
+          "y": -46,
+          "isActive": true
         }
       }
     }

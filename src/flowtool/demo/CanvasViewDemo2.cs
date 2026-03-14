@@ -22,6 +22,7 @@ public partial class CanvasViewDemo2 : PanelContainer
 		canvasView.NodeSelect += onNodeSelectedRecognized;
 		canvasView.SelectedNodeDelete += onNodeDeleteRequested;
 		canvasView.Setup(topologyCanvas);
+		new NodeDraggable(canvasView, topologyCanvas);
 	}
 
 	// 重新加载演示作用域。
@@ -73,7 +74,7 @@ public partial class CanvasViewDemo2 : PanelContainer
 		}
 
 		canvasView.SetDropShadow(nodeId, topologyCanvas.Nodes[nodeId].Position);
-		OS.Alert($"选中节点: {nodeId}", "CanvasViewDemo2");
+		GD.Print($"[CanvasViewDemo2] 选中节点: {nodeId}");
 	}
 
 	// 验证节点删除信号。
@@ -83,6 +84,6 @@ public partial class CanvasViewDemo2 : PanelContainer
 		canvasView.UpdateSelectedNode(string.Empty);
 		canvasView.ClearDropShadow();
 		canvasView.QueueRedraw();
-		OS.Alert($"删除节点: {nodeId}", "CanvasViewDemo2");
+		GD.Print($"[CanvasViewDemo2] 删除节点: {nodeId}");
 	}
 }

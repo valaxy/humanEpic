@@ -155,7 +155,7 @@ public partial class FlowToolController : Control
 	// 重新提取并渲染当前作用域。
 	private void reloadAndRender()
 	{
-		gameSystem = TopologyExtractor.ExtractFromCurrentAssembly();
+		gameSystem = ClassInfoExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes();
 		IReadOnlyDictionary<string, Vector2> persistedLayout = layoutStore.Load(selectedLayoutScopeKey);
 		topologyCanvas.Reload(gameSystem, selectedLayoutScopeKey, persistedLayout);

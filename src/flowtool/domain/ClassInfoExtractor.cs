@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 
 /// <summary>
-/// 基于反射提取系统动力学拓扑�?
+/// 基于反射提取类的信息结构
 /// </summary>
-public static class TopologyExtractor
+public static class ClassInfoExtractor
 {
 	/// <summary>
 	/// 扫描当前程序集并提取�?SystemDynamicsProcessAttribute 标记的方法�?

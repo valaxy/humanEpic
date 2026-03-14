@@ -1,2 +1,1 @@
-﻿- 修复TopologyExtractor的编码错误
-- 
+﻿- 修复ClassInfoExtractor的编码错误

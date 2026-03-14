@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://duaiimy1fo2e1"]
 
 [ext_resource type="Script" uid="uid://b13srd01bobac" path="res://src/flowtool/FlowtoolMain.cs" id="1_main_script"]
-[ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="2_scope_panel_scene"]
+[ext_resource type="Script" uid="uid://k1d31llcn75b" path="res://src/flowtool/CanvasDropOverlay.cs" id="5_canvas_drop_overlay_script"]
+[ext_resource type="PackedScene" path="res://src/flowtool/scopePanelView/scope_panel_view.tscn" id="2_scope_panel_scene"]
 [ext_resource type="PackedScene" uid="uid://bvx4xudsy123d" path="res://src/flowtool/canvasView/canvas_view.tscn" id="3_canvas_view_scene"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolView/unassigned_pool_view.tscn" id="4_unassigned_pool_scene"]
-[ext_resource type="Script" uid="uid://k1d31llcn75b" path="res://src/flowtool/CanvasDropOverlay.cs" id="5_canvas_drop_overlay_script"]
 
 [node name="FlowtoolMain" type="Control" unique_id=139521371]
 offset_right = 2532.0

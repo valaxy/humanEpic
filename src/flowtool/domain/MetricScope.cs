@@ -19,6 +19,12 @@ public sealed class MetricScope
 	/// </summary>
 	public string DisplayName { get; }
 
+
+	/// <summary>
+	/// 完整显示名
+	/// </summary>
+	public string FullDisplayName => string.IsNullOrEmpty(DisplayName) ? Name : $"{DisplayName} ({Name})";
+
 	/// <summary>
 	/// 作用域内指标集合。
 	/// </summary>

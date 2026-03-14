@@ -17,6 +17,11 @@ public sealed class Metric
 	public string DisplayName { get; }
 
 	/// <summary>
+	/// 完整显示名
+	/// </summary>
+	public string FullDisplayName => string.IsNullOrEmpty(DisplayName) ? Name : $"{DisplayName} ({Name})";
+
+	/// <summary>
 	/// 所属类型全名。
 	/// </summary>
 	public string TypeFullName { get; }

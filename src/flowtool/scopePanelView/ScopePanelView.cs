@@ -17,8 +17,10 @@ public partial class ScopePanelView : VBoxContainer
 
 	// 列表控件。
 	private ItemList layoutScopeList = null!;
+
 	// 当前作用域快照。
-	private IReadOnlyList<MetricScope> scopes = Array.Empty<MetricScope>();
+	private List<MetricScope> scopes = null!;
+
 	// 当前选中作用域名称。
 	private string selectedScopeName = string.Empty;
 
@@ -41,9 +43,7 @@ public partial class ScopePanelView : VBoxContainer
 
 		layoutScopeList.Clear();
 		scopes
-			.Select(static scope => scope.DisplayName)
-			.ToList()
-			.ForEach(displayName => layoutScopeList.AddItem(displayName));
+			.ForEach(scope => layoutScopeList.AddItem(scope.FullDisplayName));
 
 		int selectedScopeIndex = scopes
 			.Select((scope, index) => new { scope, index })

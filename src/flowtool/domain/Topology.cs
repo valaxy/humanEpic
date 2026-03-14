@@ -28,6 +28,11 @@ public sealed class Topology
 	public IReadOnlyList<MetricEdge> MetricEdges { get; }
 
 	/// <summary>
+	/// 作用域内节点字典。
+	/// </summary>
+	public IReadOnlyDictionary<string, MetricNode> MetricNodesById { get; }
+
+	/// <summary>
 	/// 创建作用域。
 	/// </summary>
 	public Topology(
@@ -44,5 +49,15 @@ public sealed class Topology
 		MetricEdges = metricEdges is null
 			? Array.Empty<MetricEdge>()
 			: metricEdges.ToList();
+		MetricNodesById = MetricNodes
+			.ToDictionary(static node => node.NodeId, static node => node, StringComparer.Ordinal);
+	}
+
+	/// <summary>
+	/// 收集作用域内全部节点 ID。
+	/// </summary>
+	public IReadOnlyCollection<string> CollectMetricNodeIds()
+	{
+		return MetricNodesById.Keys.ToHashSet(StringComparer.Ordinal);
 	}
 }

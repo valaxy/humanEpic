@@ -10,14 +10,13 @@ using System.Linq;
 public partial class CanvasViewDemo : PanelContainer
 {
 	// 演示画布领域模型。
-	private readonly TopologyCanvas demoTopology = new(1400f, 900f, 260f, 96f);
+	private readonly TopologyCanvas demoTopology = TopologyCanvas.Instance;
 	// 演示视图节点。
 	private CanvasView canvasView = null!;
 
 	public override void _Ready()
 	{
 		canvasView = GetNode<CanvasView>("CanvasView/Canvas/MainViewport/CanvasRoot/WorldLayer");
-		canvasView.NodePayloadDropped += onNodePayloadDropped;
 		canvasView.NodeSelectedRecognized += onNodeSelectedRecognized;
 		canvasView.SelectedNodeDeleteRequested += onNodeDeleteRequested;
 		canvasView.Initialize(demoTopology);
@@ -26,7 +25,6 @@ public partial class CanvasViewDemo : PanelContainer
 		canvasView.SyncViewportSize();
 		Vector2I viewportSize = canvasView.GetCanvasViewportSize();
 		GD.Print($"[CanvasViewDemo] viewport size = {viewportSize.X}x{viewportSize.Y}");
-		canvasView.EmitSignal(CanvasView.SignalName.NodePayloadDropped, "Output", new Vector2(980f, 420f));
 	}
 
 	// 初始化演示节点与连线。
@@ -49,21 +47,8 @@ public partial class CanvasViewDemo : PanelContainer
 			new("Input", "Process"),
 			new("Process", "Output")
 		};
-		demoTopology.UpdateGraph(nodesByNodeId, layoutByNodeId, edges);
+		demoTopology.ApplySnapshot(nodesByNodeId, layoutByNodeId, edges);
 		canvasView.SetDropShadow("Output", new Vector2(940f, 420f));
-		canvasView.QueueRedraw();
-	}
-
-	// 处理演示中的节点落点事件。
-	private void onNodePayloadDropped(string nodeId, Vector2 graphPosition)
-	{
-		IReadOnlyDictionary<string, Vector2> nextLayout = demoTopology.NodeLayout
-			.ToDictionary(
-				pair => pair.Key,
-				pair => pair.Key == nodeId ? graphPosition : pair.Value,
-				StringComparer.Ordinal);
-		demoTopology.UpdateGraph(demoTopology.Nodes, nextLayout, demoTopology.Edges);
-		canvasView.SetDropShadow(nodeId, graphPosition);
 		canvasView.QueueRedraw();
 	}
 

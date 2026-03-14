@@ -13,23 +13,18 @@ public sealed class TopologyCanvasLayout
 {
 	// 默认布局存档路径。
 	private const string defaultLayoutFilePath = "res://config/flowtool_layout.json";
-	// 全部布局作用域键。
-	private const string allLayoutScopeKey = "all";
 
 	// 布局存档路径。
 	private readonly string layoutFilePath;
-	// 当前布局作用域键。
-	private readonly string layoutScopeKey;
 	// JSON 序列化选项。
 	private readonly JsonSerializerOptions jsonSerializerOptions;
 
 	/// <summary>
 	/// 构造布局存储器。
 	/// </summary>
-	public TopologyCanvasLayout(string layoutScopeKey, string userPath = defaultLayoutFilePath)
+	public TopologyCanvasLayout(string userPath = defaultLayoutFilePath)
 	{
 		layoutFilePath = ProjectSettings.GlobalizePath(userPath);
-		this.layoutScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey) ? allLayoutScopeKey : layoutScopeKey;
 		jsonSerializerOptions = new JsonSerializerOptions
 		{
 			WriteIndented = true,
@@ -41,10 +36,13 @@ public sealed class TopologyCanvasLayout
 	/// <summary>
 	/// 读取布局字典。
 	/// </summary>
-	public IReadOnlyDictionary<string, Vector2> Load()
+	public IReadOnlyDictionary<string, Vector2> Load(string layoutScopeKey)
 	{
+		string normalizedScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey)
+			? GameSystem.AllTopologyScopeKey
+			: layoutScopeKey;
 		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
-		if (layoutCollectionFile.Scopes.TryGetValue(layoutScopeKey, out FlowToolLayoutFile? scopedLayoutFile))
+		if (layoutCollectionFile.Scopes.TryGetValue(normalizedScopeKey, out FlowToolLayoutFile? scopedLayoutFile))
 		{
 			return toNodePositions(scopedLayoutFile);
 		}
@@ -55,10 +53,13 @@ public sealed class TopologyCanvasLayout
 	/// <summary>
 	/// 保存布局字典。
 	/// </summary>
-	public void Save(IReadOnlyDictionary<string, Vector2> nodePositions)
+	public void Save(string layoutScopeKey, IReadOnlyDictionary<string, Vector2> nodePositions)
 	{
+		string normalizedScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey)
+			? GameSystem.AllTopologyScopeKey
+			: layoutScopeKey;
 		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
-		layoutCollectionFile.Scopes[layoutScopeKey] = new FlowToolLayoutFile
+		layoutCollectionFile.Scopes[normalizedScopeKey] = new FlowToolLayoutFile
 		{
 			Nodes = nodePositions.ToDictionary(
 				static pair => pair.Key,
@@ -75,17 +76,6 @@ public sealed class TopologyCanvasLayout
 
 		string jsonText = JsonSerializer.Serialize(layoutCollectionFile, jsonSerializerOptions);
 		File.WriteAllText(layoutFilePath, jsonText);
-	}
-
-	/// <summary>
-	/// 清理失效节点布局并返回有效布局。
-	/// </summary>
-	public IReadOnlyDictionary<string, Vector2> FilterInvalidNodes(IReadOnlyDictionary<string, Vector2> nodePositions, IReadOnlyCollection<string> validNodeIds)
-	{
-		HashSet<string> validNodeIdSet = validNodeIds.ToHashSet(StringComparer.Ordinal);
-		return nodePositions
-			.Where(pair => validNodeIdSet.Contains(pair.Key))
-			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
 	}
 
 	// 读取聚合布局文件。

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bq1ow0tmjqg6h"]
 
-[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvas.cs" id="1_script"]
-[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolAutosaver.cs" id="5_autosave_controler"]
+[ext_resource type="Script" path="res://src/flowtool/controller/FlowToolController.cs" id="1_script"]
+[ext_resource type="Script" path="res://src/flowtool/controller/FlowToolAutosaveController.cs" id="5_autosave_controler"]
 [ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolPanel/unassigned_pool_panel.tscn" id="4_unassigned_pool_panel"]
 [ext_resource type="PackedScene" path="res://src/flowtool/canvasView/canvas_view.tscn" id="8_canvas_view"]

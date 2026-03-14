@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// 左侧类列表组件。
+/// 左侧拓扑作用域列表视图。
 /// </summary>
 [GlobalClass]
 public partial class ScopePanel : VBoxContainer
@@ -27,7 +27,7 @@ public partial class ScopePanel : VBoxContainer
 	}
 
 	/// <summary>
-	/// 渲染类列表项并同步当前选中项。
+	/// 渲染作用域列表并同步当前选中项。
 	/// </summary>
 	public void Update(IReadOnlyList<Topology> scopes, string selectedScopeKey)
 	{
@@ -56,4 +56,3 @@ public partial class ScopePanel : VBoxContainer
 		EmitSignal(SignalName.ScopeSelected, selectedIndex);
 	}
 }
-

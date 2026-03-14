@@ -8,38 +8,56 @@ using System.Linq;
 public sealed class GameSystem
 {
 	/// <summary>
+	/// 全量作用域键。
+	/// </summary>
+	public const string AllTopologyScopeKey = "all";
+
+	/// <summary>
 	/// 默认空系统。
 	/// </summary>
 	public static GameSystem Empty { get; } = new(Array.Empty<MetricNode>(), Array.Empty<MetricEdge>());
 
-	// 当前作用域集合。
-	private IReadOnlyList<Topology> scopes = Array.Empty<Topology>();
-	// 当前完整指标节点集合。
-	private IReadOnlyList<MetricNode> metrics = Array.Empty<MetricNode>();
-	// 当前完整连线集合。
-	private IReadOnlyList<MetricEdge> edges = Array.Empty<MetricEdge>();
+	// 全量拓扑。
+	private readonly Topology allTopology;
+	// 作用域拓扑集合。
+	private readonly IReadOnlyList<Topology> scopedTopologies;
+	// 按 scopeKey 索引的拓扑映射。
+	private readonly IReadOnlyDictionary<string, Topology> scopedTopologyByScopeKey;
 
 	/// <summary>
 	/// 当前作用域列表。
 	/// </summary>
-	public IReadOnlyList<Topology> Scopes => scopes;
+	public IReadOnlyList<Topology> Scopes => scopedTopologies;
 
 	/// <summary>
 	/// 当前完整指标节点集合。
 	/// </summary>
-	public IReadOnlyList<MetricNode> Metrics => metrics;
+	public IReadOnlyList<MetricNode> Metrics => allTopology.MetricNodes;
 
 	/// <summary>
 	/// 当前完整连线集合。
 	/// </summary>
-	public IReadOnlyList<MetricEdge> Edges => edges;
+	public IReadOnlyList<MetricEdge> Edges => allTopology.MetricEdges;
 
 	/// <summary>
 	/// 创建仅包含拓扑数据的系统对象。
 	/// </summary>
 	public GameSystem(IReadOnlyList<MetricNode> metrics, IReadOnlyList<MetricEdge> edges)
 	{
-		setScopes(metrics, edges);
+		IReadOnlyList<MetricNode> allMetrics = metrics.ToList();
+		IReadOnlyList<MetricEdge> allEdges = edges.ToList();
+		allTopology = new Topology(AllTopologyScopeKey, "全部", allMetrics, allEdges);
+
+		scopedTopologies = allMetrics
+			.Select(static metric => metric.OwnerTypeFullName)
+			.Where(static ownerTypeName => string.IsNullOrWhiteSpace(ownerTypeName) == false)
+			.Distinct(StringComparer.Ordinal)
+			.OrderBy(static ownerTypeName => ownerTypeName, StringComparer.Ordinal)
+			.Select(ownerTypeName => createScopeTopology(ownerTypeName!, allMetrics, allEdges))
+			.ToList();
+
+		scopedTopologyByScopeKey = scopedTopologies
+			.ToDictionary(static scope => scope.ScopeKey, static scope => scope, StringComparer.Ordinal);
 	}
 
 	/// <summary>
@@ -47,18 +65,24 @@ public sealed class GameSystem
 	/// </summary>
 	public IReadOnlyList<Topology> BuildLayoutScopes()
 	{
-		return scopes.ToList();
+		return new[] { allTopology }
+			.Concat(scopedTopologies)
+			.ToList();
 	}
 
 	/// <summary>
 	/// 按类作用域筛选系统。
 	/// </summary>
-	public GameSystem FilterByOwnerType(string ownerTypeFullName)
+	public Topology GetTopology(string scopeKey)
 	{
-		Topology scope = scopes
-			.Where(scopeItem => scopeItem.ScopeKey == ownerTypeFullName)
-			.FirstOrDefault() ?? new Topology(ownerTypeFullName, getTypeShortName(ownerTypeFullName));
-		return new GameSystem(scope.MetricNodes, scope.MetricEdges);
+		if (scopeKey == AllTopologyScopeKey)
+		{
+			return allTopology;
+		}
+
+		return scopedTopologyByScopeKey.TryGetValue(scopeKey, out Topology? topology)
+			? topology
+			: new Topology(scopeKey, getTypeShortName(scopeKey));
 	}
 
 	/// <summary>
@@ -66,18 +90,16 @@ public sealed class GameSystem
 	/// </summary>
 	public IReadOnlyCollection<string> CollectMetricNodeIds()
 	{
-		return metrics
-			.Select(static metric => metric.NodeId)
-			.ToHashSet(StringComparer.Ordinal);
+		return allTopology.CollectMetricNodeIds();
 	}
 
 	/// <summary>
 	/// 根据布局数据推导当前可激活节点集合。
 	/// </summary>
-	public HashSet<string> DeriveActiveNodeIds(IEnumerable<string> layoutNodeIds)
+	public HashSet<string> DeriveActiveNodeIds(IEnumerable<string> layoutNodeIds, Topology topology)
 	{
-		HashSet<string> validMetricNodeIds = metrics
-			.Select(static metric => metric.NodeId)
+		HashSet<string> validMetricNodeIds = topology
+			.CollectMetricNodeIds()
 			.ToHashSet(StringComparer.Ordinal);
 		HashSet<string> activeIds = layoutNodeIds
 			.Where(validMetricNodeIds.Contains)
@@ -86,24 +108,8 @@ public sealed class GameSystem
 		return activeIds;
 	}
 
-	// 按当前指标节点和连线重建作用域集合。
-	private void setScopes(IReadOnlyList<MetricNode> inputMetrics, IReadOnlyList<MetricEdge> inputEdges)
-	{
-		IReadOnlyList<MetricNode> allMetrics = inputMetrics.ToList();
-		IReadOnlyList<MetricEdge> allEdges = inputEdges.ToList();
-		metrics = allMetrics;
-		edges = allEdges;
-		scopes = allMetrics
-			.Select(static metric => metric.OwnerTypeFullName)
-			.Where(static ownerTypeName => string.IsNullOrWhiteSpace(ownerTypeName) == false)
-			.Distinct(StringComparer.Ordinal)
-			.OrderBy(static ownerTypeName => ownerTypeName, StringComparer.Ordinal)
-			.Select(ownerTypeName => createScope(ownerTypeName!, allMetrics, allEdges))
-			.ToList();
-	}
-
 	// 构建单个作用域并筛选其内部连线。
-	private static Topology createScope(string ownerTypeFullName, IReadOnlyList<MetricNode> allMetrics, IReadOnlyList<MetricEdge> allEdges)
+	private static Topology createScopeTopology(string ownerTypeFullName, IReadOnlyList<MetricNode> allMetrics, IReadOnlyList<MetricEdge> allEdges)
 	{
 		IReadOnlyList<MetricNode> scopedMetrics = allMetrics
 			.Where(metric => metric.OwnerTypeFullName == ownerTypeFullName)

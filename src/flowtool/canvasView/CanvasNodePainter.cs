@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 
 /// <summary>
-/// 画布节点视觉绘制器，封装节点样式与文本绘制规则。
+/// 画布节点视觉绘制器。
 /// </summary>
 public static class CanvasNodePainter
 {
@@ -43,9 +43,9 @@ public static class CanvasNodePainter
 	{
 		Font fallbackFont = ThemeDB.FallbackFont;
 		int fallbackFontSize = ThemeDB.FallbackFontSize;
-		topologyCanvas.Nodes
-			.Where(pair => topologyCanvas.NodeLayout.ContainsKey(pair.Key))
-			.Select(pair => new { pair.Key, Node = pair.Value, Position = topologyCanvas.NodeLayout[pair.Key] })
+		topologyCanvas.NodesByNodeId
+			.Where(pair => topologyCanvas.NodeLayoutByNodeId.ContainsKey(pair.Key))
+			.Select(pair => new { pair.Key, Node = pair.Value, Position = topologyCanvas.NodeLayoutByNodeId[pair.Key] })
 			.ToList()
 			.ForEach(item => Draw(canvas, item.Node, item.Position, topologyCanvas.NodeSize, fallbackFont, fallbackFontSize, item.Key == selectedNodeId));
 	}

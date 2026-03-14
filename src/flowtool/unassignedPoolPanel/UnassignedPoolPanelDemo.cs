@@ -35,7 +35,7 @@ public partial class UnassignedPoolPanelDemo : Control
 		{
 			"metric:population"
 		};
-		unassignedPoolPanel.Update(demoTopology, activeNodeIds);
+		unassignedPoolPanel.Update(demoTopology.GetTopology(GameSystem.AllTopologyScopeKey), activeNodeIds);
 		GD.Print("[UnassignedPoolPanelDemo] Rendered with 2 unassigned nodes.");
 	}
 }

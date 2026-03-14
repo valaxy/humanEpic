@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// 画布世界渲染层，负责背景、节点、连线与拖拽阴影绘制。
+/// 画布世界渲染层，只负责渲染与输入识别。
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -22,12 +22,6 @@ public partial class CanvasView : Node2D
 	public delegate void MouseMotionInputRecognizedEventHandler(InputEventMouseMotion mouseMotion);
 
 	/// <summary>
-	/// 节点拖拽落点信号。
-	/// </summary>
-	[Signal]
-	public delegate void NodePayloadDroppedEventHandler(string nodeId, Vector2 graphPosition);
-
-	/// <summary>
 	/// 节点选中识别信号。
 	/// </summary>
 	[Signal]
@@ -39,11 +33,6 @@ public partial class CanvasView : Node2D
 	[Signal]
 	public delegate void SelectedNodeDeleteRequestedEventHandler(string nodeId);
 
-
-	// 画布背景色。
-	private static readonly Color canvasBackgroundColor = new(0.11f, 0.14f, 0.18f);
-	// 画布边框色。
-	private static readonly Color canvasBorderColor = new(0.24f, 0.31f, 0.39f);
 	// 拖拽阴影填充色。
 	private static readonly Color dropShadowFillColor = new(0.78f, 0.86f, 0.98f, 0.18f);
 	// 拖拽阴影边框色。
@@ -73,8 +62,6 @@ public partial class CanvasView : Node2D
 	// 拖拽阴影位置。
 	private Vector2 dropShadowPosition = Vector2.Zero;
 
-
-
 	public override void _Ready()
 	{
 		canvasPanel = GetNode<SubViewportContainer>("../../../");
@@ -85,29 +72,14 @@ public partial class CanvasView : Node2D
 		SyncViewportSize();
 	}
 
-	// 配置主视口。
-	private void configureMainViewport()
-	{
-		mainViewport.World2D ??= new World2D();
-		mainViewport.HandleInputLocally = true;
-		mainViewport.TransparentBg = false;
-		mainViewport.Size2DOverrideStretch = false;
-		mainCamera.Enabled = true;
-		mainCamera.MakeCurrent();
-	}
-
 	/// <summary>
 	/// 初始化渲染层依赖的画布领域模型。
 	/// </summary>
-	public void Initialize(TopologyCanvas topologyCanvas)
+	public void Initialize(TopologyCanvas inputTopologyCanvas)
 	{
-		this.topologyCanvas = topologyCanvas;
+		topologyCanvas = inputTopologyCanvas;
 		QueueRedraw();
 	}
-
-
-
-
 
 	/// <summary>
 	/// 获取画布容器的当前像素尺寸。
@@ -167,26 +139,22 @@ public partial class CanvasView : Node2D
 		IReadOnlyDictionary<string, MetricNode> nodesByNodeId,
 		IReadOnlyDictionary<string, Vector2> layoutByNodeId,
 		IReadOnlyList<MetricEdge> activeEdges,
-		string selectedNodeId)
+		string inputSelectedNodeId)
 	{
-		topologyCanvas.UpdateGraph(nodesByNodeId, layoutByNodeId, activeEdges);
-		this.selectedNodeId = selectedNodeId;
+		topologyCanvas.ApplySnapshot(nodesByNodeId, layoutByNodeId, activeEdges);
+		selectedNodeId = inputSelectedNodeId;
 		QueueRedraw();
 	}
 
 	/// <summary>
 	/// 清空图快照并触发重绘。
 	/// </summary>
-	public void ClearGraph(string selectedNodeId)
+	public void ClearGraph(string inputSelectedNodeId)
 	{
-		topologyCanvas.UpdateGraph(
-			new Dictionary<string, MetricNode>(StringComparer.Ordinal),
-			new Dictionary<string, Vector2>(StringComparer.Ordinal),
-			Array.Empty<MetricEdge>());
-		this.selectedNodeId = selectedNodeId;
+		topologyCanvas.Clear();
+		selectedNodeId = inputSelectedNodeId;
 		QueueRedraw();
 	}
-
 
 	/// <summary>
 	/// 更新拖拽阴影节点显示。
@@ -208,11 +176,26 @@ public partial class CanvasView : Node2D
 		QueueRedraw();
 	}
 
+	public override void _Draw()
+	{
+		CanvasEdgePainter.DrawEdges(this, topologyCanvas);
+		CanvasNodePainter.DrawNodes(this, topologyCanvas, selectedNodeId);
+		drawSelectedNodeDeleteButton();
+		drawDropShadow();
+	}
 
+	// 配置主视口。
+	private void configureMainViewport()
+	{
+		mainViewport.World2D ??= new World2D();
+		mainViewport.HandleInputLocally = true;
+		mainViewport.TransparentBg = false;
+		mainViewport.Size2DOverrideStretch = false;
+		mainCamera.Enabled = true;
+		mainCamera.MakeCurrent();
+	}
 
-	// 输入相关
-
-	// 识别输入事件并转发为信号，不在视图内处理业务。
+	// 识别输入事件并转发为信号。
 	private void handleInputEvent(InputEvent @event)
 	{
 		if (@event is InputEventMouseButton mouseButton)
@@ -220,7 +203,8 @@ public partial class CanvasView : Node2D
 			if (mouseButton.ButtonIndex == MouseButton.Left && mouseButton.Pressed)
 			{
 				Vector2 graphPointerPosition = mapCanvasLocalPointerToGraph(mouseButton.Position);
-				if (tryGetSelectedNodeDeleteButtonRect(out Rect2 deleteButtonRect) && deleteButtonRect.HasPoint(graphPointerPosition)
+				if (tryGetSelectedNodeDeleteButtonRect(out Rect2 deleteButtonRect)
+					&& deleteButtonRect.HasPoint(graphPointerPosition)
 					&& tryEmitNodeDeleteSignal())
 				{
 					return;
@@ -234,20 +218,22 @@ public partial class CanvasView : Node2D
 			return;
 		}
 
-		// 移动鼠标时触发
 		if (@event is InputEventMouseMotion mouseMotion)
 		{
 			EmitSignal(SignalName.MouseMotionInputRecognized, mouseMotion);
 			return;
 		}
 
-		// 这个if分支不能删，成功抛出删除事件
-		if (@event is InputEventKey keyEvent && keyEvent.Pressed && keyEvent.Keycode == Key.Delete && tryEmitNodeDeleteSignal())
+		if (@event is InputEventKey keyEvent
+			&& keyEvent.Pressed
+			&& keyEvent.Keycode == Key.Delete
+			&& tryEmitNodeDeleteSignal())
 		{
 			return;
 		}
 	}
 
+	// 触发删除信号。
 	private bool tryEmitNodeDeleteSignal()
 	{
 		if (string.IsNullOrWhiteSpace(selectedNodeId))
@@ -259,32 +245,10 @@ public partial class CanvasView : Node2D
 		return true;
 	}
 
-
 	// 将画布局部坐标映射到画布世界坐标。
 	private Vector2 mapCanvasLocalPointerToGraph(Vector2 canvasLocalPointerPosition)
 	{
 		return mainViewport.CanvasTransform.AffineInverse() * canvasLocalPointerPosition;
-	}
-
-
-
-	// 绘制相关
-
-	public override void _Draw()
-	{
-		// drawCanvasBackground();
-		CanvasEdgePainter.DrawEdges(this, topologyCanvas);
-		CanvasNodePainter.DrawNodes(this, topologyCanvas, selectedNodeId);
-		drawSelectedNodeDeleteButton();
-		drawDropShadow();
-	}
-
-	// 绘制画布背景与边框。
-	private void drawCanvasBackground()
-	{
-		Rect2 canvasRect = new(Vector2.Zero, topologyCanvas.CanvasSize);
-		DrawRect(canvasRect, canvasBackgroundColor, true);
-		DrawRect(canvasRect, canvasBorderColor, false, 3f);
 	}
 
 	// 绘制拖拽阴影。
@@ -327,12 +291,12 @@ public partial class CanvasView : Node2D
 			return false;
 		}
 
-		if (topologyCanvas.NodeLayout.ContainsKey(selectedNodeId) == false)
+		if (topologyCanvas.NodeLayoutByNodeId.ContainsKey(selectedNodeId) == false)
 		{
 			return false;
 		}
 
-		Vector2 nodePosition = topologyCanvas.NodeLayout[selectedNodeId];
+		Vector2 nodePosition = topologyCanvas.NodeLayoutByNodeId[selectedNodeId];
 		Vector2 buttonPosition = new(
 			nodePosition.X + topologyCanvas.NodeWidth - deleteButtonSize - deleteButtonMargin,
 			nodePosition.Y + deleteButtonMargin);

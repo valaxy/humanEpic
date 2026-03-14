@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// 右侧未分配池面板，负责展示当前作用域下未放置到画布的节点列表。
+/// 右侧未分配池视图，负责展示当前作用域未激活节点。
 /// </summary>
 [GlobalClass]
 public partial class UnassignedPoolPanel : VBoxContainer
@@ -22,11 +22,11 @@ public partial class UnassignedPoolPanel : VBoxContainer
 	/// <summary>
 	/// 渲染未分配池列表。
 	/// </summary>
-	public void Update(GameSystem topology, IReadOnlyCollection<string> activeNodeIds)
+	public void Update(Topology topology, IReadOnlyCollection<string> activeNodeIds)
 	{
 		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
 
-		IReadOnlyList<UnassignedItem> metricItems = topology.Metrics
+		IReadOnlyList<UnassignedItem> metricItems = topology.MetricNodes
 			.Where(metric => activeNodeIds.Contains(metric.NodeId) == false)
 			.OrderBy(static metric => metric.DisplayName, System.StringComparer.Ordinal)
 			.Select(createMetricPoolItem)
@@ -39,7 +39,7 @@ public partial class UnassignedPoolPanel : VBoxContainer
 	private static UnassignedItem createMetricPoolItem(MetricNode metricNode)
 	{
 		UnassignedItem button = new();
-		button.Setup($"{metricNode.DisplayName}", metricNode.NodeId);
+		button.Setup(metricNode.DisplayName, metricNode.NodeId);
 		return button;
 	}
 }

@@ -2,7 +2,7 @@ using Godot;
 using System.Linq;
 
 /// <summary>
-/// 画布边视觉绘制器，封装边样式与绘制规则。
+/// 画布边视觉绘制器。
 /// </summary>
 public static class CanvasEdgePainter
 {
@@ -26,8 +26,8 @@ public static class CanvasEdgePainter
 	/// </summary>
 	public static void DrawEdges(Node2D canvas, TopologyCanvas topologyCanvas)
 	{
-		topologyCanvas.Edges
-			.Where(edge => topologyCanvas.NodeLayout.ContainsKey(edge.FromNodeId) && topologyCanvas.NodeLayout.ContainsKey(edge.ToNodeId))
+		topologyCanvas.ActiveEdges
+			.Where(edge => topologyCanvas.NodeLayoutByNodeId.ContainsKey(edge.FromNodeId) && topologyCanvas.NodeLayoutByNodeId.ContainsKey(edge.ToNodeId))
 			.ToList()
 			.ForEach(edge => drawEdge(canvas, topologyCanvas, edge));
 	}
@@ -35,8 +35,8 @@ public static class CanvasEdgePainter
 	// 绘制单条连线。
 	private static void drawEdge(Node2D canvas, TopologyCanvas topologyCanvas, MetricEdge edge)
 	{
-		Vector2 fromPosition = topologyCanvas.NodeLayout[edge.FromNodeId];
-		Vector2 toPosition = topologyCanvas.NodeLayout[edge.ToNodeId];
+		Vector2 fromPosition = topologyCanvas.NodeLayoutByNodeId[edge.FromNodeId];
+		Vector2 toPosition = topologyCanvas.NodeLayoutByNodeId[edge.ToNodeId];
 		Vector2 fromCenter = fromPosition + (topologyCanvas.NodeSize * edgeAnchorOffsetRatio);
 		Vector2 toCenter = toPosition + (topologyCanvas.NodeSize * edgeAnchorOffsetRatio);
 		Draw(canvas, fromCenter, toCenter);

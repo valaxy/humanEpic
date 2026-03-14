@@ -5,39 +5,37 @@ using System.Globalization;
 using System.Linq;
 
 /// <summary>
-/// 负责监听关键交互并执行布局自动保存。
+/// flowtool 自动保存控制器。
 /// </summary>
-public partial class FlowToolAutosaver : Node
+public partial class FlowToolAutosaveController : Node
 {
-	// 默认布局作用域键。
-	private const string allLayoutScopeKey = "all";
 	// 自动保存节流秒数。
 	private const double autoSaveIntervalSeconds = 0.25d;
-	// 画布根节点。
-	private FlowToolCanvas flowToolCanvas = null!;
+	// 当前作用域键。
+	private string currentScopeKey = GameSystem.AllTopologyScopeKey;
+	// 画布控制器。
+	private FlowToolController flowToolController = null!;
 	// 布局存储器。
-	private TopologyCanvasLayout layoutStore = new(allLayoutScopeKey);
+	private readonly TopologyCanvasLayout layoutStore = new();
 	// 保存计时器。
 	private double saveClockSeconds;
 	// 最近布局指纹。
 	private string lastLayoutFingerprint = string.Empty;
 
 	/// <summary>
-	/// 初始化并绑定 FlowToolCanvas 信号。
+	/// 初始化并绑定自动保存信号。
 	/// </summary>
 	public override void _Ready()
 	{
-		flowToolCanvas = GetParent<FlowToolCanvas>();
-		flowToolCanvas.AutosavePulse += onAutosavePulse;
-		flowToolCanvas.AutosaveForced += onAutosaveForced;
-		flowToolCanvas.AutosaveSnapshotRequested += onAutosaveSnapshotRequested;
-		flowToolCanvas.AutosaveCommitLayout += onAutosaveCommitLayout;
-		flowToolCanvas.AutosaveScopeChanged += onAutosaveScopeChanged;
+		flowToolController = GetParent<FlowToolController>();
+		flowToolController.AutosavePulse += onAutosavePulse;
+		flowToolController.AutosaveForced += onAutosaveForced;
+		flowToolController.AutosaveSnapshotRequested += onAutosaveSnapshotRequested;
+		flowToolController.AutosaveCommitLayout += onAutosaveCommitLayout;
+		flowToolController.AutosaveScopeChanged += onAutosaveScopeChanged;
 	}
 
-	/// <summary>
-	/// 推进自动保存时钟，命中节流窗口后尝试保存。
-	/// </summary>
+	// 推进自动保存时钟。
 	private void onAutosavePulse(double delta)
 	{
 		saveClockSeconds += delta;
@@ -50,18 +48,16 @@ public partial class FlowToolAutosaver : Node
 		saveIfChanged();
 	}
 
-	/// <summary>
-	/// 若布局发生变化则保存。
-	/// </summary>
+	// 强制保存。
 	private void onAutosaveForced()
 	{
 		saveIfChanged(forceSave: true);
 	}
 
-	// 处理切换前快照保存。
+	// 作用域切换前保存快照。
 	private void onAutosaveSnapshotRequested()
 	{
-		if (flowToolCanvas.HasRenderedNodes == false)
+		if (flowToolController.HasRenderedNodes == false)
 		{
 			return;
 		}
@@ -69,31 +65,33 @@ public partial class FlowToolAutosaver : Node
 		saveIfChanged(forceSave: true);
 	}
 
-	// 处理重载后的已知布局提交。
+	// 重载后提交已知布局。
 	private void onAutosaveCommitLayout()
 	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolCanvas.CollectCurrentLayout();
-		layoutStore.Save(currentLayout);
+		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolController.CollectCurrentLayout();
+		layoutStore.Save(currentScopeKey, currentLayout);
 		lastLayoutFingerprint = createLayoutFingerprint(currentLayout);
 	}
 
 	// 处理布局作用域切换。
 	private void onAutosaveScopeChanged(string layoutScopeKey)
 	{
-		layoutStore = new TopologyCanvasLayout(layoutScopeKey);
+		currentScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey)
+			? GameSystem.AllTopologyScopeKey
+			: layoutScopeKey;
 	}
 
 	// 若布局发生变化则保存。
 	private void saveIfChanged(bool forceSave = false)
 	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolCanvas.CollectCurrentLayout();
+		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolController.CollectCurrentLayout();
 		string currentFingerprint = createLayoutFingerprint(currentLayout);
 		if (forceSave == false && currentFingerprint == lastLayoutFingerprint)
 		{
 			return;
 		}
 
-		layoutStore.Save(currentLayout);
+		layoutStore.Save(currentScopeKey, currentLayout);
 		lastLayoutFingerprint = currentFingerprint;
 	}
 

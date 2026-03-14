@@ -1,1 +1,2 @@
-﻿- 启动canvas_view_demo.tscn时遇到运行时问题：ERROR: Node not found: "Canvas" (relative to "/root/CanvasViewDemo/CanvasView").
+﻿- 修复TopologyExtractor的编码错误
+- 

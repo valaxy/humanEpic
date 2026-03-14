@@ -1,3 +1,12 @@
+使用MVC模式对flowtool进行彻底的重构：
+- Domain：MVC中的模型，代码全部放在`flowtool/domain`下，不依赖于视图逻辑
+  - TopologyCanvas：单例模式，每次界面切换Topology时都要重新加载新的Topology的内容；依赖于MetricNode、MetricEdge来获取节点信息
+  - TopologyCanvasLayout：将持久化/反持久化相关的代码抽取为一个独立的文件，将其他逻辑合入TopologyCanvas
+  - GameSystem：管理多个Topology
+  - Topology：扁平的管理多个MetricEdge和MetricNode
+- View：MVC中的V，只包含纯渲染、绘制、或者UI相关的逻辑，依赖于Domain
+- Controller：MVC总的C，管理其他View或Domain的逻辑，胶水层
+
 
 
 - 消费：人口资产--

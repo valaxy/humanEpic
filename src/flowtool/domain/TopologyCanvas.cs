@@ -89,4 +89,42 @@ public sealed class TopologyCanvas
 			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
 		Edges = activeEdges.ToList();
 	}
+
+	/// <summary>
+	/// 基于作用域拓扑与激活节点重建渲染快照。
+	/// </summary>
+	public (IReadOnlyDictionary<string, MetricNode> NodesByNodeId, IReadOnlyDictionary<string, Vector2> LayoutByNodeId, IReadOnlyList<MetricEdge> ActiveEdges) BuildScopeSnapshot(
+		GameSystem scopedTopology,
+		IReadOnlyCollection<string> activeNodeIds,
+		IReadOnlyDictionary<string, Vector2> currentLayoutPositions,
+		Vector2 fallbackPosition)
+	{
+		Dictionary<string, MetricNode> nodesByNodeId = scopedTopology.Metrics
+			.Where(metric => activeNodeIds.Contains(metric.NodeId))
+			.ToDictionary(metric => metric.NodeId, metric => metric, StringComparer.Ordinal);
+
+		Dictionary<string, Vector2> layoutByNodeId = activeNodeIds
+			.ToDictionary(
+				nodeId => nodeId,
+				nodeId => currentLayoutPositions.TryGetValue(nodeId, out Vector2 savedPosition) ? savedPosition : fallbackPosition,
+				StringComparer.Ordinal);
+
+		IReadOnlyList<MetricEdge> activeEdges = scopedTopology.Edges
+			.Where(edge => activeNodeIds.Contains(edge.FromNodeId) && activeNodeIds.Contains(edge.ToNodeId))
+			.ToList();
+
+		return (nodesByNodeId, layoutByNodeId, activeEdges);
+	}
+
+	/// <summary>
+	/// 尝试根据画布坐标拾取节点。
+	/// </summary>
+	public bool TryPickNodeIdAt(Vector2 canvasPosition, out string nodeId)
+	{
+		nodeId = NodeLayout
+			.Where(pair => new Rect2(pair.Value, NodeSize).HasPoint(canvasPosition))
+			.Select(static pair => pair.Key)
+			.FirstOrDefault() ?? string.Empty;
+		return string.IsNullOrWhiteSpace(nodeId) == false;
+	}
 }

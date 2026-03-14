@@ -1,14 +1,16 @@
 [gd_scene format=3 uid="uid://dnp5a3nijrm0c"]
 
 [ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasViewDemo.cs" id="1_demo_script"]
-[ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasView.cs" id="2_view_script"]
+[ext_resource type="PackedScene" uid="uid://bvx4xudsy123d" path="res://src/flowtool/canvasView/canvas_view.tscn" id="2_canvas_view_scene"]
 
-[node name="CanvasViewDemo" type="Node2D"]
+[node name="Container" type="PanelContainer" unique_id=1072631040]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_demo_script")
 
-[node name="CanvasView" type="Node2D" parent="."]
-script = ExtResource("2_view_script")
-
-[node name="DemoCamera" type="Camera2D" parent="."]
-enabled = true
-position = Vector2(700, 450)
+[node name="CanvasView" parent="." unique_id=1737073474 instance=ExtResource("2_canvas_view_scene")]
+layout_mode = 2
+size_flags_vertical = 3

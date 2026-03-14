@@ -5,7 +5,7 @@ using System.Linq;
 /// <summary>
 /// 类列表项，负责保存拓扑结构
 /// </summary>
-public sealed class TopologyScope
+public sealed class Topology
 {
 	/// <summary>
 	/// 作用域键。
@@ -30,7 +30,7 @@ public sealed class TopologyScope
 	/// <summary>
 	/// 创建作用域。
 	/// </summary>
-	public TopologyScope(
+	public Topology(
 		string scopeKey,
 		string displayName,
 		IReadOnlyList<MetricNode>? metricNodes = null,

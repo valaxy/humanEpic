@@ -1,27 +1,32 @@
 using Godot;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// CanvasView 的演示入口，用于验证基础绘制结果。
 /// </summary>
-[Tool]
 [GlobalClass]
-public partial class CanvasViewDemo : Node2D
+public partial class CanvasViewDemo : PanelContainer
 {
 	// 演示画布领域模型。
 	private readonly TopologyCanvas demoTopology = new(1400f, 900f, 260f, 96f);
 	// 演示视图节点。
 	private CanvasView canvasView = null!;
-	// 演示摄像机。
-	private Camera2D demoCamera = null!;
 
 	public override void _Ready()
 	{
-		canvasView = GetNode<CanvasView>("CanvasView");
-		demoCamera = GetNode<Camera2D>("DemoCamera");
-		demoCamera.MakeCurrent();
+		canvasView = GetNode<CanvasView>("CanvasView/Canvas/MainViewport/CanvasRoot/WorldLayer");
+		canvasView.NodePayloadDropped += onNodePayloadDropped;
+		canvasView.NodeSelectedRecognized += onNodeSelectedRecognized;
+		canvasView.SelectedNodeDeleteRequested += onNodeDeleteRequested;
 		canvasView.Initialize(demoTopology);
 		seedDemoGraph();
+		canvasView.UpdateSelectedNode("Process");
+		canvasView.SyncViewportSize();
+		Vector2I viewportSize = canvasView.GetCanvasViewportSize();
+		GD.Print($"[CanvasViewDemo] viewport size = {viewportSize.X}x{viewportSize.Y}");
+		canvasView.EmitSignal(CanvasView.SignalName.NodePayloadDropped, "Output", new Vector2(980f, 420f));
 	}
 
 	// 初始化演示节点与连线。
@@ -49,5 +54,33 @@ public partial class CanvasViewDemo : Node2D
 		canvasView.QueueRedraw();
 	}
 
-	// 演示场景不包含交互逻辑，仅用于验证渲染输出。
+	// 处理演示中的节点落点事件。
+	private void onNodePayloadDropped(string nodeId, Vector2 graphPosition)
+	{
+		IReadOnlyDictionary<string, Vector2> nextLayout = demoTopology.NodeLayout
+			.ToDictionary(
+				pair => pair.Key,
+				pair => pair.Key == nodeId ? graphPosition : pair.Value,
+				StringComparer.Ordinal);
+		demoTopology.UpdateGraph(demoTopology.Nodes, nextLayout, demoTopology.Edges);
+		canvasView.SetDropShadow(nodeId, graphPosition);
+		canvasView.QueueRedraw();
+	}
+
+	// 验证节点选中信号。
+	private void onNodeSelectedRecognized(string nodeId, Vector2 graphPointerPosition)
+	{
+		if (string.IsNullOrWhiteSpace(nodeId))
+		{
+			return;
+		}
+
+		OS.Alert($"选中节点: {nodeId}", "CanvasViewDemo");
+	}
+
+	// 验证节点删除信号。
+	private void onNodeDeleteRequested(string nodeId)
+	{
+		OS.Alert($"删除节点: {nodeId}", "CanvasViewDemo");
+	}
 }

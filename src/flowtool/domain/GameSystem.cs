@@ -13,7 +13,7 @@ public sealed class GameSystem
 	public static GameSystem Empty { get; } = new(Array.Empty<MetricNode>(), Array.Empty<MetricEdge>());
 
 	// 当前作用域集合。
-	private IReadOnlyList<TopologyScope> scopes = Array.Empty<TopologyScope>();
+	private IReadOnlyList<Topology> scopes = Array.Empty<Topology>();
 	// 当前完整指标节点集合。
 	private IReadOnlyList<MetricNode> metrics = Array.Empty<MetricNode>();
 	// 当前完整连线集合。
@@ -22,7 +22,7 @@ public sealed class GameSystem
 	/// <summary>
 	/// 当前作用域列表。
 	/// </summary>
-	public IReadOnlyList<TopologyScope> Scopes => scopes;
+	public IReadOnlyList<Topology> Scopes => scopes;
 
 	/// <summary>
 	/// 当前完整指标节点集合。
@@ -45,7 +45,7 @@ public sealed class GameSystem
 	/// <summary>
 	/// 构建用于 UI 展示的作用域列表。
 	/// </summary>
-	public IReadOnlyList<TopologyScope> BuildLayoutScopes()
+	public IReadOnlyList<Topology> BuildLayoutScopes()
 	{
 		return scopes.ToList();
 	}
@@ -55,9 +55,9 @@ public sealed class GameSystem
 	/// </summary>
 	public GameSystem FilterByOwnerType(string ownerTypeFullName)
 	{
-		TopologyScope scope = scopes
+		Topology scope = scopes
 			.Where(scopeItem => scopeItem.ScopeKey == ownerTypeFullName)
-			.FirstOrDefault() ?? new TopologyScope(ownerTypeFullName, getTypeShortName(ownerTypeFullName));
+			.FirstOrDefault() ?? new Topology(ownerTypeFullName, getTypeShortName(ownerTypeFullName));
 		return new GameSystem(scope.MetricNodes, scope.MetricEdges);
 	}
 
@@ -103,7 +103,7 @@ public sealed class GameSystem
 	}
 
 	// 构建单个作用域并筛选其内部连线。
-	private static TopologyScope createScope(string ownerTypeFullName, IReadOnlyList<MetricNode> allMetrics, IReadOnlyList<MetricEdge> allEdges)
+	private static Topology createScope(string ownerTypeFullName, IReadOnlyList<MetricNode> allMetrics, IReadOnlyList<MetricEdge> allEdges)
 	{
 		IReadOnlyList<MetricNode> scopedMetrics = allMetrics
 			.Where(metric => metric.OwnerTypeFullName == ownerTypeFullName)
@@ -114,7 +114,7 @@ public sealed class GameSystem
 		IReadOnlyList<MetricEdge> scopedEdges = allEdges
 			.Where(edge => scopedMetricNodeIds.Contains(edge.FromNodeId) && scopedMetricNodeIds.Contains(edge.ToNodeId))
 			.ToList();
-		return new TopologyScope(ownerTypeFullName, getTypeShortName(ownerTypeFullName), scopedMetrics, scopedEdges);
+		return new Topology(ownerTypeFullName, getTypeShortName(ownerTypeFullName), scopedMetrics, scopedEdges);
 	}
 
 	// 获取类型短名。

@@ -29,7 +29,7 @@ public partial class ScopePanel : VBoxContainer
 	/// <summary>
 	/// 渲染类列表项并同步当前选中项。
 	/// </summary>
-	public void Update(IReadOnlyList<TopologyScope> scopes, string selectedScopeKey)
+	public void Update(IReadOnlyList<Topology> scopes, string selectedScopeKey)
 	{
 		layoutScopeList.Clear();
 		scopes

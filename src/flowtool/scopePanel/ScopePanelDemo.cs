@@ -13,7 +13,7 @@ public partial class ScopePanelDemo : Control
 	// 演示面板。
 	private ScopePanel scopePanel = null!;
 	// 演示作用域列表。
-	private IReadOnlyList<TopologyScope> demoScopes = Array.Empty<TopologyScope>();
+	private IReadOnlyList<Topology> demoScopes = Array.Empty<Topology>();
 
 	/// <summary>
 	/// 初始化演示并渲染示例作用域。
@@ -27,16 +27,16 @@ public partial class ScopePanelDemo : Control
 	}
 
 	// 构造演示作用域数据。
-	private static IReadOnlyList<TopologyScope> createDemoScopes()
+	private static IReadOnlyList<Topology> createDemoScopes()
 	{
-		IReadOnlyList<TopologyScope> scopes = new[]
+		IReadOnlyList<Topology> scopes = new[]
 		{
-			new TopologyScope("all", "全部"),
-			new TopologyScope("scope:population", "Population", new[]
+			new Topology("all", "全部"),
+			new Topology("scope:population", "Population", new[]
 			{
 				new MetricNode("population.total", "PopulationTotal", "总人口", "System.Single", "Demo.Population")
 			}, Array.Empty<MetricEdge>()),
-			new TopologyScope("scope:market", "Market", new[]
+			new Topology("scope:market", "Market", new[]
 			{
 				new MetricNode("market.price", "MarketPrice", "价格水平", "System.Single", "Demo.Market")
 			}, Array.Empty<MetricEdge>())
@@ -47,7 +47,7 @@ public partial class ScopePanelDemo : Control
 	// 打印当前选中的作用域信息。
 	private void onScopeSelected(long selectedIndex)
 	{
-		TopologyScope selectedScope = demoScopes[(int)selectedIndex];
+		Topology selectedScope = demoScopes[(int)selectedIndex];
 		GD.Print($"[ScopePanelDemo] ScopeSelected => {selectedScope.ScopeKey}/{selectedScope.DisplayName}");
 	}
 }

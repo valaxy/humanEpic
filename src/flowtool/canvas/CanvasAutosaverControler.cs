@@ -16,7 +16,7 @@ public partial class FlowToolAutosaver : Node
 	// 画布根节点。
 	private FlowToolCanvas flowToolCanvas = null!;
 	// 布局存储器。
-	private CanvasLayout layoutStore = new(allLayoutScopeKey);
+	private TopologyCanvasLayout layoutStore = new(allLayoutScopeKey);
 	// 保存计时器。
 	private double saveClockSeconds;
 	// 最近布局指纹。
@@ -80,7 +80,7 @@ public partial class FlowToolAutosaver : Node
 	// 处理布局作用域切换。
 	private void onAutosaveScopeChanged(string layoutScopeKey)
 	{
-		layoutStore = new CanvasLayout(layoutScopeKey);
+		layoutStore = new TopologyCanvasLayout(layoutScopeKey);
 	}
 
 	// 若布局发生变化则保存。

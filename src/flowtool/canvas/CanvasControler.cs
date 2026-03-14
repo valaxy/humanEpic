@@ -48,12 +48,10 @@ public partial class FlowToolCanvas : Control
 	private const float nodeWidth = 280f;
 	// 节点默认高度。
 	private const float nodeHeight = 96f;
-	// 拓扑提取器。
-	private readonly TopologyExtractor topologyExtractor = new();
 	// 交互缩放控制器。
 	private readonly CanvasZoomController zoomController = new();
 	// 布局存储。
-	private CanvasLayout layoutStore = new(allLayoutScopeKey);
+	private TopologyCanvasLayout layoutStore = new(allLayoutScopeKey);
 	// 当前作用域拓扑。
 	private GameSystem topology = GameSystem.Empty;
 	// 画布当前渲染状态。
@@ -63,7 +61,7 @@ public partial class FlowToolCanvas : Control
 	// 当前布局作用域。
 	private string selectedLayoutScopeKey = allLayoutScopeKey;
 	// 当前布局作用域列表。
-	private IReadOnlyList<TopologyScope> layoutScopes = Array.Empty<TopologyScope>();
+	private IReadOnlyList<Topology> layoutScopes = Array.Empty<Topology>();
 	// 当前激活节点。
 	private HashSet<string> activeNodeIds = new(StringComparer.Ordinal);
 	// 当前选中节点。
@@ -76,12 +74,8 @@ public partial class FlowToolCanvas : Control
 	private ScopePanel layoutScopePanel = null!;
 	// 右侧未分配池面板。
 	private UnassignedPoolPanel unassignedPoolPanel = null!;
-	// 主视口。
-	private SubViewport mainViewport = null!;
 	// 世界层。
 	private CanvasView worldLayer = null!;
-	// 主摄像机。
-	private Camera2D mainCamera = null!;
 
 	/// <summary>
 	/// 当前是否已有已渲染节点。
@@ -101,8 +95,7 @@ public partial class FlowToolCanvas : Control
 	{
 		bindUi();
 		bindSignals();
-		configureMainViewport();
-		updateViewportSizes();
+		worldLayer.SyncViewportSize();
 		worldLayer.Initialize(worldCanvas);
 		reloadAndRender();
 	}
@@ -149,7 +142,7 @@ public partial class FlowToolCanvas : Control
 
 		if (what == NotificationResized)
 		{
-			updateViewportSizes();
+			worldLayer.SyncViewportSize();
 		}
 	}
 
@@ -158,36 +151,17 @@ public partial class FlowToolCanvas : Control
 	{
 		layoutScopePanel = GetNode<ScopePanel>("SplitContainer/ScopePanel");
 		unassignedPoolPanel = GetNode<UnassignedPoolPanel>("SplitContainer/ContentSplitContainer/UnassignedPoolBackground/UnassignedPoolPanel");
-		mainViewport = GetNode<SubViewport>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport");
 		worldLayer = GetNode<CanvasView>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot/WorldLayer");
-		mainCamera = GetNode<Camera2D>("SplitContainer/ContentSplitContainer/EditorPanel/Canvas/MainViewport/CanvasRoot/MainCamera");
 	}
 
 	// 绑定组件信号。
 	private void bindSignals()
 	{
 		layoutScopePanel.ScopeSelected += onLayoutScopeSelected;
+		worldLayer.NodeSelectedRecognized += handleNodeSelected;
+		worldLayer.SelectedNodeDeleteRequested += onDeleteButtonPressed;
 		worldLayer.MouseButtonInputRecognized += handleMouseButton;
 		worldLayer.MouseMotionInputRecognized += handleMouseMotion;
-		worldLayer.DeleteKeyInputRecognized += handleDeleteKey;
-	}
-
-	// 配置主视口。
-	private void configureMainViewport()
-	{
-		mainViewport.World2D ??= new World2D();
-		mainViewport.HandleInputLocally = true;
-		mainViewport.TransparentBg = false;
-		mainViewport.Size2DOverrideStretch = false;
-		mainCamera.Enabled = true;
-		mainCamera.MakeCurrent();
-	}
-
-	// 更新视口尺寸。
-	private void updateViewportSizes()
-	{
-		Vector2I canvasViewportSize = worldLayer.GetCanvasViewportSize();
-		mainViewport.Size = canvasViewportSize;
 	}
 
 	// 计算当前鼠标在画布容器内的局部坐标。
@@ -200,7 +174,7 @@ public partial class FlowToolCanvas : Control
 	// 处理鼠标按钮输入。
 	private void handleMouseButton(InputEventMouseButton mouseButton)
 	{
-		if (zoomController.TryHandle(mouseButton, mainCamera))
+		if (worldLayer.TryHandleZoom(zoomController, mouseButton))
 		{
 			return;
 		}
@@ -212,25 +186,30 @@ public partial class FlowToolCanvas : Control
 
 		if (mouseButton.Pressed)
 		{
-			if (tryPickNodeIdAt(mouseButton.Position, out string nodeId))
-			{
-				selectedNodeId = nodeId;
-				draggingNodeId = nodeId;
-				draggingPointerOffset = mouseButton.Position - worldCanvas.NodeLayout[nodeId];
-			}
-			else
-			{
-				selectedNodeId = string.Empty;
-				draggingNodeId = string.Empty;
-				draggingPointerOffset = Vector2.Zero;
-			}
-
-			updateDeleteButtonVisibility();
 			return;
 		}
 
 		draggingNodeId = string.Empty;
 		draggingPointerOffset = Vector2.Zero;
+	}
+
+	// 处理节点点击选中输入。
+	private void handleNodeSelected(string nodeId, Vector2 graphPointerPosition)
+	{
+		if (string.IsNullOrWhiteSpace(nodeId))
+		{
+			selectedNodeId = string.Empty;
+			draggingNodeId = string.Empty;
+			draggingPointerOffset = Vector2.Zero;
+			updateDeleteButtonVisibility();
+			return;
+		}
+
+		selectedNodeId = nodeId;
+		draggingNodeId = nodeId;
+		draggingPointerOffset = graphPointerPosition - worldCanvas.NodeLayout[nodeId];
+
+		updateDeleteButtonVisibility();
 	}
 
 	// 处理鼠标拖拽输入。
@@ -251,25 +230,13 @@ public partial class FlowToolCanvas : Control
 		Dictionary<string, Vector2> nextLayoutByNodeId = worldCanvas.NodeLayout
 			.ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal);
 		nextLayoutByNodeId[draggingNodeId] = snappedPosition;
-		worldCanvas.UpdateGraph(worldCanvas.Nodes, nextLayoutByNodeId, worldCanvas.Edges);
-		worldLayer.QueueRedraw();
-	}
-
-	// 处理删除键请求。
-	private void handleDeleteKey()
-	{
-		if (string.IsNullOrWhiteSpace(selectedNodeId))
-		{
-			return;
-		}
-
-		onDeleteButtonPressed(selectedNodeId);
+		worldLayer.RenderGraph(worldCanvas.Nodes, nextLayoutByNodeId, worldCanvas.Edges, selectedNodeId);
 	}
 
 	// 执行提取并重绘。
 	private void reloadAndRender()
 	{
-		GameSystem fullTopology = topologyExtractor.ExtractFromCurrentAssembly();
+		GameSystem fullTopology = TopologyExtractor.ExtractFromCurrentAssembly();
 		rebuildLayoutScopes(fullTopology);
 		topology = selectedLayoutScopeKey == allLayoutScopeKey ? fullTopology : fullTopology.FilterByOwnerType(selectedLayoutScopeKey);
 		IReadOnlyCollection<string> validNodeIds = topology.CollectMetricNodeIds();
@@ -287,21 +254,14 @@ public partial class FlowToolCanvas : Control
 	private void renderTopology(GameSystem scopedTopology, IReadOnlyCollection<string> currentActiveNodeIds, IReadOnlyDictionary<string, Vector2> currentLayoutPositions)
 	{
 		clearCanvasState();
-		Dictionary<string, MetricNode> nodesByNodeId = scopedTopology.Metrics
-			.Where(metric => currentActiveNodeIds.Contains(metric.NodeId))
-			.ToDictionary(metric => metric.NodeId, metric => metric, StringComparer.Ordinal);
-
-		Dictionary<string, Vector2> layoutByNodeId = currentActiveNodeIds
-			.ToDictionary(
-				nodeId => nodeId,
-				nodeId => currentLayoutPositions.TryGetValue(nodeId, out Vector2 savedPosition) ? savedPosition : new Vector2(80f, 80f),
-				StringComparer.Ordinal);
-
-		IReadOnlyList<MetricEdge> currentEdges = scopedTopology.Edges
-			.Where(edge => currentActiveNodeIds.Contains(edge.FromNodeId) && currentActiveNodeIds.Contains(edge.ToNodeId))
-			.ToList();
-		worldCanvas.UpdateGraph(nodesByNodeId, layoutByNodeId, currentEdges);
-		worldLayer.QueueRedraw();
+		(IReadOnlyDictionary<string, MetricNode> nodesByNodeId,
+			IReadOnlyDictionary<string, Vector2> layoutByNodeId,
+			IReadOnlyList<MetricEdge> currentEdges) = worldCanvas.BuildScopeSnapshot(
+				scopedTopology,
+				currentActiveNodeIds,
+				currentLayoutPositions,
+				new Vector2(80f, 80f));
+		worldLayer.RenderGraph(nodesByNodeId, layoutByNodeId, currentEdges, selectedNodeId);
 		updateDeleteButtonVisibility();
 	}
 
@@ -313,7 +273,7 @@ public partial class FlowToolCanvas : Control
 			return;
 		}
 
-		TopologyScope selectedScope = layoutScopes[(int)selectedIndex];
+		Topology selectedScope = layoutScopes[(int)selectedIndex];
 		if (selectedScope.ScopeKey == selectedLayoutScopeKey)
 		{
 			return;
@@ -321,21 +281,21 @@ public partial class FlowToolCanvas : Control
 
 		EmitSignal(SignalName.AutosaveSnapshotRequested);
 		selectedLayoutScopeKey = selectedScope.ScopeKey;
-		layoutStore = new CanvasLayout(selectedLayoutScopeKey);
+		layoutStore = new TopologyCanvasLayout(selectedLayoutScopeKey);
 		reloadAndRender();
 	}
 
 	// 构建布局作用域列表。
 	private void rebuildLayoutScopes(GameSystem sourceTopology)
 	{
-		IReadOnlyList<TopologyScope> scoped = sourceTopology.BuildLayoutScopes();
+		IReadOnlyList<Topology> scoped = sourceTopology.BuildLayoutScopes();
 		layoutScopes = scoped.ToList();
 
 		if (layoutScopes.Any(scope => scope.ScopeKey == selectedLayoutScopeKey) == false)
 		{
-			TopologyScope? fallbackScope = layoutScopes.FirstOrDefault();
+			Topology? fallbackScope = layoutScopes.FirstOrDefault();
 			selectedLayoutScopeKey = fallbackScope?.ScopeKey ?? allLayoutScopeKey;
-			layoutStore = new CanvasLayout(selectedLayoutScopeKey);
+			layoutStore = new TopologyCanvasLayout(selectedLayoutScopeKey);
 		}
 	}
 
@@ -390,12 +350,7 @@ public partial class FlowToolCanvas : Control
 	private void clearCanvasState()
 	{
 		selectedNodeId = string.Empty;
-		worldCanvas.UpdateGraph(
-			new Dictionary<string, MetricNode>(StringComparer.Ordinal),
-			new Dictionary<string, Vector2>(StringComparer.Ordinal),
-			Array.Empty<MetricEdge>());
-		worldLayer.UpdateSelectedNode(selectedNodeId);
-		worldLayer.QueueRedraw();
+		worldLayer.ClearGraph(selectedNodeId);
 	}
 
 	// 判断给定屏幕坐标处是否可接收节点拖拽，并更新投影提示。
@@ -450,16 +405,6 @@ public partial class FlowToolCanvas : Control
 		}
 
 		nodeId = nodeIdValue.AsString();
-		return string.IsNullOrWhiteSpace(nodeId) == false;
-	}
-
-	// 尝试根据坐标拾取节点。
-	private bool tryPickNodeIdAt(Vector2 canvasPosition, out string nodeId)
-	{
-		nodeId = worldCanvas.NodeLayout
-			.Where(pair => new Rect2(pair.Value, worldCanvas.NodeSize).HasPoint(canvasPosition))
-			.Select(static pair => pair.Key)
-			.FirstOrDefault() ?? string.Empty;
 		return string.IsNullOrWhiteSpace(nodeId) == false;
 	}
 

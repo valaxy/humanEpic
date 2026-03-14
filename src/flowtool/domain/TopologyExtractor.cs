@@ -8,15 +8,15 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// 基于反射提取系统动力学拓扑�?
 /// </summary>
-public sealed class TopologyExtractor
+public static class TopologyExtractor
 {
 	/// <summary>
 	/// 扫描当前程序集并提取�?SystemDynamicsProcessAttribute 标记的方法�?
 	/// </summary>
-	public GameSystem ExtractFromCurrentAssembly()
+	public static GameSystem ExtractFromCurrentAssembly()
 	{
 		Assembly assembly = Assembly.GetExecutingAssembly();
-		FlowToolXmlDocProvider xmlDocProvider = FlowToolXmlDocProvider.Load(assembly);
+		XmlDocProvider xmlDocProvider = XmlDocProvider.Load(assembly);
 
 		IReadOnlyList<Type> flowTypes = assembly
 			.GetTypes()
@@ -42,7 +42,7 @@ public sealed class TopologyExtractor
 	}
 
 	// 为流程方法创建指标节点�?
-	private static MetricNode createMetricNode(MethodInfo method, FlowToolXmlDocProvider xmlDocProvider)
+	private static MetricNode createMetricNode(MethodInfo method, XmlDocProvider xmlDocProvider)
 	{
 		string declaringTypeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
 		string metricName = method.Name;
@@ -156,28 +156,28 @@ public sealed class TopologyExtractor
 	}
 
 	// XML 文档提供器�?
-	private sealed class FlowToolXmlDocProvider
+	private sealed class XmlDocProvider
 	{
 		// 工程根目录�?
 		private readonly string? projectRoot;
 		// 方法摘要缓存�?
 		private readonly Dictionary<string, string> summaryByMethodKey = new(StringComparer.Ordinal);
 
-		private FlowToolXmlDocProvider(string? projectRoot)
+		private XmlDocProvider(string? projectRoot)
 		{
 			this.projectRoot = projectRoot;
 		}
 
 		// 载入工程上下文�?
-		public static FlowToolXmlDocProvider Load(Assembly assembly)
+		public static XmlDocProvider Load(Assembly assembly)
 		{
 			string? root = resolveProjectRoot(AppContext.BaseDirectory);
 			if (string.IsNullOrWhiteSpace(root))
 			{
-				return new FlowToolXmlDocProvider(null);
+				return new XmlDocProvider(null);
 			}
 
-			return new FlowToolXmlDocProvider(root);
+			return new XmlDocProvider(root);
 		}
 
 		// 读取方法摘要，缺失时回退为方法名�?

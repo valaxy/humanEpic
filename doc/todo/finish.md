@@ -1,23 +1,16 @@
-﻿- 领域层重构：
-	* TopologyScope改造为类，负责管理多个MetricEdge和MetricNode
-	* WorldCanvas重命名为Topology，负责管理多个TopologyScope，不直接管理MetricEdge和MetricNode
-- 为scopePanel新增一个DEMO
-- scopePanel移除固定的【全部】项
-- 为unassignedPoolPanel新增一个DEMO
-- 将FlowToolCanvasGraphEdit，WorldCanvasInteractionController，FlowToolCanvas合并为一个类
-- WorldCanvasView是一个底层的纯渲染的类，不应该依赖于任何其他组件，其他组件依赖于WorldCanvasView
-- 将WorldCanvasXXX相关的类全部重命名为CanvasXXX，并移动到一个新的目录里
-- 修复UnassignedPoolPanel的编码问题
-- 确认一下Topology的allScopeKey相关逻辑是不是已经没用了
-- 将Topology拆分为两个类：
-	* TopologyCanvas：负责管理画布尺寸、节点尺寸与布局数据
-	* GameSystem：整个游戏演化的复杂系统，负责管理多个TopologyScope
-- canvasCore目录重命名为canvasView，移动到flowtool目录下，与canvas目录平级
-- 修复canvas_view_demo.tscn的问题，为什么打开之后整个canvasView出现在右下方？不应该有这个样式才对
-- 将CanvasView的drawEdge/drawEdges进一步抽取到CanvasEdgePainter中去；将CanvasView的drawNode/drawNodes进一步抽取到CanvasNodePainter中去
-- 将对画布鼠标交互事件信号的识别从FlowToolCanvas抽取到CanvasView，CanvasView只负责信号的识别，不负责处理，注意依赖关系
-- 修复整个flowtool_dashboard.tscn的布局问题，目前布局是乱的，右侧未分配池也超出了位置；整体是左中右三列布局
-- 将flowtool_dashboard.tscn中属于CanvasView职责的的节点与CanvasView模块整合到一起，形成一个完整的CanvasView模块，生成对应的tscn文件
-- 彻底移除Canvas缩略图的相关功能
-- [node name="EditorPanel" type="VBoxContainer" parent="SplitContainer/ContentSplitContainer" unique_id=1858856966]和相关的逻辑，可以进一步从FlowToolCanvas下沉到canvasView模块中去
-- FlowToolCanvas中的canvasPanel应该放在canvasView中处理
+﻿- 启动canvas_view_demo.tscn时遇到运行时问题：ERROR: Node not found: "Canvas" (relative to "/root/CanvasViewDemo/CanvasView").
+- FlowToolCanvas.cs中的mainViewport、mainCamera似乎都跨越了边界进行处理，这些变量的相关逻辑应该被抽取到CanvasView中去
+- CanvasView新增了一些API，完善CanvasView的DEMO
+- canvas_view_demo.tscn改造通过tscn实例化CanvasView
+- canvas_view_demo.tscn打开后显示的CanvasView太小了，调整CanvasView的尺寸和位置，使其占满整个视口
+- 为CanvasView新增选中节点信号，并在CanvasViewDemo中连接该信号，使用OS.Alert验证
+- FlowToolCanvas的handleMouseButton针对CanvasView中新的信号（节点点击信号）重构一下
+- 在canvasViewDemo中点击节点不会弹出Alert，是不是Canvas的坐标判断逻辑有问题
+- 将tryPickNodeIdAt提取到TopologyCanvas中去
+- MapCanvasLocalPointerToGraph改为私有方法，NodeSelectedRecognized触发时可以将需要的参数准备好传递上去
+- 移除FlowToolCanvas中冗余的绘制逻辑，相关的逻辑应该在CanvasView里都已经存在了
+- reloadAndRender和renderTopology是否冗余而且不属于FlowToolCanvas的职责？应该直接调用CanvasView中接口来实现
+- 将reloadAndRender/renderTopology对TopologyCanvas的重新构建逻辑抽取到领域层去实现
+- CanvasView中选中节点会在节点右上方出现一个删除按钮，点击删除按钮向上发送删除节点的信号，相关的逻辑从FlowToolCanvas中抽取过去
+- 统一CanvasView中DeleteKey和SelectedNodeDeleteRequested信号，两者本质上是一样的，都是删除节点；在CanvasDemo中新增对删除节点信号的连接，并使用OS.Alert验证
+- CanvasLayout重命名为TopologyCanvasLayout，负责管理单个拓扑图的布局。

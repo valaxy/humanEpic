@@ -5,26 +5,8 @@ using System.Linq;
 /// 画布世界渲染层，负责背景、节点、连线与拖拽阴影绘制。
 /// </summary>
 [GlobalClass]
-public partial class WorldCanvasView : Node2D
+public partial class CanvasView : Node2D
 {
-	/// <summary>
-	/// 节点选中变化信号。
-	/// </summary>
-	[Signal]
-	public delegate void NodeSelectedEventHandler(string nodeId);
-
-	/// <summary>
-	/// 节点拖拽位移信号。
-	/// </summary>
-	[Signal]
-	public delegate void NodeDraggedEventHandler(string nodeId, Vector2 position);
-
-	/// <summary>
-	/// 节点删除请求信号。
-	/// </summary>
-	[Signal]
-	public delegate void DeleteRequestedEventHandler(string nodeId);
-
 	/// <summary>
 	/// 节点拖拽落点信号。
 	/// </summary>
@@ -40,9 +22,7 @@ public partial class WorldCanvasView : Node2D
 	// 拖拽阴影边框色。
 	private static readonly Color dropShadowBorderColor = new(0.32f, 0.62f, 0.94f, 0.9f);
 	// 画布领域模型。
-	private WorldCanvas worldCanvas = new(5000f, 3200f, 280f, 96f);
-	// 交互控制器。
-	private readonly WorldCanvasInteractionController interactionController = new();
+	private TopologyCanvas worldCanvas = null!;
 	// 当前选中节点 ID。
 	private string selectedNodeId = string.Empty;
 	// 拖拽阴影节点 ID。
@@ -53,7 +33,7 @@ public partial class WorldCanvasView : Node2D
 	/// <summary>
 	/// 初始化渲染层依赖的画布领域模型。
 	/// </summary>
-	public void Initialize(WorldCanvas inputWorldCanvas)
+	public void Initialize(TopologyCanvas inputWorldCanvas)
 	{
 		worldCanvas = inputWorldCanvas;
 		QueueRedraw();
@@ -66,32 +46,6 @@ public partial class WorldCanvasView : Node2D
 	{
 		selectedNodeId = nodeId;
 		QueueRedraw();
-	}
-
-	/// <summary>
-	/// 处理画布输入并在内部触发基础信号。
-	/// </summary>
-	public void HandleInputEvent(InputEvent @event, Camera2D camera)
-	{
-		if (@event is InputEventMouseButton mouseButton
-			&& interactionController.TryHandleMouseButton(mouseButton, worldCanvas, camera, out string nextSelectedNodeId))
-		{
-			SetSelectedNode(nextSelectedNodeId);
-			EmitSignal(SignalName.NodeSelected, nextSelectedNodeId);
-			return;
-		}
-
-		if (@event is InputEventMouseMotion mouseMotion
-			&& interactionController.TryHandleMouseMotion(mouseMotion, worldCanvas, out string draggingNodeId, out Vector2 snappedPosition))
-		{
-			EmitSignal(SignalName.NodeDragged, draggingNodeId, snappedPosition);
-			return;
-		}
-
-		if (@event is InputEventKey keyEvent && interactionController.TryHandleDeleteKey(keyEvent, out string deletingNodeId))
-		{
-			EmitSignal(SignalName.DeleteRequested, deletingNodeId);
-		}
 	}
 
 	/// <summary>
@@ -162,7 +116,7 @@ public partial class WorldCanvasView : Node2D
 	// 绘制单个节点。
 	private void drawNode(string nodeId, MetricNode node, Vector2 position, Font font, int fontSize)
 	{
-		WorldCanvasNodePainter.Draw(this, node, position, worldCanvas.NodeSize, font, fontSize, nodeId == selectedNodeId);
+		CanvasNodePainter.Draw(this, node, position, worldCanvas.NodeSize, font, fontSize, nodeId == selectedNodeId);
 	}
 
 	// 绘制单条连线。
@@ -172,7 +126,7 @@ public partial class WorldCanvasView : Node2D
 		Vector2 toPosition = worldCanvas.NodeLayout[edge.ToNodeId];
 		Vector2 fromCenter = fromPosition + (worldCanvas.NodeSize / 2f);
 		Vector2 toCenter = toPosition + (worldCanvas.NodeSize / 2f);
-		WorldCanvasEdgePainter.Draw(this, fromCenter, toCenter);
+		CanvasEdgePainter.Draw(this, fromCenter, toCenter);
 	}
 
 	// 绘制拖拽阴影。

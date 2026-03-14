@@ -3,7 +3,7 @@ using Godot;
 /// <summary>
 /// 画布缩放控制器，处理鼠标滚轮驱动的摄像机缩放。
 /// </summary>
-public sealed class WorldCanvasZoomController
+public sealed class CanvasZoomController
 {
 	// 最小缩放比例。
 	private const float minZoom = 0.35f;

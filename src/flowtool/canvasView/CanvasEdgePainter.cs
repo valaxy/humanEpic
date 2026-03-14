@@ -3,7 +3,7 @@ using Godot;
 /// <summary>
 /// 画布边视觉绘制器，封装边样式与绘制规则。
 /// </summary>
-public static class WorldCanvasEdgePainter
+public static class CanvasEdgePainter
 {
 	// 默认边颜色。
 	private static readonly Color defaultEdgeColor = new(0.46f, 0.74f, 0.95f);

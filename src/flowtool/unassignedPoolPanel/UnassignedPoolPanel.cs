@@ -22,7 +22,7 @@ public partial class UnassignedPoolPanel : VBoxContainer
 	/// <summary>
 	/// 渲染未分配池列表。
 	/// </summary>
-	public void Update(WorldCanvas topology, IReadOnlyCollection<string> activeNodeIds)
+	public void Update(GameSystem topology, IReadOnlyCollection<string> activeNodeIds)
 	{
 		unassignedPoolList.GetChildren().ToList().ForEach(static child => child.QueueFree());
 

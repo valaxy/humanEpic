@@ -6,26 +6,26 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 
 /// <summary>
-/// 基于反射提取系统动力学拓扑。
+/// 基于反射提取系统动力学拓扑�?
 /// </summary>
 public sealed class TopologyExtractor
 {
 	/// <summary>
-	/// 扫描当前程序集并提取被 SystemDynamicsProcessAttribute 标记的方法。
+	/// 扫描当前程序集并提取�?SystemDynamicsProcessAttribute 标记的方法�?
 	/// </summary>
-	public WorldCanvas ExtractFromCurrentAssembly()
+	public GameSystem ExtractFromCurrentAssembly()
 	{
 		Assembly assembly = Assembly.GetExecutingAssembly();
 		FlowToolXmlDocProvider xmlDocProvider = FlowToolXmlDocProvider.Load(assembly);
 
 		IReadOnlyList<Type> flowTypes = assembly
 			.GetTypes()
-			.Where(static type => type.GetCustomAttributes(typeof(SystemDynamicsFlowAttribute), false).Length > 0)
+			.Where(static type => type.GetCustomAttributes(typeof(TopologyScopeableAttribute), false).Length > 0)
 			.ToList();
 
 		IReadOnlyList<MethodInfo> processMethods = flowTypes
 			.SelectMany(static type => type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
-			.Where(static method => method.GetCustomAttributes(typeof(SystemDynamicsProcessAttribute), false).Length > 0)
+			.Where(static method => method.GetCustomAttributes(typeof(TopologyProcessableAttribute), false).Length > 0)
 			.Where(static method => method.IsSpecialName == false)
 			.ToList();
 
@@ -38,10 +38,10 @@ public sealed class TopologyExtractor
 			.Distinct()
 			.ToList();
 
-		return new WorldCanvas(metricNodes, edges);
+		return new GameSystem(metricNodes, edges);
 	}
 
-	// 为流程方法创建指标节点。
+	// 为流程方法创建指标节点�?
 	private static MetricNode createMetricNode(MethodInfo method, FlowToolXmlDocProvider xmlDocProvider)
 	{
 		string declaringTypeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
@@ -53,7 +53,7 @@ public sealed class TopologyExtractor
 		return new MetricNode(nodeId, metricName, displayName, typeDisplayName, declaringTypeName);
 	}
 
-	// 构建指标节点之间的依赖边：参数节点 -> 方法指标节点。
+	// 构建指标节点之间的依赖边：参数节�?-> 方法指标节点�?
 	private static IReadOnlyList<MetricEdge> createEdges(MethodInfo method, IReadOnlyList<MetricNode> metricNodes)
 	{
 		string targetNodeId = createMetricNodeId(method);
@@ -71,7 +71,7 @@ public sealed class TopologyExtractor
 			.ToList();
 	}
 
-	// 按“同名指标”规则解析参数来源指标，优先同类。
+	// 按“同名指标”规则解析参数来源指标，优先同类�?
 	private static IReadOnlyList<MetricNode> resolveSourceMetrics(
 		string parameterMetricName,
 		string targetNodeId,
@@ -90,7 +90,7 @@ public sealed class TopologyExtractor
 			: allCandidates;
 	}
 
-	// 构建方法对应的指标 ID。
+	// 构建方法对应的指�?ID�?
 	private static string createMetricNodeId(MethodInfo method)
 	{
 		string declaringTypeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
@@ -98,7 +98,7 @@ public sealed class TopologyExtractor
 		return $"metric:{declaringTypeName}:{normalizedMetricName}";
 	}
 
-	// 将类型名格式化为完整显示文本。
+	// 将类型名格式化为完整显示文本�?
 	private static string formatMetricTypeDisplayName(Type type)
 	{
 		if (type.IsByRef)
@@ -138,7 +138,7 @@ public sealed class TopologyExtractor
 		return type.FullName ?? type.Name;
 	}
 
-	// 统一指标命名，确保过程输出与输入参数可以按名称对齐。
+	// 统一指标命名，确保过程输出与输入参数可以按名称对齐�?
 	private static string normalizeMetricName(string metricName)
 	{
 		if (string.IsNullOrWhiteSpace(metricName))
@@ -155,12 +155,12 @@ public sealed class TopologyExtractor
 		return char.ToLowerInvariant(trimmedName[0]) + trimmedName[1..];
 	}
 
-	// XML 文档提供器。
+	// XML 文档提供器�?
 	private sealed class FlowToolXmlDocProvider
 	{
-		// 工程根目录。
+		// 工程根目录�?
 		private readonly string? projectRoot;
-		// 方法摘要缓存。
+		// 方法摘要缓存�?
 		private readonly Dictionary<string, string> summaryByMethodKey = new(StringComparer.Ordinal);
 
 		private FlowToolXmlDocProvider(string? projectRoot)
@@ -168,7 +168,7 @@ public sealed class TopologyExtractor
 			this.projectRoot = projectRoot;
 		}
 
-		// 载入工程上下文。
+		// 载入工程上下文�?
 		public static FlowToolXmlDocProvider Load(Assembly assembly)
 		{
 			string? root = resolveProjectRoot(AppContext.BaseDirectory);
@@ -180,7 +180,7 @@ public sealed class TopologyExtractor
 			return new FlowToolXmlDocProvider(root);
 		}
 
-		// 读取方法摘要，缺失时回退为方法名。
+		// 读取方法摘要，缺失时回退为方法名�?
 		public string GetMethodSummary(MethodInfo method)
 		{
 			string methodKey = createMethodKey(method);
@@ -194,14 +194,14 @@ public sealed class TopologyExtractor
 			return resolvedSummary;
 		}
 
-		// 生成方法缓存键。
+		// 生成方法缓存键�?
 		private static string createMethodKey(MethodInfo method)
 		{
 			string typeName = method.DeclaringType?.FullName ?? method.DeclaringType?.Name ?? "UnknownType";
 			return $"{typeName}.{method.Name}";
 		}
 
-		// 从源码中读取 XML 注释摘要。
+		// 从源码中读取 XML 注释摘要�?
 		private string? tryReadSummaryFromSource(MethodInfo method)
 		{
 			if (string.IsNullOrWhiteSpace(projectRoot) || method.DeclaringType is null)
@@ -229,7 +229,7 @@ public sealed class TopologyExtractor
 			return normalizeSummaryText(match.Groups["summary"].Value);
 		}
 
-		// 解析工程根目录。
+		// 解析工程根目录�?
 		private static string? resolveProjectRoot(string startDirectory)
 		{
 			DirectoryInfo? currentDirectory = new(startDirectory);
@@ -249,7 +249,7 @@ public sealed class TopologyExtractor
 			return null;
 		}
 
-		// 规范化 XML 摘要文本。
+		// 规范�?XML 摘要文本�?
 		private static string normalizeSummaryText(string rawSummary)
 		{
 			Regex summaryLineRegex = new("^\\s*///\\s?", RegexOptions.Compiled);

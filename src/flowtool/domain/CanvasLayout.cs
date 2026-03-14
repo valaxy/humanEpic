@@ -7,9 +7,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>
-/// flowtool 位置布局持久化。
+/// canvas 位置布局持久化。
 /// </summary>
-public sealed class FlowToolLayoutStore
+public sealed class CanvasLayout
 {
 	// 默认布局存档路径。
 	private const string defaultLayoutFilePath = "res://config/flowtool_layout.json";
@@ -26,7 +26,7 @@ public sealed class FlowToolLayoutStore
 	/// <summary>
 	/// 构造布局存储器。
 	/// </summary>
-	public FlowToolLayoutStore(string layoutScopeKey, string userPath = defaultLayoutFilePath)
+	public CanvasLayout(string layoutScopeKey, string userPath = defaultLayoutFilePath)
 	{
 		layoutFilePath = ProjectSettings.GlobalizePath(userPath);
 		this.layoutScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey) ? allLayoutScopeKey : layoutScopeKey;

@@ -1,7 +1,7 @@
 
 
-// [SystemDynamicsFlow]
-public class HelloWorldFlowSample
+[TopologyScopeable]
+public class Sample1
 {
     /// <summary>
     /// 根据新增人口与离开人口计算总人口变化。
@@ -9,7 +9,7 @@ public class HelloWorldFlowSample
     /// <param name="newResidents">新增人口。</param>
     /// <param name="leavingResidents">离开人口。</param>
     /// <returns>人口净变化。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int PopulationDelta(int newResidents, int leavingResidents)
     {
         return newResidents - leavingResidents;
@@ -21,7 +21,7 @@ public class HelloWorldFlowSample
     /// <param name="populationDelta">人口净变化。</param>
     /// <param name="basePopulation">基础人口。</param>
     /// <returns>当前总人口。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int Population(int populationDelta, int basePopulation)
     {
         return basePopulation + populationDelta;
@@ -33,7 +33,7 @@ public class HelloWorldFlowSample
     /// <param name="population">当前总人口。</param>
     /// <param name="participationRate">就业参与率（百分比整数）。</param>
     /// <returns>劳动力供给。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int LaborSupply(int population, int participationRate)
     {
         return population * participationRate / 100;
@@ -45,7 +45,7 @@ public class HelloWorldFlowSample
     /// <param name="laborSupply">劳动力供给。</param>
     /// <param name="capitalStock">资本存量。</param>
     /// <returns>总产出。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int Output(int laborSupply, int capitalStock)
     {
         return laborSupply * 2 + capitalStock;
@@ -57,7 +57,7 @@ public class HelloWorldFlowSample
     /// <param name="output">总产出。</param>
     /// <param name="population">当前总人口。</param>
     /// <returns>人均消费预算。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int ConsumptionBudget(int output, int population)
     {
         int safePopulation = population <= 0 ? 1 : population;
@@ -70,7 +70,7 @@ public class HelloWorldFlowSample
     /// <param name="consumptionBudget">人均消费预算。</param>
     /// <param name="basePrice">基础价格。</param>
     /// <returns>需求热度。</returns>
-    [SystemDynamicsProcess]
+    [TopologyProcessable]
     public int DemandIndex(int consumptionBudget, int basePrice)
     {
         int safeBasePrice = basePrice <= 0 ? 1 : basePrice;

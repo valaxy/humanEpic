@@ -4,7 +4,7 @@ using System;
 /// <summary>
 /// 画布节点视觉绘制器，封装节点样式与文本绘制规则。
 /// </summary>
-public static class WorldCanvasNodePainter
+public static class CanvasNodePainter
 {
 	// 节点默认背景色。
 	private static readonly Color defaultNodeBackgroundColor = new(0.12f, 0.16f, 0.2f);

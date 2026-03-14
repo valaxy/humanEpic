@@ -1,9 +1,9 @@
 using System;
 
 /// <summary>
-/// 标记系统动力学过程方法，供 flowtool 反射提取。
+/// 标记一个方法是可处理的
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public sealed class SystemDynamicsProcessAttribute : Attribute
+public sealed class TopologyProcessableAttribute : Attribute
 {
 }

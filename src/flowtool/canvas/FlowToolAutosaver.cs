@@ -15,10 +15,8 @@ public partial class FlowToolAutosaver : Node
 	private const double autoSaveIntervalSeconds = 0.25d;
 	// 画布根节点。
 	private FlowToolCanvas flowToolCanvas = null!;
-	// 画布组件。
-	private FlowToolCanvasGraphEdit canvasGraphEdit = null!;
 	// 布局存储器。
-	private FlowToolLayoutStore layoutStore = new(allLayoutScopeKey);
+	private CanvasLayout layoutStore = new(allLayoutScopeKey);
 	// 保存计时器。
 	private double saveClockSeconds;
 	// 最近布局指纹。
@@ -30,7 +28,6 @@ public partial class FlowToolAutosaver : Node
 	public override void _Ready()
 	{
 		flowToolCanvas = GetParent<FlowToolCanvas>();
-		canvasGraphEdit = GetNode<FlowToolCanvasGraphEdit>("../SplitContainer/ContentSplitContainer/EditorPanel/Canvas");
 		flowToolCanvas.AutosavePulse += onAutosavePulse;
 		flowToolCanvas.AutosaveForced += onAutosaveForced;
 		flowToolCanvas.AutosaveSnapshotRequested += onAutosaveSnapshotRequested;
@@ -64,7 +61,7 @@ public partial class FlowToolAutosaver : Node
 	// 处理切换前快照保存。
 	private void onAutosaveSnapshotRequested()
 	{
-		if (canvasGraphEdit.HasRenderedNodes == false)
+		if (flowToolCanvas.HasRenderedNodes == false)
 		{
 			return;
 		}
@@ -75,7 +72,7 @@ public partial class FlowToolAutosaver : Node
 	// 处理重载后的已知布局提交。
 	private void onAutosaveCommitLayout()
 	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = canvasGraphEdit.CollectCurrentLayout();
+		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolCanvas.CollectCurrentLayout();
 		layoutStore.Save(currentLayout);
 		lastLayoutFingerprint = createLayoutFingerprint(currentLayout);
 	}
@@ -83,13 +80,13 @@ public partial class FlowToolAutosaver : Node
 	// 处理布局作用域切换。
 	private void onAutosaveScopeChanged(string layoutScopeKey)
 	{
-		layoutStore = new FlowToolLayoutStore(layoutScopeKey);
+		layoutStore = new CanvasLayout(layoutScopeKey);
 	}
 
 	// 若布局发生变化则保存。
 	private void saveIfChanged(bool forceSave = false)
 	{
-		IReadOnlyDictionary<string, Vector2> currentLayout = canvasGraphEdit.CollectCurrentLayout();
+		IReadOnlyDictionary<string, Vector2> currentLayout = flowToolCanvas.CollectCurrentLayout();
 		string currentFingerprint = createLayoutFingerprint(currentLayout);
 		if (forceSave == false && currentFingerprint == lastLayoutFingerprint)
 		{

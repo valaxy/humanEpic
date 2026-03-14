@@ -6,7 +6,7 @@ using System.Linq;
 /// <summary>
 /// 世界逻辑：人口的购买计划
 /// </summary>
-[SystemDynamicsFlow]
+[TopologyScopeable]
 public class PopulationBuyLogic : WorldLogic
 {
 	// 人口集合。
@@ -32,7 +32,7 @@ public class PopulationBuyLogic : WorldLogic
 
 
 	
-	[SystemDynamicsProcess]
+	[TopologyProcessable]
 	private Dictionary<ProductType.Enums, DailyHistoryData<float>> productBuyHistory()
 	{
 		throw new NotImplementedException();
@@ -40,7 +40,7 @@ public class PopulationBuyLogic : WorldLogic
 
 
 
-	[SystemDynamicsProcess]
+	[TopologyProcessable]
 	private Dictionary<ProductType.Enums, DailyHistoryData<float>> productSellHistory()
 	{
 		throw new NotImplementedException();
@@ -54,7 +54,7 @@ public class PopulationBuyLogic : WorldLogic
 	/// <param name="budgetMoney"></param>
 	/// <returns></returns>
 	/// <exception cref="NotImplementedException"></exception>
-	[SystemDynamicsProcess]
+	[TopologyProcessable]
 	private Dictionary<ProductType.Enums, float> expectBuyProductsNum(ProductMarket productMarket, float budgetMoney)
 	{
 		throw new NotImplementedException();
@@ -64,7 +64,7 @@ public class PopulationBuyLogic : WorldLogic
 	/// <summary>
 	/// 商品购买订单价格
 	/// </summary>
-	[SystemDynamicsProcess]
+	[TopologyProcessable]
 	private Dictionary<ProductType.Enums, float> buyOrderPrices(
 		Dictionary<ProductType.Enums, float> buyOrderPrices,
 		Dictionary<ProductType.Enums, DailyHistoryData<float>> productBuyHistory,

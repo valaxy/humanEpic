@@ -1,18 +1,15 @@
-﻿- FlowToolCanvasWorld重命名为WorldCanvas，管理画布尺寸和节点尺寸，以及管理所有的节点和连线数据
-- FlowToolCanvasWorldLayer2D重命名为WorldCanvasView，负责纯绘制相关的逻辑，在初始化时传入WorldCanvas使用；为WorldCanvasView创建一个demo
-- 将节点绘制的逻辑从FlowToolCanvasNodeCard、FlowToolCanvasGraphEdit、FlowToolCanvas抽取到WorldCanvasView中去
-- 文件拆分和重命名：
-	* 将FlowToolMetricNode重命名为MetricNode，并拆分到独立的文件里
-	* 将FlowToolEdge重命名为MetricEdge，并拆分到独立的文件里
-- 调整了线的绘制顺序，确保线在节点的下方绘制
-- createNodeDetailText抽取到MetricNode里去
-- 将对节点的视觉逻辑包括绘制和样式抽取到独立的模块里，以工厂形式提供
-- 将对边的视觉逻辑包括绘制和样式抽取到独立的模块里，以工厂形式提供
-- FlowToolTopologyExtractor重命名为TopologyExtractor
-- WorldCanvasNodePainter和WorldCanvasNodePainterFactory整合到一起，直接使用静态方法的形式使用即可
-- WorldCanvasEdgePainterFactory和WorldCanvasEdgePainter整合到一起，直接使用静态方法的形式使用即可
-- 将FlowToolTopology与WorldCanvas整合到一起，实际上它们的职责是一致的
-- 将canvas基本信号的触发封装在WorldCanvasView里，其他模块应当监听这些信号再进行相应的处理；demo中请编写代码对这些信号进行测试
-- 将鼠标滚动即可缩放画布的功能从FlowToolCanvas和FlowToolCanvasGraphEdit抽取出来，放到一个独立的文件里；最后与WorldCanvasView一起使用编写一个DEMO
-- 对WorldCanvasView来说，信号都是在内部被触发的，如果不能从内部触发说明这个信号不属于这个类
-- 新增一个纯逻辑的Controller类负责处理canvas的交互，首先将FlowToolCanvasGraphEdit中涉及到对节点拖拽的逻辑和WorldCanvasZoomController都整合到这个类里面去
+﻿- 领域层重构：
+	* TopologyScope改造为类，负责管理多个MetricEdge和MetricNode
+	* WorldCanvas重命名为Topology，负责管理多个TopologyScope，不直接管理MetricEdge和MetricNode
+- 为scopePanel新增一个DEMO
+- scopePanel移除固定的【全部】项
+- 为unassignedPoolPanel新增一个DEMO
+- 将FlowToolCanvasGraphEdit，WorldCanvasInteractionController，FlowToolCanvas合并为一个类
+- WorldCanvasView是一个底层的纯渲染的类，不应该依赖于任何其他组件，其他组件依赖于WorldCanvasView
+- 将WorldCanvasXXX相关的类全部重命名为CanvasXXX，并移动到一个新的目录里
+- 修复UnassignedPoolPanel的编码问题
+- 确认一下Topology的allScopeKey相关逻辑是不是已经没用了
+- 将Topology拆分为两个类：
+	* TopologyCanvas：负责管理画布尺寸、节点尺寸与布局数据
+	* GameSystem：整个游戏演化的复杂系统，负责管理多个TopologyScope
+- canvasCore目录重命名为canvasView，移动到flowtool目录下，与canvas目录平级

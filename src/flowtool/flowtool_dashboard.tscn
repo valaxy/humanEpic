@@ -1,10 +1,9 @@
 [gd_scene format=3 uid="uid://bq1ow0tmjqg6h"]
 
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvas.cs" id="1_script"]
-[ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasGraphEdit.cs" id="2_script"]
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolAutosaver.cs" id="5_autosave_controler"]
 [ext_resource type="Script" path="res://src/flowtool/canvas/FlowToolCanvasMinimap.cs" id="6_minimap_script"]
-[ext_resource type="Script" path="res://src/flowtool/canvas/WorldCanvasView.cs" id="7_world_layer_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasView.cs" id="7_world_layer_script"]
 [ext_resource type="PackedScene" path="res://src/flowtool/scopePanel/scope_panel.tscn" id="3_scope_panel"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolPanel/unassigned_pool_panel.tscn" id="4_unassigned_pool_panel"]
 
@@ -54,7 +53,6 @@ custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("2_script")
 
 [node name="MainViewport" type="SubViewport" parent="SplitContainer/ContentSplitContainer/EditorPanel/Canvas"]
 handle_input_locally = true

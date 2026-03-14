@@ -1,8 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/flowtool/unassignedPoolView/UnassignedPoolViewDemo.cs" id="1_demo_script"]
+[ext_resource type="Script" path="res://src/flowtool/demo/UnassignedPoolViewDemo.cs" id="1_demo_script"]
 [ext_resource type="PackedScene" path="res://src/flowtool/unassignedPoolView/unassigned_pool_view.tscn" id="2_pool_view"]
-[ext_resource type="Script" path="res://src/flowtool/unassignedPoolView/UnassignedPoolDropTarget.cs" id="3_drop_target_script"]
+[ext_resource type="Script" path="res://src/flowtool/demo/UnassignedPoolDropTarget.cs" id="3_drop_target_script"]
 
 [node name="UnassignedPoolViewDemo" type="Control"]
 layout_mode = 3

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dnp5a3nijrm0c"]
 
-[ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasViewDemo1.cs" id="1_demo_script"]
+[ext_resource type="Script" path="res://src/flowtool/demo/CanvasViewDemo1.cs" id="1_demo_script"]
 [ext_resource type="PackedScene" uid="uid://bvx4xudsy123d" path="res://src/flowtool/canvasView/canvas_view.tscn" id="2_canvas_view_scene"]
 
 [node name="Container" type="PanelContainer" unique_id=1072631040]

@@ -26,17 +26,18 @@ public static class CanvasEdgePainter
 	/// </summary>
 	public static void DrawEdges(Node2D canvas, TopologyCanvas topologyCanvas)
 	{
-		topologyCanvas.ActiveEdges
-			.Where(edge => topologyCanvas.NodeLayoutByNodeId.ContainsKey(edge.FromNodeId) && topologyCanvas.NodeLayoutByNodeId.ContainsKey(edge.ToNodeId))
+		topologyCanvas.Edges
+			.Where(edge => topologyCanvas.Nodes.ContainsKey(edge.FromNode.Id) && topologyCanvas.Nodes.ContainsKey(edge.ToNode.Id))
+			.Where(edge => edge.FromNode.IsActive && edge.ToNode.IsActive)
 			.ToList()
 			.ForEach(edge => drawEdge(canvas, topologyCanvas, edge));
 	}
 
 	// 绘制单条连线。
-	private static void drawEdge(Node2D canvas, TopologyCanvas topologyCanvas, MetricEdge edge)
+	private static void drawEdge(Node2D canvas, TopologyCanvas topologyCanvas, TopologyEdge edge)
 	{
-		Vector2 fromPosition = topologyCanvas.NodeLayoutByNodeId[edge.FromNodeId];
-		Vector2 toPosition = topologyCanvas.NodeLayoutByNodeId[edge.ToNodeId];
+		Vector2 fromPosition = edge.FromNode.Position;
+		Vector2 toPosition = edge.ToNode.Position;
 		Vector2 fromCenter = fromPosition + (topologyCanvas.NodeSize * edgeAnchorOffsetRatio);
 		Vector2 toCenter = toPosition + (topologyCanvas.NodeSize * edgeAnchorOffsetRatio);
 		Draw(canvas, fromCenter, toCenter);

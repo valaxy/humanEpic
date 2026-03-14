@@ -1,7 +1,7 @@
 /// <summary>
 /// flowtool 示例类：用于验证多类反射解析与布局切换。
 /// </summary>
-[TopologyScopeable]
+[MetricScopeable]
 public class Sample2
 {
     /// <summary>
@@ -10,8 +10,8 @@ public class Sample2
     /// <param name="jobDemand">岗位需求量。</param>
     /// <param name="wageLevel">薪资水平指数。</param>
     /// <returns>招聘意愿指数。</returns>
-    [TopologyProcessable]
-    public int RecruitmentIntent(int jobDemand, int wageLevel)
+    [Metricable]
+    public int recruitmentIntent(int jobDemand, int wageLevel)
     {
         return jobDemand + (wageLevel / 2);
     }
@@ -22,8 +22,8 @@ public class Sample2
     /// <param name="recruitmentIntent">招聘意愿指数。</param>
     /// <param name="skillMatchRate">技能匹配率（百分比整数）。</param>
     /// <returns>录用数量。</returns>
-    [TopologyProcessable]
-    public int HiringCount(int recruitmentIntent, int skillMatchRate)
+    [Metricable]
+    public int hiringCount(int recruitmentIntent, int skillMatchRate)
     {
         return recruitmentIntent * skillMatchRate / 100;
     }
@@ -34,8 +34,8 @@ public class Sample2
     /// <param name="hiringCount">录用数量。</param>
     /// <param name="separationCount">离职数量。</param>
     /// <returns>就业净变化。</returns>
-    [TopologyProcessable]
-    public int EmploymentDelta(int hiringCount, int separationCount)
+    [Metricable]
+    public int employmentDelta(int hiringCount, int separationCount)
     {
         return hiringCount - separationCount;
     }

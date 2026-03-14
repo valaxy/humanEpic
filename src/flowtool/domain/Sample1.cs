@@ -1,6 +1,6 @@
 
 
-[TopologyScopeable]
+[MetricScopeable]
 public class Sample1
 {
     /// <summary>
@@ -9,8 +9,8 @@ public class Sample1
     /// <param name="newResidents">新增人口。</param>
     /// <param name="leavingResidents">离开人口。</param>
     /// <returns>人口净变化。</returns>
-    [TopologyProcessable]
-    public int PopulationDelta(int newResidents, int leavingResidents)
+    [Metricable]
+    public int populationDelta(int newResidents, int leavingResidents)
     {
         return newResidents - leavingResidents;
     }
@@ -21,8 +21,8 @@ public class Sample1
     /// <param name="populationDelta">人口净变化。</param>
     /// <param name="basePopulation">基础人口。</param>
     /// <returns>当前总人口。</returns>
-    [TopologyProcessable]
-    public int Population(int populationDelta, int basePopulation)
+    [Metricable]
+    public int population(int populationDelta, int basePopulation)
     {
         return basePopulation + populationDelta;
     }
@@ -33,8 +33,8 @@ public class Sample1
     /// <param name="population">当前总人口。</param>
     /// <param name="participationRate">就业参与率（百分比整数）。</param>
     /// <returns>劳动力供给。</returns>
-    [TopologyProcessable]
-    public int LaborSupply(int population, int participationRate)
+    [Metricable]
+    public int laborSupply(int population, int participationRate)
     {
         return population * participationRate / 100;
     }
@@ -45,8 +45,8 @@ public class Sample1
     /// <param name="laborSupply">劳动力供给。</param>
     /// <param name="capitalStock">资本存量。</param>
     /// <returns>总产出。</returns>
-    [TopologyProcessable]
-    public int Output(int laborSupply, int capitalStock)
+    [Metricable]
+    public int output(int laborSupply, int capitalStock)
     {
         return laborSupply * 2 + capitalStock;
     }
@@ -57,8 +57,8 @@ public class Sample1
     /// <param name="output">总产出。</param>
     /// <param name="population">当前总人口。</param>
     /// <returns>人均消费预算。</returns>
-    [TopologyProcessable]
-    public int ConsumptionBudget(int output, int population)
+    [Metricable]
+    public int consumptionBudget(int output, int population)
     {
         int safePopulation = population <= 0 ? 1 : population;
         return output / safePopulation;
@@ -70,8 +70,8 @@ public class Sample1
     /// <param name="consumptionBudget">人均消费预算。</param>
     /// <param name="basePrice">基础价格。</param>
     /// <returns>需求热度。</returns>
-    [TopologyProcessable]
-    public int DemandIndex(int consumptionBudget, int basePrice)
+    [Metricable]
+    public int demandIndex(int consumptionBudget, int basePrice)
     {
         int safeBasePrice = basePrice <= 0 ? 1 : basePrice;
         return consumptionBudget * 100 / safeBasePrice;
@@ -82,7 +82,7 @@ public class Sample1
     /// </summary>
     /// <param name="rawValue">原始值。</param>
     /// <returns>仅用于调试的离散值。</returns>
-    public int ClampForDebugOnly(int rawValue)
+    public int clampForDebugOnly(int rawValue)
     {
         if (rawValue < 0)
         {

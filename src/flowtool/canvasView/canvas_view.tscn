@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bvx4xudsy123d"]
 
-[ext_resource type="Script" uid="uid://b3e1bnopft6w2" path="res://src/flowtool/canvasView/CanvasView.cs" id="1_canvas_view_script"]
+[ext_resource type="Script" path="res://src/flowtool/canvasView/CanvasView.cs" id="1_canvas_view_script"]
 
 [node name="EditorPanel" type="VBoxContainer" unique_id=1092873275]
 

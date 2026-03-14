@@ -1,30 +1,53 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>
-/// canvas 位置布局持久化。
+/// 工具类，负责TopologyCanvas的持久化。
 /// </summary>
-public sealed class TopologyCanvasLayout
+public static class TopologyCanvasLayout
 {
+	// 默认节点位置数据。
+	private sealed class NodeLayoutData
+	{
+		public float X { get; set; }
+		public float Y { get; set; }
+		public bool IsActive { get; set; } = true;
+	}
+
+	// 作用域布局数据。
+	private sealed class ScopeLayoutData
+	{
+		// 节点布局映射。
+		public Dictionary<string, NodeLayoutData> Nodes { get; set; } = new(StringComparer.Ordinal);
+	}
+
+	// 布局文件根节点。
+	private sealed class LayoutRootData
+	{
+		// 作用域布局集合。
+		public Dictionary<string, ScopeLayoutData> Scopes { get; set; } = new(StringComparer.Ordinal);
+	}
+
+
+
+
 	// 默认布局存档路径。
 	private const string defaultLayoutFilePath = "res://config/flowtool_layout.json";
 
-	// 布局存档路径。
-	private readonly string layoutFilePath;
 	// JSON 序列化选项。
-	private readonly JsonSerializerOptions jsonSerializerOptions;
+	private static readonly JsonSerializerOptions jsonSerializerOptions;
 
 	/// <summary>
 	/// 构造布局存储器。
 	/// </summary>
-	public TopologyCanvasLayout(string userPath = defaultLayoutFilePath)
+	static TopologyCanvasLayout()
 	{
-		layoutFilePath = ProjectSettings.GlobalizePath(userPath);
 		jsonSerializerOptions = new JsonSerializerOptions
 		{
 			WriteIndented = true,
@@ -33,114 +56,107 @@ public sealed class TopologyCanvasLayout
 		};
 	}
 
-	/// <summary>
-	/// 读取布局字典。
-	/// </summary>
-	public IReadOnlyDictionary<string, Vector2> Load(string layoutScopeKey)
-	{
-		string normalizedScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey)
-			? GameSystem.AllTopologyScopeKey
-			: layoutScopeKey;
-		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
-		if (layoutCollectionFile.Scopes.TryGetValue(normalizedScopeKey, out FlowToolLayoutFile? scopedLayoutFile))
-		{
-			return toNodePositions(scopedLayoutFile);
-		}
 
-		return new Dictionary<string, Vector2>(StringComparer.Ordinal);
-	}
+
 
 	/// <summary>
-	/// 保存布局字典。
+	/// 读取指定作用域的布局字典并应用到模型里
 	/// </summary>
-	public void Save(string layoutScopeKey, IReadOnlyDictionary<string, Vector2> nodePositions)
+	public static void LoadAndApply(string scopeName, TopologyCanvas topologyCanvas)
 	{
-		string normalizedScopeKey = string.IsNullOrWhiteSpace(layoutScopeKey)
-			? GameSystem.AllTopologyScopeKey
-			: layoutScopeKey;
-		FlowToolLayoutCollectionFile layoutCollectionFile = loadLayoutCollectionFile();
-		layoutCollectionFile.Scopes[normalizedScopeKey] = new FlowToolLayoutFile
-		{
-			Nodes = nodePositions.ToDictionary(
-				static pair => pair.Key,
-				static pair => new FlowToolVector2Dto { X = pair.Value.X, Y = pair.Value.Y },
-				StringComparer.Ordinal
-			)
-		};
+		// AI这写的什么垃圾逻辑，懒得改能用就行了
+		Debug.Assert(!string.IsNullOrWhiteSpace(scopeName));
 
-		string outputDirectoryPath = Path.GetDirectoryName(layoutFilePath) ?? string.Empty;
-		if (string.IsNullOrWhiteSpace(outputDirectoryPath) == false)
-		{
-			Directory.CreateDirectory(outputDirectoryPath);
-		}
+		LayoutRootData root = loadRootData();
+		Dictionary<string, NodeLayoutData> persistedNodeLayout = root.Scopes
+			.TryGetValue(scopeName, out ScopeLayoutData? scopeLayout)
+			? scopeLayout.Nodes
+			: new Dictionary<string, NodeLayoutData>(StringComparer.Ordinal);
 
-		string jsonText = JsonSerializer.Serialize(layoutCollectionFile, jsonSerializerOptions);
-		File.WriteAllText(layoutFilePath, jsonText);
-	}
+		Dictionary<string, NodeLayoutData> defaultNodeLayout = topologyCanvas.Nodes
+			.Values
+			.OrderBy(node => node.Id, StringComparer.Ordinal)
+			.Select((node, index) => new
+			{
+				NodeId = node.Id,
+				Layout = new NodeLayoutData
+				{
+					X = 120f + ((index % 4) * 360f), // TODO 啥意思？
+					Y = 160f + ((index / 4) * 220f),
+					IsActive = true
+				}
+			})
+			.ToDictionary(item => item.NodeId, item => item.Layout, StringComparer.Ordinal);
 
-	// 读取聚合布局文件。
-	private FlowToolLayoutCollectionFile loadLayoutCollectionFile()
-	{
-		if (File.Exists(layoutFilePath) == false)
-		{
-			return new FlowToolLayoutCollectionFile();
-		}
-
-		string jsonText = File.ReadAllText(layoutFilePath);
-		FlowToolLayoutCollectionFile? collectionFile = JsonSerializer.Deserialize<FlowToolLayoutCollectionFile>(jsonText, jsonSerializerOptions);
-		if (collectionFile is not null && collectionFile.Scopes.Count > 0)
-		{
-			return normalizeCollectionFile(collectionFile);
-		}
-
-		return new FlowToolLayoutCollectionFile();
-	}
-
-	// 统一布局集合实例中的字典比较器与空值状态。
-	private static FlowToolLayoutCollectionFile normalizeCollectionFile(FlowToolLayoutCollectionFile collectionFile)
-	{
-		return new FlowToolLayoutCollectionFile
-		{
-			Scopes = collectionFile.Scopes
-				.ToDictionary(
-					static pair => pair.Key,
-					static pair => pair.Value ?? new FlowToolLayoutFile(),
-					StringComparer.Ordinal
-				)
-		};
-	}
-
-	// 将布局 DTO 转为运行时坐标字典。
-	private static IReadOnlyDictionary<string, Vector2> toNodePositions(FlowToolLayoutFile layoutFile)
-	{
-		return layoutFile.Nodes
+		Dictionary<string, NodeLayoutData> resolvedNodeLayout = defaultNodeLayout
 			.ToDictionary(
-				static pair => pair.Key,
-				static pair => new Vector2(pair.Value.X, pair.Value.Y),
-				StringComparer.Ordinal
-			);
+				pair => pair.Key,
+				pair => persistedNodeLayout.TryGetValue(pair.Key, out NodeLayoutData? persistedLayout)
+					? persistedLayout
+					: pair.Value,
+				StringComparer.Ordinal);
+
+		topologyCanvas.Nodes
+			.Values
+			.ToList()
+			.ForEach(node =>
+			{
+				NodeLayoutData nodeLayout = resolvedNodeLayout[node.Id];
+				node.Position = new Vector2(nodeLayout.X, nodeLayout.Y);
+				node.IsActive = nodeLayout.IsActive;
+			});
 	}
 
-	// 多作用域布局 JSON 文件实体。
-	private sealed class FlowToolLayoutCollectionFile
+	/// <summary>
+	/// 保存指定作用域的布局数据
+	/// </summary>
+	public static void Save(string scopeName, TopologyCanvas topologyCanvas)
 	{
-		// 作用域布局映射。
-		public Dictionary<string, FlowToolLayoutFile> Scopes { get; set; } = new(StringComparer.Ordinal);
+		Debug.Assert(!string.IsNullOrWhiteSpace(scopeName));
+
+		LayoutRootData root = loadRootData();
+		Dictionary<string, NodeLayoutData> nodeLayout = topologyCanvas.Nodes
+			.Values
+			.ToDictionary(
+				node => node.Id,
+				node => new NodeLayoutData
+				{
+					X = node.Position.X,
+					Y = node.Position.Y,
+					IsActive = node.IsActive
+				},
+				StringComparer.Ordinal);
+		root.Scopes[scopeName] = new ScopeLayoutData
+		{
+			Nodes = nodeLayout
+		};
+
+		string globalPath = ProjectSettings.GlobalizePath(defaultLayoutFilePath);
+		string? directoryPath = Path.GetDirectoryName(globalPath);
+		if (!string.IsNullOrWhiteSpace(directoryPath))
+		{
+			Directory.CreateDirectory(directoryPath);
+		}
+
+		string json = JsonSerializer.Serialize(root, jsonSerializerOptions);
+		File.WriteAllText(globalPath, json);
 	}
 
-	// 布局 JSON 文件实体。
-	private sealed class FlowToolLayoutFile
+	// 读取布局文件根节点。
+	private static LayoutRootData loadRootData()
 	{
-		// 节点位置映射。
-		public Dictionary<string, FlowToolVector2Dto> Nodes { get; set; } = new(StringComparer.Ordinal);
-	}
+		string globalPath = ProjectSettings.GlobalizePath(defaultLayoutFilePath);
+		if (File.Exists(globalPath) == false)
+		{
+			return new LayoutRootData();
+		}
 
-	// 二维向量 DTO。
-	private sealed class FlowToolVector2Dto
-	{
-		// X 坐标。
-		public float X { get; set; }
-		// Y 坐标。
-		public float Y { get; set; }
+		string json = File.ReadAllText(globalPath);
+		if (string.IsNullOrWhiteSpace(json))
+		{
+			return new LayoutRootData();
+		}
+
+		return JsonSerializer.Deserialize<LayoutRootData>(json, jsonSerializerOptions) ?? new LayoutRootData();
 	}
 }

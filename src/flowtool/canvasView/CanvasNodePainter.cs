@@ -21,18 +21,18 @@ public static class CanvasNodePainter
 	/// <summary>
 	/// 绘制单个节点。
 	/// </summary>
-	public static void Draw(Node2D canvas, MetricNode node, Vector2 position, Vector2 nodeSize, Font font, int fontSize, bool isSelected)
+	public static void Draw(Node2D canvas, TopologyNode node, Vector2 nodeSize, Font font, int fontSize, bool isSelected)
 	{
 		Color backgroundColor = isSelected ? selectedNodeBackgroundColor : defaultNodeBackgroundColor;
-		Rect2 nodeRect = new(position, nodeSize);
+		Rect2 nodeRect = new(node.Position, nodeSize);
 		canvas.DrawRect(nodeRect, backgroundColor, true);
 		canvas.DrawRect(nodeRect, nodeBorderColor, false, 2f);
 
-		Vector2 titlePosition = position + new Vector2(12f, 28f);
-		canvas.DrawString(font, titlePosition, node.DisplayName, HorizontalAlignment.Left, nodeSize.X - 24f, fontSize, titleTextColor);
+		Vector2 titlePosition = node.Position + new Vector2(12f, 28f);
+		canvas.DrawString(font, titlePosition, node.Metric.Name, HorizontalAlignment.Left, nodeSize.X - 24f, fontSize, titleTextColor);
 
-		string detailText = node.CreateDetailText();
-		Vector2 detailPosition = position + new Vector2(12f, 52f);
+		string detailText = node.Metric.GetDetailText();
+		Vector2 detailPosition = node.Position + new Vector2(12f, 52f);
 		canvas.DrawString(font, detailPosition, detailText, HorizontalAlignment.Left, nodeSize.X - 24f, Math.Max(fontSize - 2, 10), detailTextColor);
 	}
 
@@ -43,10 +43,10 @@ public static class CanvasNodePainter
 	{
 		Font fallbackFont = ThemeDB.FallbackFont;
 		int fallbackFontSize = ThemeDB.FallbackFontSize;
-		topologyCanvas.NodesByNodeId
-			.Where(pair => topologyCanvas.NodeLayoutByNodeId.ContainsKey(pair.Key))
-			.Select(pair => new { pair.Key, Node = pair.Value, Position = topologyCanvas.NodeLayoutByNodeId[pair.Key] })
+		topologyCanvas.Nodes
+			.Values
+			.Where(item => item.IsActive)
 			.ToList()
-			.ForEach(item => Draw(canvas, item.Node, item.Position, topologyCanvas.NodeSize, fallbackFont, fallbackFontSize, item.Key == selectedNodeId));
+			.ForEach(item => Draw(canvas, item, topologyCanvas.NodeSize, fallbackFont, fallbackFontSize, item.Id == selectedNodeId));
 	}
 }

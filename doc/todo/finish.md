@@ -1,16 +1,1 @@
-﻿- 启动canvas_view_demo.tscn时遇到运行时问题：ERROR: Node not found: "Canvas" (relative to "/root/CanvasViewDemo/CanvasView").
-- FlowToolCanvas.cs中的mainViewport、mainCamera似乎都跨越了边界进行处理，这些变量的相关逻辑应该被抽取到CanvasView中去
-- CanvasView新增了一些API，完善CanvasView的DEMO
-- canvas_view_demo.tscn改造通过tscn实例化CanvasView
-- canvas_view_demo.tscn打开后显示的CanvasView太小了，调整CanvasView的尺寸和位置，使其占满整个视口
-- 为CanvasView新增选中节点信号，并在CanvasViewDemo中连接该信号，使用OS.Alert验证
-- FlowToolCanvas的handleMouseButton针对CanvasView中新的信号（节点点击信号）重构一下
-- 在canvasViewDemo中点击节点不会弹出Alert，是不是Canvas的坐标判断逻辑有问题
-- 将tryPickNodeIdAt提取到TopologyCanvas中去
-- MapCanvasLocalPointerToGraph改为私有方法，NodeSelectedRecognized触发时可以将需要的参数准备好传递上去
-- 移除FlowToolCanvas中冗余的绘制逻辑，相关的逻辑应该在CanvasView里都已经存在了
-- reloadAndRender和renderTopology是否冗余而且不属于FlowToolCanvas的职责？应该直接调用CanvasView中接口来实现
-- 将reloadAndRender/renderTopology对TopologyCanvas的重新构建逻辑抽取到领域层去实现
-- CanvasView中选中节点会在节点右上方出现一个删除按钮，点击删除按钮向上发送删除节点的信号，相关的逻辑从FlowToolCanvas中抽取过去
-- 统一CanvasView中DeleteKey和SelectedNodeDeleteRequested信号，两者本质上是一样的，都是删除节点；在CanvasDemo中新增对删除节点信号的连接，并使用OS.Alert验证
-- CanvasLayout重命名为TopologyCanvasLayout，负责管理单个拓扑图的布局。
+﻿

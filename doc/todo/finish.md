@@ -1,1 +1,3 @@
-﻿
+﻿新增一个canvas_view_demo2，不通过反射加载数据，而是使用直接构造的方式传入数据进行渲染
+修复ScopePanelDemo，构造演示数据，并且在ScopePanel内部保留哪个Scope被选中。向上抛出被选中事件时戴上scopeName而不是index
+我不知道是什么原因导致的，打开canvas_view_demo1一片空白，但是canvas_view_demo2就有内容，我怀疑是摄像机视角的问题，请写一个逻辑每次重新加载Layout的时候都把摄像头重置到内容的中心位置

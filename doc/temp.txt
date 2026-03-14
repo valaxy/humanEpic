@@ -8,6 +8,22 @@
 - Controller：MVC总的C，管理其他View或Domain的逻辑，胶水层
 
 
+完善flowtool的功能：
+- main.tscn：主入口，负责管理主要布局，按照左边是scopePanel，中间是canvas，右边是unassignedPoolPanel进行布局设计，相关逻辑在FlowToolController里，直接引用即可
+- Main.cs：挂载在main.tscn上，负责连接几个组件实现整体功能
+- canvas.tscn：主要负责画布区域，可通过canvasView.tscn来实现
+- CanvasController.cs：主要负责画布的控制逻辑，通过CanvasView实现画布渲染和交互
+- 主要功能：
+    * 当scopePanel切换scope时，画布更新节点的结构
+    * 支持通过鼠标滚轮来放大或缩小画布
+    * 默认情况所有的节点都保存在
+
+
+1 读取 `doc/todo/list.md`，按照从上到下的顺序依次完成每个todo项，如果没有todo项就结束本轮工作
+2 每完成一个todo项就从`list.md`中移除并追加在`doc/todo/finish.md`里，然后执行 `scripts/goon.ps1`，根据执行结果来决定下一步怎么办：
+  - 若执行命令后获得字符串`yes`，就从1重新开始，即继续读取todolist里的内容然后执行
+  - 若执行命令失败或未获得`yes`的内容，则本轮工作就结束了
+3 永远不要停下来询问我，按你的想法直接执行，我最后会审查你的日志的
 
 - 消费：人口资产--
 - 购买：人口资产++，人口预算--

@@ -1,10 +1,12 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 画布渲染层，只负责渲染与输入识别。
 /// </summary>
+[Tool]
 [GlobalClass]
 public partial class CanvasView : Node2D
 {
@@ -101,6 +103,35 @@ public partial class CanvasView : Node2D
 		QueueRedraw();
 	}
 
+	/// <summary>
+	/// 将摄像机重置到当前内容中心位置。
+	/// </summary>
+	public void ResetCameraToContentCenter()
+	{
+		IReadOnlyList<TopologyNode> visibleNodes = topologyCanvas.Nodes.Values
+			.Where(node => node.IsActive)
+			.ToList();
+		IReadOnlyList<TopologyNode> nodesForCenter = visibleNodes.Count > 0
+			? visibleNodes
+			: topologyCanvas.Nodes.Values.ToList();
+
+		if (nodesForCenter.Count == 0)
+		{
+			mainCamera.Position = topologyCanvas.CanvasSize / 2f;
+			mainCamera.Zoom = Vector2.One;
+			return;
+		}
+
+		float minX = nodesForCenter.Min(node => node.Position.X);
+		float minY = nodesForCenter.Min(node => node.Position.Y);
+		float maxX = nodesForCenter.Max(node => node.Position.X + topologyCanvas.NodeWidth);
+		float maxY = nodesForCenter.Max(node => node.Position.Y + topologyCanvas.NodeHeight);
+		Vector2 contentCenter = new((minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
+
+		mainCamera.Position = contentCenter;
+		mainCamera.Zoom = Vector2.One;
+	}
+
 
 
 
@@ -170,6 +201,7 @@ public partial class CanvasView : Node2D
 
 
 
+	// 绘制
 	public override void _Draw()
 	{
 		GD.Print(topologyCanvas.Nodes.Count);

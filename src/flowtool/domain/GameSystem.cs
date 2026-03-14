@@ -23,35 +23,4 @@ public sealed class GameSystem
 	{
 		this.scopes = scopes.ToDictionary(scope => scope.Name, StringComparer.Ordinal);
 	}
-
-
-	// /// <summary>
-	// /// 根据布局数据推导当前可激活节点集合。
-	// /// </summary>
-	// public HashSet<string> DeriveActiveNodeIds(IEnumerable<string> layoutNodeIds, Topology topology)
-	// {
-	// 	HashSet<string> validMetricNodeIds = topology
-	// 		.CollectMetricNodeIds()
-	// 		.ToHashSet(StringComparer.Ordinal);
-	// 	HashSet<string> activeIds = layoutNodeIds
-	// 		.Where(validMetricNodeIds.Contains)
-	// 		.ToHashSet(StringComparer.Ordinal);
-
-	// 	return activeIds;
-	// }
-
-	// // 构建单个作用域并筛选其内部连线。
-	// private Topology createScopeTopology(string ownerTypeFullName, IReadOnlyList<MetricNode> allMetrics, IReadOnlyList<MetricEdge> allEdges)
-	// {
-	// 	IReadOnlyList<MetricNode> scopedMetrics = allMetrics
-	// 		.Where(metric => metric.OwnerTypeFullName == ownerTypeFullName)
-	// 		.ToList();
-	// 	HashSet<string> scopedMetricNodeIds = scopedMetrics
-	// 		.Select(static metric => metric.NodeId)
-	// 		.ToHashSet(StringComparer.Ordinal);
-	// 	IReadOnlyList<MetricEdge> scopedEdges = allEdges
-	// 		.Where(edge => scopedMetricNodeIds.Contains(edge.FromNodeId) && scopedMetricNodeIds.Contains(edge.ToNodeId))
-	// 		.ToList();
-	// 	return new Topology(ownerTypeFullName, getTypeShortName(ownerTypeFullName), scopedMetrics, scopedEdges);
-	// }
 }

@@ -7,7 +7,7 @@ using System.Linq;
 /// CanvasView 的演示入口，用于验证基础绘制结果。
 /// </summary>
 [GlobalClass]
-public partial class CanvasViewDemo : PanelContainer
+public partial class CanvasViewDemo1 : PanelContainer
 {
 	// 演示画布领域模型。
 	private readonly TopologyCanvas topologyCanvas = TopologyCanvas.Instance;
@@ -38,6 +38,7 @@ public partial class CanvasViewDemo : PanelContainer
 			.DefaultIfEmpty(availableScopes[0])
 			.First();
 		topologyCanvas.Reload(selectedScope);
+		canvasView.ResetCameraToContentCenter();
 	}
 
 	// 验证节点选中信号。

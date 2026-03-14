@@ -1,0 +1,32 @@
+{
+  "scopes": {
+    "Sample1": {
+      "nodes": {
+        "consumptionBudget": {
+          "x": 120,
+          "y": 160
+        },
+        "demandIndex": {
+          "x": 480,
+          "y": 160
+        },
+        "laborSupply": {
+          "x": 840,
+          "y": 160
+        },
+        "output": {
+          "x": 1200,
+          "y": 160
+        },
+        "population": {
+          "x": 120,
+          "y": 380
+        },
+        "populationDelta": {
+          "x": 480,
+          "y": 380
+        }
+      }
+    }
+  }
+}

@@ -1,69 +1,59 @@
 {
   "scopes": {
-    "Sample1": {
+    "PopulationBuyLogic": {
       "nodes": {
-        "consumptionBudget": {
-          "x": 120,
-          "y": 160,
+        "productBuyHistory": {
+          "x": 720,
+          "y": -181,
           "isActive": true
         },
-        "demandIndex": {
-          "x": 480,
-          "y": 160,
-          "isActive": true
+        "productSellHistory": {
+          "x": 641,
+          "y": -284,
+          "isActive": false
         },
-        "laborSupply": {
-          "x": 840,
-          "y": 160,
-          "isActive": true
+        "expectBuyProductsNum": {
+          "x": 565,
+          "y": -269,
+          "isActive": false
         },
-        "output": {
-          "x": 1200,
-          "y": 160,
-          "isActive": true
-        },
-        "population": {
-          "x": 120,
-          "y": 380,
-          "isActive": true
-        },
-        "populationDelta": {
-          "x": 480,
-          "y": 380,
+        "buyOrderPrices": {
+          "x": 491,
+          "y": -360,
           "isActive": true
         }
       }
     },
-    "canvas_view_demo2_scope": {
+    "Sample1": {
       "nodes": {
         "populationDelta": {
-          "x": 449,
-          "y": 331,
-          "isActive": true
+          "x": 480,
+          "y": 380,
+          "isActive": false
         },
         "population": {
-          "x": 107,
-          "y": 238,
-          "isActive": true
+          "x": 120,
+          "y": 380,
+          "isActive": false
         },
         "laborSupply": {
-          "x": 802,
-          "y": 280,
+          "x": 825,
+          "y": -33,
           "isActive": true
         },
         "output": {
-          "x": 1113,
-          "y": 80,
+          "x": 706,
+          "y": -318,
           "isActive": true
         },
         "consumptionBudget": {
-          "x": 128,
-          "y": -111,
-          "isActive": true
+          "x": 120,
+          "y": 160,
+          "isActive": false
         },
         "demandIndex": {
-          "x": 607.2793,
-          "y": 8.279297,
+          "x": 480,
+          "y": 160,
           "isActive": false
         }
       }

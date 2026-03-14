@@ -17,7 +17,7 @@ public static class TopologyCanvasLayout
 	{
 		public float X { get; set; }
 		public float Y { get; set; }
-		public bool IsActive { get; set; } = true;
+		public bool IsActive { get; set; }
 	}
 
 	// 作用域布局数据。
@@ -81,9 +81,9 @@ public static class TopologyCanvasLayout
 				NodeId = node.Id,
 				Layout = new NodeLayoutData
 				{
-					X = 120f + ((index % 4) * 360f), // TODO 啥意思？
+					X = 120f + ((index % 4) * 360f), // 按照一排4个节点的方式放置
 					Y = 160f + ((index / 4) * 220f),
-					IsActive = true
+					IsActive = node.IsActive
 				}
 			})
 			.ToDictionary(item => item.NodeId, item => item.Layout, StringComparer.Ordinal);

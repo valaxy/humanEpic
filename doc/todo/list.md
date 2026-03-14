@@ -1,1 +1,1 @@
-﻿
+﻿- 我希望scopePanelView和unassignedPoolView在两边是固定宽度，而canvasView在中间要填充剩余的宽度；我试过去移除MainViewport的Size，但是一移除整个布局就会乱掉

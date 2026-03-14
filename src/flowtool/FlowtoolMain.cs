@@ -33,6 +33,7 @@ public partial class FlowtoolMain : Control
 		gameSystem = MetricInfoExtractor.ExtractFromCurrentAssembly();
 
 		canvasView.Setup(topologyCanvas);
+		canvasDropOverlay.GuiInput += canvasView.ForwardGuiInput;
 
 		scopePanel.ScopeSelected += onScopeSelected;
 		canvasView.NodeSelect += onCanvasNodeSelected;

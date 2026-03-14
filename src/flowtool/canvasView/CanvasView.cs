@@ -77,6 +77,14 @@ public partial class CanvasView : Node2D
 		new MouseWheelZoomable(this);
 	}
 
+	/// <summary>
+	/// 外部覆盖层可调用此方法，将自身接收到的 GuiInput 转发到画布输入识别逻辑。
+	/// </summary>
+	public void ForwardGuiInput(InputEvent inputEvent)
+	{
+		handleInputEvent(inputEvent);
+	}
+
 	// 配置主视口。
 	private void initMainViewport()
 	{

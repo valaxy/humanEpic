@@ -72,6 +72,9 @@ public partial class CanvasView : Node2D
 		canvasPanel.GuiInput += handleInputEvent;
 		initMainViewport();
 		initViewportSize();
+
+		new NodeDraggable(this, topologyCanvas);
+		new MouseWheelZoomable(this);
 	}
 
 	// 配置主视口。
